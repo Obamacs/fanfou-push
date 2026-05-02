@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:timeleft.com)",
+      "WebFetch(domain:help.timeleft.com)",
+      "Bash(sw_vers)",
+      "Bash(npm --version)",
+      "Bash(npm list *)",
+      "Bash(brew list *)",
+      "Bash(node -e \"console.log\\(process.version\\)\")",
+      "Bash(npm -v)",
+      "Bash(npx --version)"
+    ]
+  }
+}
