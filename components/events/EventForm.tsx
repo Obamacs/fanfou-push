@@ -251,6 +251,7 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
           value={imageUrl}
           onChange={setImageUrl}
           label="选择活动图片"
+          type="event"
         />
       </div>
 

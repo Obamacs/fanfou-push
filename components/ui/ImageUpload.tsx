@@ -8,9 +8,10 @@ interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
+  type?: "avatar" | "event"; // 上传类型
 }
 
-export function ImageUpload({ value, onChange, label = "上传图片" }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, label = "上传图片", type = "avatar" }: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +26,7 @@ export function ImageUpload({ value, onChange, label = "上传图片" }: ImageUp
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("type", type);
 
       const response = await fetch("/api/upload", {
         method: "POST",
