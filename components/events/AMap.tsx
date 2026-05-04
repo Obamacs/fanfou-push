@@ -27,7 +27,7 @@ export function AMap({
     // 动态加载高德地图API
     const script = document.createElement("script");
     script.src =
-      "https://webapi.amap.com/maps?v=2.0&key=YOUR_AMAP_KEY&plugin=AMap.Geocoder";
+      "https://webapi.amap.com/maps?v=2.0&key=257501275a6867c79f1bb06e03f456a6&plugin=AMap.Geocoder";
     script.async = true;
     script.onload = () => {
       initMap();
