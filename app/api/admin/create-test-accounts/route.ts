@@ -1,21 +1,27 @@
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const testAccounts = [
+      {
+        email: "admin@fanfou.com",
+        name: "管理员",
+        password: "Admin123456",
+        role: "ADMIN" as const,
+      },
       {
         email: "test@fanfou.com",
         name: "测试用户",
         password: "Test123456",
-        role: "USER",
+        role: "USER" as const,
       },
       {
         email: "demo@fanfou.com",
         name: "演示用户",
         password: "Demo123456",
-        role: "USER",
+        role: "USER" as const,
       },
     ];
 
@@ -36,7 +42,7 @@ export async function POST(req: NextRequest) {
 
       const hashedPassword = await bcrypt.hash(account.password, 10);
 
-      const user = await db.user.create({
+      await db.user.create({
         data: {
           email: account.email,
           name: account.name,
