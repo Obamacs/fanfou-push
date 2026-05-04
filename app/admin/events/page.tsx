@@ -92,12 +92,12 @@ export default function EventsPage() {
           placeholder="搜索活动标题..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-gray-900 border-gray-800 text-white"
+          className="bg-gray-900 border-gray-800 text-white placeholder-gray-500"
         />
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 bg-gray-900 border border-gray-800 text-white rounded-lg"
+          className="px-4 py-2 bg-gray-900 border border-gray-800 text-white rounded-lg font-medium"
         >
           <option value="all">全部状态</option>
           <option value="UPCOMING">即将开始</option>
@@ -113,64 +113,74 @@ export default function EventsPage() {
           <table className="w-full">
             <thead className="bg-gray-800 border-b border-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white">
                   活动
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white">
                   创建者
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white">
                   时间
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white">
                   参加人数
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white">
                   状态
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white">
                   操作
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
               {filteredEvents.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-800/50">
+                <tr key={event.id} className="hover:bg-gray-800/50 transition-colors">
                   <td className="px-6 py-4">
                     <div>
-                      <p className="text-white font-medium">{event.title}</p>
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-white font-semibold text-base">{event.title}</p>
+                      <p className="text-gray-400 text-sm mt-1">
                         {event.city} · {event.type}
                       </p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <p className="text-white text-sm">{event.creator.name}</p>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-white font-medium text-sm">{event.creator.name}</p>
+                      <p className="text-gray-400 text-xs mt-1">
                         {event.creator.email}
                       </p>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-300 text-sm">
-                    {new Date(event.date).toLocaleDateString()}
+                  <td className="px-6 py-4 text-gray-300 text-sm font-medium">
+                    {new Date(event.date).toLocaleDateString("zh-CN", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })}
                   </td>
-                  <td className="px-6 py-4 text-gray-300">
+                  <td className="px-6 py-4 text-gray-300 font-medium">
                     {event._count.attendances} 人
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`px-2 py-1 text-xs rounded ${
+                      className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${
                         event.status === "UPCOMING"
-                          ? "bg-blue-500/20 text-blue-400"
+                          ? "bg-blue-500/20 text-blue-300"
                           : event.status === "ONGOING"
-                          ? "bg-green-500/20 text-green-400"
+                          ? "bg-green-500/20 text-green-300"
                           : event.status === "COMPLETED"
-                          ? "bg-gray-500/20 text-gray-400"
-                          : "bg-red-500/20 text-red-400"
+                          ? "bg-gray-500/20 text-gray-300"
+                          : "bg-red-500/20 text-red-300"
                       }`}
                     >
-                      {event.status}
+                      {event.status === "UPCOMING"
+                        ? "即将开始"
+                        : event.status === "ONGOING"
+                        ? "进行中"
+                        : event.status === "COMPLETED"
+                        ? "已完成"
+                        : "已取消"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -179,7 +189,7 @@ export default function EventsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-blue-400 hover:text-blue-300"
+                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 font-medium"
                         >
                           编辑
                         </Button>
@@ -188,7 +198,7 @@ export default function EventsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteEvent(event.id)}
-                        className="text-red-400 hover:text-red-300"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 font-medium"
                       >
                         删除
                       </Button>
@@ -200,6 +210,14 @@ export default function EventsPage() {
           </table>
         </div>
       </Card>
+
+      {/* Empty state */}
+      {filteredEvents.length === 0 && (
+        <Card className="bg-gray-900 border-gray-800 p-12 text-center">
+          <div className="text-6xl mb-4">📭</div>
+          <p className="text-gray-400 text-lg">暂无活动</p>
+        </Card>
+      )}
     </div>
   );
 }
