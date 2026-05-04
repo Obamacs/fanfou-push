@@ -52,9 +52,13 @@ export default function EventsPage() {
 
       if (res.ok) {
         setEvents(events.filter((e) => e.id !== eventId));
+        alert("活动已删除");
+      } else {
+        alert("删除失败");
       }
     } catch (err) {
       console.error("Failed to delete event:", err);
+      alert("删除失败");
     }
   };
 
@@ -75,7 +79,11 @@ export default function EventsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">活动管理</h1>
-        <div className="text-gray-400">共 {events.length} 个活动</div>
+        <Link href="/admin/events/create">
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+            + 创建活动
+          </Button>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -166,14 +174,25 @@ export default function EventsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      删除
-                    </Button>
+                    <div className="flex gap-2">
+                      <Link href={`/admin/events/${event.id}/edit`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          编辑
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteEvent(event.id)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        删除
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
