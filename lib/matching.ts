@@ -5,13 +5,50 @@ interface Candidate {
   smokingHabit?: string | null;
   drinkingHabit?: string | null;
   wantsChildren?: string | null;
-  interests: { interestId: string }[];
+  interests: { interest: { id: string; name: string } }[];
   answers: { questionId: string; answer: string }[];
 }
 
 interface Question {
   id: string;
   weight: number;
+}
+
+// 活动类型与兴趣的映射
+const ACTIVITY_INTEREST_MAP: Record<string, string[]> = {
+  "吃饭": ["美食", "烹饪"],
+  "运动": ["运动", "健身", "户外"],
+  "看电影": ["电影"],
+  "看展览": ["艺术", "摄影"],
+  "唱歌": ["音乐"],
+  "旅行": ["旅行", "户外"],
+  "读书": ["读书"],
+  "茶艺": ["茶艺"],
+  "棋牌": ["棋牌"],
+  "舞蹈": ["舞蹈"],
+  "游戏": ["游戏"],
+  "摄影": ["摄影"],
+  "手工": ["手工"],
+  "冥想": ["冥想"],
+};
+
+// 计算用户对活动的兴趣匹配度
+function calculateActivityInterestScore(
+  candidate: Candidate,
+  activityType: string
+): number {
+  const relevantInterests = ACTIVITY_INTEREST_MAP[activityType] || [];
+  if (relevantInterests.length === 0) return 50; // 如果活动类型未知，给予中等分数
+
+  const candidateInterestNames = candidate.interests.map(
+    (i) => i.interest.name
+  );
+  const matchedInterests = candidateInterestNames.filter((name) =>
+    relevantInterests.includes(name)
+  ).length;
+
+  // 如果有匹配的兴趣，给予高分；否则给予低分
+  return matchedInterests > 0 ? 80 + matchedInterests * 10 : 30;
 }
 
 function calculateRelationshipGoalScore(
@@ -99,86 +136,26 @@ function calculateDietScore(
   return 2;
 }
 
-export function calculateScore(
+export function calculateActivityScore(
   user: Candidate,
   candidate: Candidate,
-  questions: Question[],
-  relaxedMode: boolean = false
+  activityType: string
 ): number {
-  // 宽松模式：人数不足时，降低匹配标准
-  if (relaxedMode) {
-    // 在宽松模式下，只考虑基本兼容性，忽略年龄、爱好等细节
-    // 返回一个较高的基础分数，确保能找到足够的人
-
-    // 婚恋意向分（最高30分）- 保留此项以确保基本兼容
-    const goalScore = calculateRelationshipGoalScore(user, candidate);
-
-    // 在宽松模式下，给予所有候选人较高的基础分数
-    // 这样可以确保活动有足够的人数
-    const baseScore = 50; // 基础分数
-
-    return baseScore + goalScore;
-  }
-
-  // 严格模式：正常的多维度匹配
-  // 共同兴趣分（最高25分）
-  const userInterestIds = new Set(user.interests.map((i) => i.interestId));
-  const sharedInterests = candidate.interests.filter((i) =>
-    userInterestIds.has(i.interestId)
-  ).length;
-  const interestScore = (Math.min(sharedInterests, 5) / 5) * 25;
-
-  // 问卷相似度分（最高15分）
-  const userAnswerMap = new Map(
-    user.answers.map((a) => [a.questionId, a.answer])
+  // 核心：根据活动类型匹配感兴趣的人
+  const activityInterestScore = calculateActivityInterestScore(
+    candidate,
+    activityType
   );
-  let weightedMatches = 0;
-  let totalWeight = 0;
 
-  for (const q of questions) {
-    // 跳过菜系、口味、饮食问题，单独计算
-    if (["q-cuisine-1", "q-taste-1", "q-diet-1"].includes(q.id)) continue;
-
-    const userAnswer = userAnswerMap.get(q.id);
-    const candidateAnswer = candidate.answers.find(
-      (a) => a.questionId === q.id
-    )?.answer;
-
-    if (userAnswer && candidateAnswer) {
-      totalWeight += q.weight;
-      if (userAnswer === candidateAnswer) {
-        weightedMatches += q.weight;
-      }
-    }
-  }
-
-  const questionScore =
-    totalWeight > 0 ? (weightedMatches / totalWeight) * 15 : 0;
-
-  // 菜系偏好分（最高15分）
-  const cuisineScore = calculateCuisineScore(candidate, userAnswerMap);
-
-  // 口味偏好分（最高12分）
-  const tasteScore = calculateTasteScore(candidate, userAnswerMap);
-
-  // 饮食习惯分（最高10分）
-  const dietScore = calculateDietScore(candidate, userAnswerMap);
-
-  // 婚恋意向分（最高30分）
+  // 基本兼容性：婚恋意向
   const goalScore = calculateRelationshipGoalScore(user, candidate);
 
-  // 生活方式分（最高13分）
-  const lifestyleScore = calculateLifestyleScore(user, candidate);
+  // 性别平衡考虑（轻权重）
+  const genderBonus =
+    user.gender && candidate.gender && user.gender !== candidate.gender ? 10 : 0;
 
-  return (
-    interestScore +
-    questionScore +
-    cuisineScore +
-    tasteScore +
-    dietScore +
-    goalScore +
-    lifestyleScore
-  );
+  // 总分 = 活动兴趣(权重70%) + 婚恋意向(权重20%) + 性别平衡(权重10%)
+  return activityInterestScore * 0.7 + (goalScore / 35) * 20 + genderBonus;
 }
 
 export function selectBalancedGroup(
@@ -187,26 +164,23 @@ export function selectBalancedGroup(
   targetSize: number = 6,
   minCandidates: number = 3
 ): (Candidate & { score: number })[] {
-  // 如果候选人数量不足，使用宽松模式
-  // 宽松模式：忽略年龄、爱好等差别，优先确保活动有足够人数
-  const useRelaxedMode = candidates.length < minCandidates * 2;
-
-  // Sort by score descending
+  // 按分数排序（高分优先）
   const sorted = [...candidates].sort((a, b) => b.score - a.score);
 
-  // Try to balance genders: aim for roughly equal split
+  // 尝试平衡性别：目标是大致相等的分割
   const selected: (Candidate & { score: number })[] = [];
   const genderCount: Record<string, number> = {};
 
-  // Count current user's gender
+  // 计算当前用户的性别
   if (currentUser.gender) {
     genderCount[currentUser.gender] = 1;
   }
 
-  // 在宽松模式下，降低选择标准
-  const scoreThreshold = useRelaxedMode ? 30 : 50; // 宽松模式下分数阈值更低
+  // 在人数不足时，降低分数要求
+  const useRelaxedMode = candidates.length < minCandidates * 2;
+  const scoreThreshold = useRelaxedMode ? 20 : 40; // 宽松模式下分数阈值更低
 
-  // Select candidates while maintaining gender balance
+  // 选择候选人，同时保持性别平衡
   for (const candidate of sorted) {
     if (selected.length >= targetSize - 1) break;
 
@@ -218,15 +192,18 @@ export function selectBalancedGroup(
     const gender = candidate.gender || "OTHER";
     const currentCount = genderCount[gender] || 0;
 
-    // Prefer candidates of underrepresented gender
-    // Allow adding if: gender count is less than half of total, or we need to fill slots
-    if (currentCount <= Math.ceil((targetSize - 1) / 2) || selected.length < targetSize - 2) {
+    // 优先选择代表性不足的性别
+    // 如果：性别计数少于总数的一半，或者我们需要填充空位
+    if (
+      currentCount <= Math.ceil((targetSize - 1) / 2) ||
+      selected.length < targetSize - 2
+    ) {
       selected.push(candidate);
       genderCount[gender] = currentCount + 1;
     }
   }
 
-  // If we don't have enough, just take the top candidates
+  // 如果人数不足，直接选择排名靠前的候选人
   if (selected.length < targetSize - 1) {
     for (const candidate of sorted) {
       if (!selected.includes(candidate) && selected.length < targetSize - 1) {

@@ -2,10 +2,10 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { calculateScore, selectBalancedGroup } from "@/lib/matching";
-import { NextResponse } from "next/server";
+import { calculateActivityScore, selectBalancedGroup } from "@/lib/matching";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
     const session = await auth();
 
@@ -13,10 +13,14 @@ export async function POST() {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
+    const { activityType } = await req.json();
+
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       include: {
-        interests: true,
+        interests: {
+          include: { interest: true },
+        },
         answers: true,
       },
     });
@@ -49,7 +53,7 @@ export async function POST() {
       );
     }
 
-    // Query candidates: same city + same age group + onboarded + active + not banned + no active match
+    // 第一步：在同城同年龄段搜索
     let candidates = await db.user.findMany({
       where: {
         id: { not: session.user.id },
@@ -67,13 +71,14 @@ export async function POST() {
         },
       },
       include: {
-        interests: true,
+        interests: {
+          include: { interest: true },
+        },
         answers: true,
       },
     });
 
-    // 如果候选人不足，扩大搜索范围（忽略年龄限制）
-    let relaxedMode = false;
+    // 第二步：如果候选人不足，扩大搜索范围（忽略年龄限制）
     if (candidates.length < 6) {
       candidates = await db.user.findMany({
         where: {
@@ -91,11 +96,12 @@ export async function POST() {
           },
         },
         include: {
-          interests: true,
+          interests: {
+            include: { interest: true },
+          },
           answers: true,
         },
       });
-      relaxedMode = true;
     }
 
     if (candidates.length < 3) {
@@ -105,21 +111,16 @@ export async function POST() {
       );
     }
 
-    // Get all questions with weights
-    const questions = await db.questionnaireQuestion.findMany({
-      select: { id: true, weight: true },
-    });
-
-    // Calculate scores for each candidate
+    // 根据活动类型计算匹配分数
     const scoredCandidates = candidates.map((candidate) => ({
       ...candidate,
-      score: calculateScore(user, candidate, questions, relaxedMode),
+      score: calculateActivityScore(user, candidate, activityType || ""),
     }));
 
-    // Select balanced group (4-6 people including current user)
+    // 选择平衡的小组（4-6人，包括当前用户）
     const selectedCandidates = selectBalancedGroup(user, scoredCandidates, 6, 3);
 
-    // Create match with all members (including current user)
+    // 创建匹配，包括所有成员（包括当前用户）
     const match = await db.match.create({
       data: {
         status: "PENDING",
