@@ -50,7 +50,7 @@ export async function POST() {
     }
 
     // Query candidates: same city + same age group + onboarded + active + not banned + no active match
-    const candidates = await db.user.findMany({
+    let candidates = await db.user.findMany({
       where: {
         id: { not: session.user.id },
         city: user.city,
@@ -72,6 +72,32 @@ export async function POST() {
       },
     });
 
+    // 如果候选人不足，扩大搜索范围（忽略年龄限制）
+    let relaxedMode = false;
+    if (candidates.length < 6) {
+      candidates = await db.user.findMany({
+        where: {
+          id: { not: session.user.id },
+          city: user.city,
+          isOnboarded: true,
+          isActive: true,
+          isBanned: false,
+          matchMemberships: {
+            none: {
+              match: {
+                status: { in: ["PENDING", "CONFIRMED"] },
+              },
+            },
+          },
+        },
+        include: {
+          interests: true,
+          answers: true,
+        },
+      });
+      relaxedMode = true;
+    }
+
     if (candidates.length < 3) {
       return NextResponse.json(
         { error: "附近暂时没有合适的匹配，请稍后重试" },
@@ -87,11 +113,11 @@ export async function POST() {
     // Calculate scores for each candidate
     const scoredCandidates = candidates.map((candidate) => ({
       ...candidate,
-      score: calculateScore(user, candidate, questions),
+      score: calculateScore(user, candidate, questions, relaxedMode),
     }));
 
     // Select balanced group (4-6 people including current user)
-    const selectedCandidates = selectBalancedGroup(user, scoredCandidates, 6);
+    const selectedCandidates = selectBalancedGroup(user, scoredCandidates, 6, 3);
 
     // Create match with all members (including current user)
     const match = await db.match.create({

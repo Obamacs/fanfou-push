@@ -102,8 +102,25 @@ function calculateDietScore(
 export function calculateScore(
   user: Candidate,
   candidate: Candidate,
-  questions: Question[]
+  questions: Question[],
+  relaxedMode: boolean = false
 ): number {
+  // 宽松模式：人数不足时，降低匹配标准
+  if (relaxedMode) {
+    // 在宽松模式下，只考虑基本兼容性，忽略年龄、爱好等细节
+    // 返回一个较高的基础分数，确保能找到足够的人
+
+    // 婚恋意向分（最高30分）- 保留此项以确保基本兼容
+    const goalScore = calculateRelationshipGoalScore(user, candidate);
+
+    // 在宽松模式下，给予所有候选人较高的基础分数
+    // 这样可以确保活动有足够的人数
+    const baseScore = 50; // 基础分数
+
+    return baseScore + goalScore;
+  }
+
+  // 严格模式：正常的多维度匹配
   // 共同兴趣分（最高25分）
   const userInterestIds = new Set(user.interests.map((i) => i.interestId));
   const sharedInterests = candidate.interests.filter((i) =>
@@ -167,8 +184,13 @@ export function calculateScore(
 export function selectBalancedGroup(
   currentUser: Candidate,
   candidates: (Candidate & { score: number })[],
-  targetSize: number = 6
+  targetSize: number = 6,
+  minCandidates: number = 3
 ): (Candidate & { score: number })[] {
+  // 如果候选人数量不足，使用宽松模式
+  // 宽松模式：忽略年龄、爱好等差别，优先确保活动有足够人数
+  const useRelaxedMode = candidates.length < minCandidates * 2;
+
   // Sort by score descending
   const sorted = [...candidates].sort((a, b) => b.score - a.score);
 
@@ -181,9 +203,17 @@ export function selectBalancedGroup(
     genderCount[currentUser.gender] = 1;
   }
 
+  // 在宽松模式下，降低选择标准
+  const scoreThreshold = useRelaxedMode ? 30 : 50; // 宽松模式下分数阈值更低
+
   // Select candidates while maintaining gender balance
   for (const candidate of sorted) {
     if (selected.length >= targetSize - 1) break;
+
+    // 在宽松模式下，忽略分数阈值，只要有候选人就选择
+    if (!useRelaxedMode && candidate.score < scoreThreshold) {
+      break;
+    }
 
     const gender = candidate.gender || "OTHER";
     const currentCount = genderCount[gender] || 0;
