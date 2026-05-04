@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { AttendButton } from "@/components/events/AttendButton";
 import { DeleteEventButton } from "@/components/events/DeleteEventButton";
+import { AMap } from "@/components/events/AMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -188,6 +189,22 @@ export default async function EventDetailPage({
             </CardContent>
           </Card>
         </div>
+
+        {/* Map */}
+        <Card className="mb-6">
+          <CardHeader>
+            <h2 className="text-lg font-semibold">活动地点</h2>
+          </CardHeader>
+          <CardContent>
+            <AMap
+              latitude={event.latitude}
+              longitude={event.longitude}
+              address={event.address}
+              city={event.city}
+              title={event.title}
+            />
+          </CardContent>
+        </Card>
 
         {/* Description */}
         {event.description && (

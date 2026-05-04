@@ -10,6 +10,7 @@ export const EVENT_TYPES = [
 ]
 
 export const CITIES = [
+  "长沙",
   "北京",
   "上海",
   "广州",
