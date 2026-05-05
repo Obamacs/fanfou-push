@@ -98,13 +98,25 @@ function LoginContent() {
         }
       }
 
-      // 检查用户是否完成onboarding
-      const userRes = await fetch("/api/user/profile");
-      const userData = await userRes.json();
+      // 等待会话建立后再检查onboarding状态
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (!userData.user?.isOnboarded) {
-        router.push("/onboarding");
-      } else {
+      // 检查用户是否完成onboarding
+      try {
+        const userRes = await fetch("/api/user/profile");
+        if (!userRes.ok) {
+          router.push("/dashboard");
+          return;
+        }
+        const userData = await userRes.json();
+
+        if (!userData.user?.isOnboarded) {
+          router.push("/onboarding");
+        } else {
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        console.error("获取用户信息失败:", err);
         router.push("/dashboard");
       }
     } catch (err) {
