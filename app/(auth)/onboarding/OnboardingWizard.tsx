@@ -132,6 +132,7 @@ export default function OnboardingWizard({
         return;
       }
 
+      await new Promise(resolve => setTimeout(resolve, 500));
       router.push("/dashboard");
     } catch (error) {
       console.error("Onboarding error:", error);
