@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { signOutAction } from "@/app/actions/auth";
 
 async function AdminNavbar() {
   const session = await auth();
@@ -56,13 +57,7 @@ async function AdminNavbar() {
           </Link>
           <div className="flex items-center space-x-3 border-l border-gray-700 pl-4">
             <span className="text-sm text-gray-300">{session.user?.email}</span>
-            <form
-              action={async () => {
-                "use server";
-                const { signOut } = await import("@/lib/auth");
-                await signOut({ redirectTo: "/login" });
-              }}
-            >
+            <form action={signOutAction}>
               <Button type="submit" variant="ghost" size="sm" className="text-gray-300">
                 退出
               </Button>

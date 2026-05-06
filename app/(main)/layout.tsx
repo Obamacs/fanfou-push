@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { signOutAction } from "@/app/actions/auth";
 import { Home, Heart, Calendar, MessageCircle, User } from "lucide-react";
 
 async function Navbar() {
@@ -82,13 +83,7 @@ async function Navbar() {
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF2D55] to-[#FF6B35] flex items-center justify-center text-white font-semibold text-sm">
               {session.user?.email?.[0]?.toUpperCase() || "U"}
             </div>
-            <form
-              action={async () => {
-                "use server";
-                const { signOut } = await import("@/lib/auth");
-                await signOut({ redirectTo: "/login" });
-              }}
-            >
+            <form action={signOutAction}>
               <Button type="submit" variant="ghost" size="sm" className="text-gray-700 hover:text-[#FF2D55]">
                 退出
               </Button>

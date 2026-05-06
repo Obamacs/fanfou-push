@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { signOutAction } from "@/app/actions/auth";
 import Link from "next/link";
 
 interface UserProfile {
@@ -262,12 +263,7 @@ export default function ProfilePage() {
             重新完成问卷
           </Button>
         </Link>
-        <form
-          action={async () => {
-            const { signOut } = await import("@/lib/auth");
-            await signOut({ redirectTo: "/login" });
-          }}
-        >
+        <form action={signOutAction}>
           <Button type="submit" variant="outline" className="w-full text-red-600 hover:text-red-700">
             退出登录
           </Button>
