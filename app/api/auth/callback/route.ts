@@ -16,29 +16,46 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const code = searchParams.get("code");
 
-    console.log("Auth callback - code:", code);
+    // 打印完整URL和query参数用于调试
+    console.log("=== Auth Callback ===");
+    console.log("Full URL:", req.url);
+    console.log("Query params:", Object.fromEntries(searchParams));
+    console.log("Code:", code);
 
     if (!code) {
-      console.error("No code provided");
-      return NextResponse.redirect(new URL("/login?error=no_code", req.url));
+      console.error("❌ No code provided");
+      console.error("Full URL:", req.url);
+      console.error("All params:", Object.fromEntries(searchParams));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     // 使用code交换session
+    console.log("🔄 Exchanging code for session...");
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    console.log("Exchange code result:", { data, error });
+    console.log("Exchange result:", {
+      hasData: !!data,
+      hasError: !!error,
+      errorMessage: error?.message,
+      userEmail: data?.user?.email
+    });
 
     if (error) {
-      console.error("Code exchange error:", error);
-      return NextResponse.redirect(new URL("/login?error=invalid_code", req.url));
+      console.error("❌ Code exchange error:", error);
+      console.error("Full URL:", req.url);
+      console.error("All params:", Object.fromEntries(searchParams));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     if (!data.user?.email) {
-      console.error("No email in user data");
-      return NextResponse.redirect(new URL("/login?error=no_email", req.url));
+      console.error("❌ No email in user data");
+      console.error("Full URL:", req.url);
+      console.error("All params:", Object.fromEntries(searchParams));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     const email = data.user.email;
+    console.log("✅ User email:", email);
 
     // 确保用户存在于数据库
     let user = await db.user.findUnique({
@@ -46,6 +63,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!user) {
+      console.log("📝 Creating new user:", email);
       user = await db.user.create({
         data: {
           email,
@@ -61,11 +79,15 @@ export async function GET(req: NextRequest) {
       data: { emailVerified: new Date() },
     });
 
-    // 重定向到onboarding或dashboard
-    const redirectUrl = user.isOnboarded ? "/dashboard" : "/onboarding";
-    return NextResponse.redirect(new URL(redirectUrl, req.url));
+    console.log("✅ User verified and updated");
+
+    // 成功后跳转到首页（dashboard）
+    console.log("🎉 Redirecting to dashboard");
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   } catch (error) {
-    console.error("Auth callback error:", error);
-    return NextResponse.redirect(new URL("/login?error=callback_error", req.url));
+    console.error("❌ Auth callback error:", error);
+    console.error("Full error:", error instanceof Error ? error.message : String(error));
+    console.error("Full URL:", req.url);
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 }
