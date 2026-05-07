@@ -42,11 +42,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 发送magic link - 使用Supabase官方回调
+    // 发送magic link - Supabase会在邮件中发送code参数
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${supabaseUrl}/auth/v1/callback?redirect_to=${encodeURIComponent(`${process.env.NEXTAUTH_URL}/auth/callback`)}`,
+        emailRedirectTo: `${process.env.NEXTAUTH_URL}/api/auth/callback`,
       },
     });
 

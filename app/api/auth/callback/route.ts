@@ -15,18 +15,27 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const code = searchParams.get("code");
-    const redirect_to = searchParams.get("redirect_to") || "/dashboard";
+
+    console.log("Auth callback - code:", code);
 
     if (!code) {
+      console.error("No code provided");
       return NextResponse.redirect(new URL("/login?error=no_code", req.url));
     }
 
     // 使用code交换session
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (error || !data.user?.email) {
+    console.log("Exchange code result:", { data, error });
+
+    if (error) {
       console.error("Code exchange error:", error);
       return NextResponse.redirect(new URL("/login?error=invalid_code", req.url));
+    }
+
+    if (!data.user?.email) {
+      console.error("No email in user data");
+      return NextResponse.redirect(new URL("/login?error=no_email", req.url));
     }
 
     const email = data.user.email;
@@ -52,21 +61,9 @@ export async function GET(req: NextRequest) {
       data: { emailVerified: new Date() },
     });
 
-    // 重定向到指定的页面或dashboard
-    const redirectUrl = new URL(redirect_to, req.url);
-    const response = NextResponse.redirect(redirectUrl);
-
-    // 设置Supabase session cookie
-    if (data.session) {
-      response.cookies.set("sb-session", JSON.stringify(data.session), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
-    }
-
-    return response;
+    // 重定向到onboarding或dashboard
+    const redirectUrl = user.isOnboarded ? "/dashboard" : "/onboarding";
+    return NextResponse.redirect(new URL(redirectUrl, req.url));
   } catch (error) {
     console.error("Auth callback error:", error);
     return NextResponse.redirect(new URL("/login?error=callback_error", req.url));
