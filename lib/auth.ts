@@ -51,6 +51,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    CredentialsProvider({
+      id: "magiclink",
+      name: "Magic Link",
+      credentials: {
+        token: { type: "text" },
+        email: { type: "email" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.token || !credentials?.email) {
+          return null;
+        }
+
+        const verToken = await db.verificationToken.findUnique({
+          where: { token: credentials.token as string },
+        });
+
+        if (!verToken || verToken.identifier !== credentials.email) {
+          return null;
+        }
+
+        if (verToken.expires < new Date()) {
+          return null;
+        }
+
+        // Delete the token (one-time use)
+        await db.verificationToken.delete({
+          where: { token: verToken.token },
+        });
+
+        const user = await db.user.findUnique({
+          where: { email: verToken.identifier },
+        });
+
+        if (!user) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {

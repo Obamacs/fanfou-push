@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
+import { useCouponForEvent } from "@/lib/coupon";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
-    const { eventId } = await req.json();
+    const { eventId, couponCode } = await req.json();
 
     if (!eventId) {
       return NextResponse.json(
@@ -21,6 +22,20 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id as string;
+
+    // Try to use coupon first if provided
+    if (couponCode) {
+      try {
+        await useCouponForEvent(userId, couponCode.toUpperCase(), eventId);
+        return NextResponse.json({
+          usedCoupon: true,
+          redirectUrl: `/events/${eventId}?payment=success`,
+        });
+      } catch (err) {
+        // Coupon usage failed, fall through to Stripe payment
+        console.error("Coupon usage failed, falling back to Stripe:", err);
+      }
+    }
 
     // Fetch event
     const event = await db.event.findUnique({
