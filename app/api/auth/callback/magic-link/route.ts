@@ -16,21 +16,31 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const token = searchParams.get("token");
+    const token_hash = searchParams.get("token_hash");
     const type = searchParams.get("type");
 
-    if (!token || type !== "magiclink") {
+    console.log("Magic link callback - token_hash:", token_hash, "type:", type);
+
+    if (!token_hash || type !== "magiclink") {
+      console.error("Invalid token or type");
       return NextResponse.redirect(new URL("/login?error=invalid_token", req.url));
     }
 
-    // 验证token
+    // 使用token_hash和type验证OTP
     const { data, error } = await supabase.auth.verifyOtp({
-      token_hash: token,
+      token_hash,
       type: "magiclink",
     });
 
-    if (error || !data.user?.email) {
+    console.log("Verify OTP result:", { data, error });
+
+    if (error) {
       console.error("Token verification error:", error);
+      return NextResponse.redirect(new URL("/login?error=invalid_token", req.url));
+    }
+
+    if (!data.user?.email) {
+      console.error("No email in verified user");
       return NextResponse.redirect(new URL("/login?error=invalid_token", req.url));
     }
 
