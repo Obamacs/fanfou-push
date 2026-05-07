@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { nanoid } from "nanoid";
+import { signIn } from "@/lib/auth";
 
 const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -103,14 +104,16 @@ export async function GET(req: NextRequest) {
 
     console.log("✅ Created verification token for NextAuth signin");
 
-    // Redirect to NextAuth signin endpoint with magiclink provider
-    const signInUrl = new URL("/api/auth/signin/magiclink", req.url);
-    signInUrl.searchParams.set("token", token);
-    signInUrl.searchParams.set("email", userEmail);
-    signInUrl.searchParams.set("callbackUrl", "/dashboard");
+    // Call signIn with magiclink provider
+    console.log("🎉 Calling signIn with magiclink provider");
+    await signIn("magiclink", {
+      token,
+      email: userEmail,
+      redirect: false,
+    });
 
-    console.log("🎉 Redirecting to NextAuth signin");
-    return NextResponse.redirect(signInUrl);
+    // Redirect to dashboard
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   } catch (error) {
     console.error("❌ Auth callback error:", error);
     console.error("Full error:", error instanceof Error ? error.message : String(error));
