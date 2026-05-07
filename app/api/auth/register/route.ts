@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${process.env.NEXTAUTH_URL}/api/auth/callback`,
+        emailRedirectTo: "https://meal-meet.com/api/auth/callback",
       },
     });
 
