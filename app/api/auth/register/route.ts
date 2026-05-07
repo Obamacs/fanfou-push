@@ -13,6 +13,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function generateCouponCode(): string {
   const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4);
   return `COUP-${nanoid()}-${nanoid()}`;
@@ -20,11 +22,36 @@ function generateCouponCode(): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, inviteCode } = await req.json();
+    const body = await req.json();
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const inviteCode = typeof body.inviteCode === "string" ? body.inviteCode.trim() : "";
 
+    // 输入验证
     if (!name || !email) {
       return NextResponse.json(
         { error: "名字和邮箱为必填项" },
+        { status: 400 }
+      );
+    }
+
+    if (name.length < 2 || name.length > 50) {
+      return NextResponse.json(
+        { error: "名字长度应在 2-50 个字符之间" },
+        { status: 400 }
+      );
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      return NextResponse.json(
+        { error: "邮箱格式无效" },
+        { status: 400 }
+      );
+    }
+
+    if (email.length > 254) {
+      return NextResponse.json(
+        { error: "邮箱长度过长" },
         { status: 400 }
       );
     }
@@ -35,17 +62,17 @@ export async function POST(req: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "该邮箱已被注册" },
+        { error: "该邮箱已被注册，请直接登录" },
         { status: 400 }
       );
     }
 
-    // Validate invite code if provided
+    // 验证邀请码
     let inviteCodeRecord = null;
     let inviteCodeValid = false;
 
     if (inviteCode) {
-      const trimmedCode = (inviteCode as string).toUpperCase().trim();
+      const trimmedCode = inviteCode.toUpperCase();
       inviteCodeRecord = await db.inviteCode.findUnique({
         where: { code: trimmedCode },
       });
@@ -55,7 +82,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate welcome texts outside of transaction (network IO)
+    // 在事务外生成欢迎文案（涉及网络 IO）
     let newUserWelcomeText = "";
     let inviterWelcomeText = "";
 
@@ -74,8 +101,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Transaction: create user, usage record, coupons, and invite code
+    // 事务：创建用户、邀请码使用记录、优惠券、邀请码
     let couponIssued = false;
+    let newUserId: string | null = null;
 
     await db.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -85,10 +113,10 @@ export async function POST(req: NextRequest) {
           role: "USER",
         },
       });
+      newUserId = newUser.id;
 
       if (inviteCodeValid && inviteCodeRecord) {
         try {
-          // Record usage
           await tx.inviteCodeUsage.create({
             data: {
               inviteCodeId: inviteCodeRecord.id,
@@ -96,13 +124,11 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          // Update usage count
           await tx.inviteCode.update({
             where: { id: inviteCodeRecord.id },
             data: { usageCount: { increment: 1 } },
           });
 
-          // Issue coupon to new user
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 90);
 
@@ -116,7 +142,6 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          // Issue coupon to inviter
           await tx.freeCoupon.create({
             data: {
               code: generateCouponCode(),
@@ -132,17 +157,19 @@ export async function POST(req: NextRequest) {
           console.error("Failed to process invite code:", err);
         }
       }
+    });
 
-      // Create invite code for new user
+    // 事务外生成邀请码（避免事务过长）
+    if (newUserId) {
       try {
-        const newUserCode = await ensureInviteCode(newUser.id);
+        const newUserCode = await ensureInviteCode(newUserId);
         console.log("Generated invite code for new user:", newUserCode);
       } catch (err) {
         console.error("Failed to generate invite code for new user:", err);
       }
-    });
+    }
 
-    // Send magic link
+    // 发送 Magic Link
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -152,8 +179,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("Supabase magic link error:", error);
+      // 注意：用户已经创建成功，但邮件发送失败。返回提示信息让用户去登录页重试
       return NextResponse.json(
-        { error: `发送邮件失败: ${error.message}` },
+        {
+          error: `注册成功，但邮件发送失败。请前往登录页重新发送验证链接。错误详情: ${error.message}`,
+          userCreated: true,
+        },
         { status: 500 }
       );
     }

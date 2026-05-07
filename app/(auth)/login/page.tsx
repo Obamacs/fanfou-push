@@ -15,6 +15,8 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [sentEmail, setSentEmail] = useState("");
   const [loginMode, setLoginMode] = useState<"magic" | "admin">("magic");
   const [location, setLocation] = useState<{
     city?: string;
@@ -105,8 +107,9 @@ function LoginContent() {
         }).catch((err) => console.error("位置更新失败:", err));
       }
 
+      setSentEmail(email);
+      setEmailSent(true);
       setSuccess("验证链接已发送到你的邮箱，请检查邮件");
-      setEmail("");
     } catch (err) {
       console.error("Magic link error:", err);
       setError("发生错误，请重试");
@@ -187,6 +190,34 @@ function LoginContent() {
 
       <div className="w-full md:w-1/2 bg-white md:bg-gradient-to-br md:from-[#FFF8F6] md:to-white flex items-center justify-center p-6">
         <div className="w-full max-w-md">
+          {emailSent ? (
+            <div className="text-center space-y-4">
+              <div className="text-6xl mb-4">📬</div>
+              <h2 className="text-2xl font-bold text-gray-900">请查收邮件</h2>
+              <p className="text-gray-600 text-sm">我们已将验证链接发送到：</p>
+              <p className="font-semibold text-gray-900 break-all">{sentEmail}</p>
+              <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 text-left">
+                <p className="font-semibold mb-1">💡 提示：</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>请检查收件箱和垃圾邮件</li>
+                  <li>链接 5 分钟内有效</li>
+                  <li>点击邮件中的链接完成登录</li>
+                </ul>
+              </div>
+              <Button
+                onClick={() => {
+                  setEmailSent(false);
+                  setSentEmail("");
+                  setEmail("");
+                  setSuccess("");
+                }}
+                variant="outline"
+                className="w-full mt-4"
+              >
+                使用其他邮箱
+              </Button>
+            </div>
+          ) : (
           <div className="space-y-8">
             <div className="md:hidden text-center mb-8">
               <h1 className="gradient-text text-4xl font-bold">饭否</h1>
@@ -314,6 +345,7 @@ function LoginContent() {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>
