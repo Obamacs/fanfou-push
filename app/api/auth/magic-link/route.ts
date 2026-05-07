@@ -1,6 +1,6 @@
-import { db } from "@/lib/db";
-import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -13,36 +13,29 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email } = await req.json();
+    const { email } = await req.json();
 
-    if (!name || !email) {
-      return NextResponse.json(
-        { error: "名字和邮箱为必填项" },
-        { status: 400 }
-      );
+    if (!email) {
+      return NextResponse.json({ error: "邮箱为必填项" }, { status: 400 });
     }
 
-    const existingUser = await db.user.findUnique({
+    // 检查用户是否存在，如果不存在则创建
+    let user = await db.user.findUnique({
       where: { email },
     });
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "该邮箱已被注册" },
-        { status: 400 }
-      );
+    if (!user) {
+      user = await db.user.create({
+        data: {
+          email,
+          name: email.split("@")[0],
+          role: "USER",
+        },
+      });
     }
 
-    const user = await db.user.create({
-      data: {
-        email,
-        name,
-        role: "USER",
-      },
-    });
-
-    // 发送magic link
-    const { error } = await supabase.auth.signInWithOtp({
+    // 使用Supabase发送magic link
+    const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${process.env.NEXTAUTH_URL}/api/auth/callback/magic-link`,
@@ -58,13 +51,13 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: "注册成功！验证链接已发送到你的邮箱",
-      user,
+      message: "验证链接已发送到你的邮箱，请检查邮件",
+      email,
     });
   } catch (error) {
-    console.error("Register error:", error);
+    console.error("Magic link error:", error);
     return NextResponse.json(
-      { error: "注册失败，请重试" },
+      { error: "发生错误，请重试" },
       { status: 500 }
     );
   }

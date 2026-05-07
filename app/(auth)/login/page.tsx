@@ -3,26 +3,33 @@
 import { useState, useEffect } from "react";
 import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [location, setLocation] = useState<{
     city?: string;
     latitude?: number;
     longitude?: number;
   } | null>(null);
-  const successMessage = searchParams.get("registered") === "true" ? "注册成功，请登录" : "";
+
+  const errorParam = searchParams.get("error");
+  const successParam = searchParams.get("success");
+
+  useEffect(() => {
+    if (errorParam) {
+      setError("验证链接无效或已过期，请重新登录");
+    }
+    if (successParam) {
+      setSuccess("邮件已发送，请检查你的邮箱");
+    }
+  }, [errorParam, successParam]);
 
   // 获取用户位置信息
   useEffect(() => {
@@ -31,7 +38,6 @@ function LoginContent() {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            // 使用反向地理编码获取城市名称
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
             );
@@ -50,38 +56,33 @@ function LoginContent() {
     }
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setError("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccess("");
 
-    if (!formData.email || !formData.password) {
-      setError("请填写所有字段");
+    if (!email) {
+      setError("请输入邮箱");
       setLoading(false);
       return;
     }
 
     try {
-      const result = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
+      const response = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
 
-      if (!result?.ok) {
-        const errorMsg = result?.error || "登录失败，请检查邮箱和密码";
-        setError(errorMsg);
-        setLoading(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "发送失败，请重试");
         return;
       }
 
-      // 登录成功后，更新用户位置信息
+      // 更新用户位置信息
       if (location?.latitude && location?.longitude) {
         try {
           await fetch("/api/user/location", {
@@ -98,30 +99,11 @@ function LoginContent() {
         }
       }
 
-      // 等待会话建立后再检查onboarding状态
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // 检查用户是否完成onboarding
-      try {
-        const userRes = await fetch("/api/user/profile");
-        if (!userRes.ok) {
-          router.push("/dashboard");
-          return;
-        }
-        const userData = await userRes.json();
-
-        if (!userData.user?.isOnboarded) {
-          router.push("/onboarding");
-        } else {
-          router.push("/dashboard");
-        }
-      } catch (err) {
-        console.error("获取用户信息失败:", err);
-        router.push("/dashboard");
-      }
+      setSuccess("验证链接已发送到你的邮箱，请检查邮件");
+      setEmail("");
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "发生错误，请重试";
-      setError(errorMsg);
+      setError("发生错误，请重试");
+    } finally {
       setLoading(false);
     }
   };
@@ -129,7 +111,10 @@ function LoginContent() {
   return (
     <div className="min-h-screen flex">
       {/* 左侧品牌区 - 苹果风极简高级感 */}
-      <div className="hidden md:flex md:w-1/2 text-white flex-col justify-start items-center pt-40 px-16 relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(/login-hero-final.jpg)', backgroundPosition: 'center' }}>
+      <div
+        className="hidden md:flex md:w-1/2 text-white flex-col justify-start items-center pt-40 px-16 relative overflow-hidden bg-cover bg-center"
+        style={{ backgroundImage: "url(/login-hero-final.jpg)", backgroundPosition: "center" }}
+      >
         {/* 柔和深色渐变遮罩 */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/40"></div>
 
@@ -142,7 +127,9 @@ function LoginContent() {
           <p className="text-2xl font-light leading-relaxed text-white">将陌生人变成朋友</p>
 
           {/* 辅助说明 - 更轻更小 */}
-          <p className="text-base font-light leading-relaxed text-white/80 pt-2">每周的聚会，让有趣的人自然相遇</p>
+          <p className="text-base font-light leading-relaxed text-white/80 pt-2">
+            每周的聚会，让有趣的人自然相遇
+          </p>
         </div>
       </div>
 
@@ -159,13 +146,13 @@ function LoginContent() {
             {/* 标题区 */}
             <div>
               <h2 className="text-3xl font-semibold text-gray-900 mb-2">欢迎回来</h2>
-              <p className="text-gray-500 text-sm">登录你的账户继续冒险</p>
+              <p className="text-gray-500 text-sm">输入邮箱，我们将发送验证链接</p>
             </div>
 
             {/* 消息提示 */}
-            {successMessage && (
+            {success && (
               <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-                ✅ {successMessage}
+                ✅ {success}
               </div>
             )}
 
@@ -178,30 +165,12 @@ function LoginContent() {
             {/* 表单 */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  邮箱
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">邮箱</label>
                 <Input
                   type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  disabled={loading}
-                  className="border-gray-200 rounded-xl h-11"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  密码
-                </label>
-                <Input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="输入密码"
                   disabled={loading}
                   className="border-gray-200 rounded-xl h-11"
                 />
@@ -212,7 +181,7 @@ function LoginContent() {
                 disabled={loading}
                 className="w-full btn-brand text-white font-semibold h-11 rounded-xl mt-6"
               >
-                {loading ? "登录中..." : "登录"}
+                {loading ? "发送中..." : "发送验证链接"}
               </Button>
             </form>
 
