@@ -2,7 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// 使用真实的Supabase URL用于邮件发送，不通过Cloudflare代理
+const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 使用Supabase发送magic link
-    const { data, error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${process.env.NEXTAUTH_URL}/api/auth/callback/magic-link`,
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error("Supabase magic link error:", error);
       return NextResponse.json(
-        { error: "发送邮件失败，请重试" },
+        { error: `发送邮件失败: ${error.message}` },
         { status: 500 }
       );
     }
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Magic link error:", error);
     return NextResponse.json(
-      { error: "发生错误，请重试" },
+      { error: `发生错误: ${error instanceof Error ? error.message : "未知错误"}` },
       { status: 500 }
     );
   }

@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { signIn } from "@/lib/auth";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// 使用真实的Supabase URL用于验证，不通过Cloudflare代理
+const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
