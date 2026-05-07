@@ -1,0 +1,18 @@
+{
+  "env": {
+    "NEXTAUTH_URL": "https://meal-meet.com"
+  },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.meal-meet.com"
+        }
+      ],
+      "destination": "https://meal-meet.com/:path*",
+      "permanent": true
+    }
+  ]
+}
