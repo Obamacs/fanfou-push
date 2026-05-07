@@ -9,6 +9,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
     GoogleProvider({
@@ -16,6 +17,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     }),
     CredentialsProvider({
+      id: "credentials",
       name: "邮箱登录",
       credentials: {
         email: { label: "邮箱", type: "email" },
@@ -72,10 +74,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (verToken.expires < new Date()) {
+          // 删除过期的 token
+          await db.verificationToken.delete({
+            where: { token: verToken.token },
+          }).catch(() => {});
           return null;
         }
 
-        // Delete the token (one-time use)
+        // 删除 token（一次性使用）
         await db.verificationToken.delete({
           where: { token: verToken.token },
         });
@@ -118,4 +124,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/login",
   },
   trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET,
 });

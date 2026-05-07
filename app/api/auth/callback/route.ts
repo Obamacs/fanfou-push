@@ -15,9 +15,16 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
+    const error = url.searchParams.get("error");
+    const errorDescription = url.searchParams.get("error_description");
 
     console.log("🔐 Auth callback - Full URL:", req.url);
-    console.log("📦 Code:", code ? "present" : "missing");
+
+    // 处理 Supabase 错误
+    if (error) {
+      console.error("❌ Supabase error:", error, errorDescription);
+      return NextResponse.redirect(new URL(`/login?error=auth_failed&details=${encodeURIComponent(error)}`, req.url));
+    }
 
     if (!code) {
       console.error("❌ No code in callback URL");
@@ -25,17 +32,22 @@ export async function GET(req: NextRequest) {
     }
 
     console.log("🔄 Exchanging code for session...");
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (error || !data.user?.email) {
-      console.error("❌ Code exchange failed:", error);
+    if (exchangeError) {
+      console.error("❌ Code exchange failed:", exchangeError);
+      return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
+    }
+
+    if (!data.user?.email) {
+      console.error("❌ No email in session data");
       return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
     }
 
     const userEmail = data.user.email;
     console.log("✅ Session established for:", userEmail);
 
-    // Ensure user exists and mark email as verified
+    // 确保用户存在并标记邮箱已验证
     let user = await db.user.findUnique({
       where: { email: userEmail },
     });
@@ -59,10 +71,11 @@ export async function GET(req: NextRequest) {
 
     console.log("✅ User verified:", userEmail);
 
-    // Redirect to dashboard
+    // 重定向到首页
     return NextResponse.redirect(new URL("/dashboard", req.url));
   } catch (error) {
     console.error("❌ Auth callback error:", error);
+    console.error("Error details:", error instanceof Error ? error.message : String(error));
     return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
   }
 }

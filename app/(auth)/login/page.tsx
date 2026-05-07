@@ -64,8 +64,16 @@ function LoginContent() {
     setError("");
     setSuccess("");
 
+    // 验证邮箱
     if (!email) {
       setError("请输入邮箱");
+      setLoading(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("请输入有效的邮箱地址");
       setLoading(false);
       return;
     }
@@ -84,25 +92,23 @@ function LoginContent() {
         return;
       }
 
+      // 异步更新位置，不阻塞主流程
       if (location?.latitude && location?.longitude) {
-        try {
-          await fetch("/api/user/location", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              latitude: location.latitude,
-              longitude: location.longitude,
-              city: location.city,
-            }),
-          });
-        } catch (err) {
-          console.error("位置更新失败:", err);
-        }
+        fetch("/api/user/location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            city: location.city,
+          }),
+        }).catch((err) => console.error("位置更新失败:", err));
       }
 
       setSuccess("验证链接已发送到你的邮箱，请检查邮件");
       setEmail("");
     } catch (err) {
+      console.error("Magic link error:", err);
       setError("发生错误，请重试");
     } finally {
       setLoading(false);
@@ -115,8 +121,22 @@ function LoginContent() {
     setError("");
     setSuccess("");
 
+    // 验证输入
     if (!email || !password) {
       setError("邮箱和密码为必填项");
+      setLoading(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("请输入有效的邮箱地址");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("密码长度至少为 6 位");
       setLoading(false);
       return;
     }
@@ -129,17 +149,20 @@ function LoginContent() {
       });
 
       if (result?.error) {
+        console.error("Admin login error:", result.error);
         setError("邮箱或密码错误");
         return;
       }
 
       if (result?.ok) {
         setSuccess("登录成功，正在跳转...");
+        // 使用 router 而不是 window.location 以获得更好的 UX
         setTimeout(() => {
           window.location.href = "/admin";
-        }, 1000);
+        }, 500);
       }
     } catch (err) {
+      console.error("Admin login exception:", err);
       setError("登录失败，请重试");
     } finally {
       setLoading(false);
