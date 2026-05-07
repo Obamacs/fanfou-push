@@ -3,14 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { nanoid } from "nanoid";
 
-const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getSupabase() {
+  const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing Supabase environment variables");
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey);
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,6 +35,8 @@ export async function GET(req: NextRequest) {
       console.error("❌ No code in callback URL");
       return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
     }
+
+    const supabase = getSupabase();
 
     console.log("🔄 Exchanging code for session...");
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);

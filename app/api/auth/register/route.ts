@@ -4,14 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { ensureInviteCode } from "@/lib/coupon";
 import { customAlphabet } from "nanoid";
 
-const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getSupabase() {
+  const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing Supabase environment variables");
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey);
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -170,6 +172,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 发送 Magic Link
+    const supabase = getSupabase();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
