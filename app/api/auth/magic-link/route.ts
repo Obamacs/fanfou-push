@@ -35,11 +35,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 使用Supabase官方magic link - token会在URL hash里
+    // 使用Supabase官方magic link - PKCE flow，code在query里
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: "https://meal-meet.com/auth/callback",
+        emailRedirectTo: "https://meal-meet.com/api/auth/callback",
       },
     });
 

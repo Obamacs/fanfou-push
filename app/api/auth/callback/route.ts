@@ -1,8 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { nanoid } from "nanoid";
-import { signIn } from "@/lib/auth";
 
 const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -15,57 +13,29 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const url = new URL(req.url);
+    const code = url.searchParams.get("code");
 
-    console.log("=== Auth Callback ===");
-    console.log("Full URL:", req.url);
-    console.log("Query params:", Object.fromEntries(searchParams));
+    console.log("🔐 Auth callback - Full URL:", req.url);
+    console.log("📦 Code:", code ? "present" : "missing");
 
-    const code = searchParams.get("code");
-    const accessToken = searchParams.get("access_token");
-    const refreshToken = searchParams.get("refresh_token");
-
-    console.log("Code:", code);
-    console.log("Access Token:", accessToken ? "present" : "missing");
-    console.log("Refresh Token:", refreshToken ? "present" : "missing");
-
-    let userEmail: string | null = null;
-
-    // Try access_token + refresh_token first (Supabase magic link redirect)
-    if (accessToken && refreshToken) {
-      console.log("🔄 Setting session with tokens...");
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
-      if (error) {
-        console.error("❌ Session error:", error);
-        return NextResponse.redirect(new URL("/login?error=1", req.url));
-      }
-
-      userEmail = data.user?.email || null;
+    if (!code) {
+      console.error("❌ No code in callback URL");
+      return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
     }
 
-    // Fallback to code (backup plan)
-    if (!userEmail && code) {
-      console.log("🔄 Exchanging code for session...");
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    console.log("🔄 Exchanging code for session...");
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-      if (error) {
-        console.error("❌ Code exchange error:", error);
-        return NextResponse.redirect(new URL("/login?error=1", req.url));
-      }
-
-      userEmail = data.user?.email || null;
+    if (error || !data.user?.email) {
+      console.error("❌ Code exchange failed:", error);
+      return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
     }
 
-    if (!userEmail) {
-      console.error("❌ No email obtained from Supabase");
-      return NextResponse.redirect(new URL("/login?error=1", req.url));
-    }
+    const userEmail = data.user.email;
+    console.log("✅ Session established for:", userEmail);
 
-    // Ensure user exists and update emailVerified
+    // Ensure user exists and mark email as verified
     let user = await db.user.findUnique({
       where: { email: userEmail },
     });
@@ -77,46 +47,22 @@ export async function GET(req: NextRequest) {
           email: userEmail,
           name: userEmail.split("@")[0],
           role: "USER",
+          emailVerified: new Date(),
         },
+      });
+    } else {
+      await db.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
       });
     }
 
-    // Mark email as verified
-    await db.user.update({
-      where: { id: user.id },
-      data: { emailVerified: new Date() },
-    });
-
-    console.log("✅ User email verified:", userEmail);
-
-    // Create a one-time verification token for NextAuth magiclink provider (5 minutes)
-    const token = nanoid(32);
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
-
-    await db.verificationToken.create({
-      data: {
-        identifier: userEmail,
-        token,
-        expires: expiresAt,
-      },
-    });
-
-    console.log("✅ Created verification token for NextAuth signin");
-
-    // Call signIn with magiclink provider
-    console.log("🎉 Calling signIn with magiclink provider");
-    await signIn("magiclink", {
-      token,
-      email: userEmail,
-      redirect: false,
-    });
+    console.log("✅ User verified:", userEmail);
 
     // Redirect to dashboard
     return NextResponse.redirect(new URL("/dashboard", req.url));
   } catch (error) {
     console.error("❌ Auth callback error:", error);
-    console.error("Full error:", error instanceof Error ? error.message : String(error));
-    return NextResponse.redirect(new URL("/login?error=1", req.url));
+    return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
   }
 }
