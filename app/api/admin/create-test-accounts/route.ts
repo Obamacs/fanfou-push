@@ -1,26 +1,35 @@
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/api-helpers";
+import { randomBytes } from "crypto";
+
+function generatePassword(): string {
+  return randomBytes(9).toString("base64").replace(/[+/=]/g, "").slice(0, 12);
+}
 
 export async function POST() {
+  const auth = await requireAdmin();
+  if (auth.error) return auth.error;
+
   try {
     const testAccounts = [
       {
-        email: "admin@fanfou.com",
-        name: "管理员",
-        password: "Admin123456",
+        email: process.env.SEED_ADMIN_EMAIL || "admin@meal-meet.com",
+        name: "Admin",
+        password: process.env.SEED_ADMIN_PASSWORD || generatePassword(),
         role: "ADMIN" as const,
       },
       {
-        email: "test@fanfou.com",
-        name: "测试用户",
-        password: "Test123456",
+        email: process.env.SEED_TEST_EMAIL || "test@meal-meet.com",
+        name: "Test User",
+        password: process.env.SEED_TEST_PASSWORD || generatePassword(),
         role: "USER" as const,
       },
       {
-        email: "demo@fanfou.com",
-        name: "演示用户",
-        password: "Demo123456",
+        email: process.env.SEED_DEMO_EMAIL || "demo@meal-meet.com",
+        name: "Demo User",
+        password: process.env.SEED_DEMO_PASSWORD || generatePassword(),
         role: "USER" as const,
       },
     ];

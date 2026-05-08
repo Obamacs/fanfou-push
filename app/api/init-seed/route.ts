@@ -1,7 +1,29 @@
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { timingSafeEqual } from "crypto";
 
-export async function POST() {
+function tokenMatches(provided: string, expected: string): boolean {
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+export async function POST(req: NextRequest) {
+  // 允许两种认证方式：管理员会话 或 SEED_TOKEN header（用于 CI/首次部署引导）
+  const session = await auth();
+  const isAdminSession =
+    session?.user?.id && (session.user as { role?: string }).role === "ADMIN";
+
+  const seedToken = process.env.SEED_TOKEN;
+  const providedToken = req.headers.get("x-seed-token") || "";
+  const tokenValid = !!seedToken && tokenMatches(providedToken, seedToken);
+
+  if (!isAdminSession && !tokenValid) {
+    return NextResponse.json({ error: "未授权" }, { status: 401 });
+  }
+
   try {
     console.log("开始初始化种子数据...");
 

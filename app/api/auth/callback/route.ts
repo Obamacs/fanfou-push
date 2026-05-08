@@ -4,11 +4,11 @@ import { db } from "@/lib/db";
 import { nanoid } from "nanoid";
 
 function getSupabase() {
-  const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables");
+    throw new Error("Missing Supabase environment variables: SUPABASE_URL, SUPABASE_ANON_KEY");
   }
 
   return createClient(supabaseUrl, supabaseAnonKey);
@@ -54,34 +54,24 @@ export async function GET(req: NextRequest) {
     const userEmail = data.user.email;
     console.log("✅ Supabase session established for:", userEmail);
 
-    // 确保用户存在并标记邮箱已验证
-    let user = await db.user.findUnique({
+    // 用 upsert 原子地确保用户存在并标记邮箱已验证（处理 magic-link 直接登录未注册用户的场景）
+    const user = await db.user.upsert({
       where: { email: userEmail },
+      update: { emailVerified: new Date() },
+      create: {
+        email: userEmail,
+        name: userEmail.split("@")[0],
+        role: "USER",
+        emailVerified: new Date(),
+      },
     });
-
-    if (!user) {
-      console.log("📝 Creating new user:", userEmail);
-      user = await db.user.create({
-        data: {
-          email: userEmail,
-          name: userEmail.split("@")[0],
-          role: "USER",
-          emailVerified: new Date(),
-        },
-      });
-    } else {
-      await db.user.update({
-        where: { id: user.id },
-        data: { emailVerified: new Date() },
-      });
-    }
 
     console.log("✅ User verified:", userEmail);
 
-    // 创建 NextAuth 一次性 token 用于桥接建立 NextAuth session
+    // 创建 NextAuth 一次性 token 用于桥接建立 NextAuth session（15 分钟 TTL，缓冲邮件延迟）
     const bridgeToken = nanoid(32);
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
     await db.verificationToken.create({
       data: {

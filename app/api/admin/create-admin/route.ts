@@ -1,8 +1,12 @@
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth.error) return auth.error;
+
   try {
     const { email, name, password } = await req.json();
 

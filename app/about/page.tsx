@@ -25,15 +25,15 @@ export default function AboutPage() {
     {
       icon: Globe,
       title: "全球社区",
-      description: "连接全球志同道合的人，在 50+ 国家、200+ 城市建立友谊。",
+      description: "连接全球志同道合的人，与世界各地的朋友建立友谊。",
     },
   ];
 
   const milestones = [
-    { number: "200+", label: "城市" },
-    { number: "50+", label: "国家" },
-    { number: "3M+", label: "用户" },
-    { number: "80K+", label: "活动" },
+    { number: "9", label: "覆盖城市" },
+    { number: "成长中", label: "全球网络" },
+    { number: "Beta", label: "平台阶段" },
+    { number: "每周", label: "活动频次" },
   ];
 
   return (
@@ -111,7 +111,7 @@ export default function AboutPage() {
 
         {/* Statistics */}
         <div className="bg-gradient-to-r from-[#FF2D55] via-[#FF4D7E] to-[#FF6B35] rounded-2xl p-12 text-white">
-          <h2 className="text-3xl font-bold text-center mb-12">我们的成就</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">我们的现状</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {milestones.map((milestone, index) => (
               <div key={index} className="text-center">
