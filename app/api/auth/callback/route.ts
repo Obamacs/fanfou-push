@@ -5,13 +5,13 @@ import { nanoid } from "nanoid";
 
 function getSupabase() {
   const supabaseUrl = process.env.SUPABASE_URL || "https://lwercdnrvxrsnjjvojfx.supabase.co";
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Missing Supabase environment variables");
   }
 
-  return createClient(supabaseUrl, supabaseServiceKey);
+  return createClient(supabaseUrl, supabaseAnonKey);
 }
 
 export async function GET(req: NextRequest) {
