@@ -1,66 +1,39 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getSupabaseServerClient } from "@/lib/supabase";
 
-function getSupabase() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing Supabase environment variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  return createClient(supabaseUrl, supabaseServiceKey);
-}
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getCallbackUrl(req: NextRequest): string {
   const base = process.env.NEXTAUTH_URL || new URL(req.url).origin;
   return `${base.replace(/\/$/, "")}/api/auth/callback`;
 }
 
-// 邮箱验证正则
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
 
-    // 验证邮箱
     if (!email) {
       return NextResponse.json({ error: "邮箱为必填项" }, { status: 400 });
     }
-
     if (!EMAIL_REGEX.test(email)) {
       return NextResponse.json({ error: "邮箱格式无效" }, { status: 400 });
     }
-
-    // 限制邮箱长度
     if (email.length > 254) {
       return NextResponse.json({ error: "邮箱长度过长" }, { status: 400 });
     }
 
-    // 检查用户是否存在，如果不存在则创建
-    let user = await db.user.findUnique({
-      where: { email },
-    });
-
+    let user = await db.user.findUnique({ where: { email } });
     if (!user) {
       user = await db.user.create({
-        data: {
-          email,
-          name: email.split("@")[0],
-          role: "USER",
-        },
+        data: { email, name: email.split("@")[0], role: "USER" },
       });
     }
 
-    // 使用Supabase官方magic link - PKCE flow，code在query里
-    const supabase = getSupabase();
+    const supabase = await getSupabaseServerClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: getCallbackUrl(req),
-      },
+      options: { emailRedirectTo: getCallbackUrl(req) },
     });
 
     if (error) {
@@ -78,7 +51,11 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Magic link error:", error);
     return NextResponse.json(
-      { error: `发生错误: ${error instanceof Error ? error.message : "未知错误"}` },
+      {
+        error: `发生错误: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`,
+      },
       { status: 500 }
     );
   }

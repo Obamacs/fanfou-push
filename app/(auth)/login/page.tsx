@@ -25,16 +25,38 @@ function LoginContent() {
   } | null>(null);
 
   const errorParam = searchParams.get("error");
+  const detailsParam = searchParams.get("details");
   const successParam = searchParams.get("success");
 
   useEffect(() => {
     if (errorParam) {
-      setError("验证链接无效或已过期，请重新登录");
+      const detailText = detailsParam ? `（${detailsParam}）` : "";
+      switch (errorParam) {
+        case "access_denied":
+          setError(`验证链接已失效或已被使用，请重新发送 ${detailText}`);
+          break;
+        case "otp_expired":
+          setError(`验证链接已过期，请重新发送 ${detailText}`);
+          break;
+        case "exchange_failed":
+          setError(`登录验证失败 ${detailText}`);
+          break;
+        case "missing_code":
+        case "missing_bridge_params":
+          setError("验证链接不完整，请重新发送");
+          break;
+        case "session_failed":
+        case "bridge_exception":
+          setError(`会话建立失败 ${detailText}`);
+          break;
+        default:
+          setError(`验证失败 ${detailText || "，请重新登录"}`);
+      }
     }
     if (successParam) {
       setSuccess("邮件已发送，请检查你的邮箱");
     }
-  }, [errorParam, successParam]);
+  }, [errorParam, detailsParam, successParam]);
 
   useEffect(() => {
     if (navigator.geolocation) {
