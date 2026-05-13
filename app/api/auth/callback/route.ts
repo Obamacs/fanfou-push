@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { nanoid } from "nanoid";
 import { getSupabaseServerClient } from "@/lib/supabase";
+import { createHash } from "crypto";
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -19,14 +24,7 @@ export async function GET(req: NextRequest) {
   if (errorParam) {
     console.error("❌ Supabase auth error:", errorParam, errorDescription);
     return NextResponse.redirect(
-      new URL(
-        `/login?error=${encodeURIComponent(errorParam)}${
-          errorDescription
-            ? `&details=${encodeURIComponent(errorDescription)}`
-            : ""
-        }`,
-        req.url
-      )
+      new URL(`/login?error=auth_failed`, req.url)
     );
   }
 
@@ -56,12 +54,7 @@ export async function GET(req: NextRequest) {
     if (exchangeError) {
       console.error("❌ Code exchange failed:", exchangeError);
       return NextResponse.redirect(
-        new URL(
-          `/login?error=exchange_failed&details=${encodeURIComponent(
-            exchangeError.message
-          )}`,
-          req.url
-        )
+        new URL(`/login?error=exchange_failed`, req.url)
       );
     }
 
@@ -91,7 +84,7 @@ export async function GET(req: NextRequest) {
     await db.verificationToken.create({
       data: {
         identifier: userEmail,
-        token: bridgeToken,
+        token: hashToken(bridgeToken),
         expires: expiresAt,
       },
     });
@@ -106,12 +99,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("❌ Auth callback error:", error);
     return NextResponse.redirect(
-      new URL(
-        `/login?error=callback_exception&details=${encodeURIComponent(
-          error instanceof Error ? error.message : String(error)
-        )}`,
-        req.url
-      )
+      new URL(`/login?error=callback_exception`, req.url)
     );
   }
 }

@@ -17,7 +17,8 @@ export async function GET() {
       where: { code },
     });
 
-    const shareUrl = `https://meal-meet.com/register?invite=${code}`;
+    const baseUrl = process.env.NEXTAUTH_URL || "https://meal-meet.com";
+    const shareUrl = `${baseUrl}/register?invite=${code}`;
 
     return NextResponse.json({
       inviteCode: {

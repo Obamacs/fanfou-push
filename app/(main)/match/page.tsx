@@ -88,9 +88,6 @@ export default async function MatchPage() {
                 `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/match/find`,
                 {
                   method: "POST",
-                  headers: {
-                    Cookie: `${session.user?.id}`,
-                  },
                 }
               );
 

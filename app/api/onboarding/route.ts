@@ -1,6 +1,14 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  AGE_OPTIONS,
+  GENDER_OPTIONS,
+  RELATIONSHIP_GOAL_OPTIONS,
+  HABIT_OPTIONS,
+  CHILDREN_OPTIONS,
+  CITY_OPTIONS,
+} from "@/lib/onboarding-constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,6 +26,31 @@ export async function POST(req: NextRequest) {
         { error: "请填写所有必填项" },
         { status: 400 }
       );
+    }
+
+    // 验证枚举字段
+    if (!AGE_OPTIONS.includes(ageGroup)) {
+      return NextResponse.json({ error: "年龄组无效" }, { status: 400 });
+    }
+    if (!GENDER_OPTIONS.includes(gender)) {
+      return NextResponse.json({ error: "性别选择无效" }, { status: 400 });
+    }
+    const validGoals = RELATIONSHIP_GOAL_OPTIONS.map((o) => o.value);
+    if (!validGoals.includes(relationshipGoal)) {
+      return NextResponse.json({ error: "交友目标无效" }, { status: 400 });
+    }
+    if (smokingHabit && !HABIT_OPTIONS.includes(smokingHabit)) {
+      return NextResponse.json({ error: "吸烟习惯选择无效" }, { status: 400 });
+    }
+    if (drinkingHabit && !HABIT_OPTIONS.includes(drinkingHabit)) {
+      return NextResponse.json({ error: "饮酒习惯选择无效" }, { status: 400 });
+    }
+    const validChildren = CHILDREN_OPTIONS.map((o) => o.value);
+    if (wantsChildren && !validChildren.includes(wantsChildren)) {
+      return NextResponse.json({ error: "生育意愿无效" }, { status: 400 });
+    }
+    if (!CITY_OPTIONS.includes(city)) {
+      return NextResponse.json({ error: "城市选择无效" }, { status: 400 });
     }
 
     const userId = session.user.id as string;

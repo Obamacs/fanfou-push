@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Conversations fetch error:", error);
     return NextResponse.json(
-      { error: "获取对话列表失败", details: String(error) },
+      { error: "获取对话列表失败" },
       { status: 500 }
     );
   }

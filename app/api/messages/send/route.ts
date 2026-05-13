@@ -19,6 +19,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (typeof content === "string" && content.length > 2000) {
+      return NextResponse.json(
+        { error: "消息内容过长" },
+        { status: 400 }
+      );
+    }
+
     if (receiverId === session.user.id) {
       return NextResponse.json(
         { error: "不能给自己发送消息" },
@@ -72,7 +79,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Message send error:", error);
     return NextResponse.json(
-      { error: "发送消息失败", details: String(error) },
+      { error: "发送消息失败" },
       { status: 500 }
     );
   }

@@ -20,6 +20,14 @@ export async function POST(req: NextRequest) {
         longitude,
         lastLocationUpdate: new Date(),
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        latitude: true,
+        longitude: true,
+        lastLocationUpdate: true,
+      },
     });
 
     return NextResponse.json({ user });

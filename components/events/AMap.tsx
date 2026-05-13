@@ -84,11 +84,20 @@ export function AMap({
       map: map.current,
     });
 
+    // HTML-escape user-provided values before injecting into innerHTML
+    const escapeHtml = (str: string) =>
+      str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
     // 添加信息窗口
     const infoWindow = new window.AMap.InfoWindow({
       content: `<div style="padding: 8px;">
-        <div style="font-weight: bold;">${title || "活动地点"}</div>
-        ${address ? `<div style="font-size: 12px; color: #666;">${address}</div>` : ""}
+        <div style="font-weight: bold;">${escapeHtml(title || "活动地点")}</div>
+        ${address ? `<div style="font-size: 12px; color: #666;">${escapeHtml(address)}</div>` : ""}
       </div>`,
       offset: new window.AMap.Pixel(0, -30),
     });

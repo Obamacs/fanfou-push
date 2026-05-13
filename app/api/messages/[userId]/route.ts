@@ -67,7 +67,7 @@ export async function GET(
   } catch (error) {
     console.error("Messages fetch error:", error);
     return NextResponse.json(
-      { error: "获取消息失败", details: String(error) },
+      { error: "获取消息失败" },
       { status: 500 }
     );
   }

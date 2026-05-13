@@ -188,7 +188,7 @@ export async function POST(
   } catch (error) {
     console.error("Attendance error:", error);
     return NextResponse.json(
-      { error: "操作失败", details: String(error) },
+      { error: "操作失败" },
       { status: 500 }
     );
   }

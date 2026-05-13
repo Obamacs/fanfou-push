@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { ensureInviteCode } from "@/lib/coupon";
 import { customAlphabet } from "nanoid";
 import { getSupabaseServerClient } from "@/lib/supabase";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -44,11 +45,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "邮箱长度过长" }, { status: 400 });
     }
 
+    // Rate limit: 3 registrations per IP per hour
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    const ipLimit = checkRateLimit(`register:ip:${ip}`, {
+      maxRequests: 3,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: "注册请求过于频繁，请稍后再试" },
+        { status: 429, headers: { "Retry-After": String(ipLimit.retryAfter) } }
+      );
+    }
+
     const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
+      // 返回通用消息，避免邮箱枚举
       return NextResponse.json(
-        { error: "该邮箱已被注册，请直接登录" },
-        { status: 400 }
+        { message: "如果该邮箱可用，验证链接将发送到你的邮箱" },
+        { status: 200 }
       );
     }
 
@@ -152,10 +170,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error("Supabase magic link error:", error);
       return NextResponse.json(
-        {
-          error: `注册成功，但邮件发送失败。请前往登录页重新发送验证链接。错误详情: ${error.message}`,
-          userCreated: true,
-        },
+        { error: "注册成功，但邮件发送失败。请前往登录页重新发送验证链接。" },
         { status: 500 }
       );
     }
@@ -169,11 +184,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(
-      {
-        error: `注册失败: ${
-          error instanceof Error ? error.message : "未知错误"
-        }`,
-      },
+      { error: "注册失败，请稍后重试" },
       { status: 500 }
     );
   }

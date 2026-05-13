@@ -43,7 +43,7 @@ export async function GET(
     return NextResponse.json({ event });
   } catch (error) {
     return NextResponse.json(
-      { error: "查询活动失败", details: String(error) },
+      { error: "查询活动失败" },
       { status: 500 }
     );
   }
@@ -129,7 +129,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Event update error:", error);
     return NextResponse.json(
-      { error: "编辑活动失败", details: String(error) },
+      { error: "编辑活动失败" },
       { status: 500 }
     );
   }
@@ -175,7 +175,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Event delete error:", error);
     return NextResponse.json(
-      { error: "删除活动失败", details: String(error) },
+      { error: "删除活动失败" },
       { status: 500 }
     );
   }

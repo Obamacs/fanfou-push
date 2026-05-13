@@ -4,6 +4,11 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "./db";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -33,7 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user || !user.passwordHash) {
-          throw new Error("账号不存在或密码未设置");
+          throw new Error("邮箱或密码错误");
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -42,7 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!isPasswordValid) {
-          throw new Error("密码错误");
+          throw new Error("邮箱或密码错误");
         }
 
         return {
@@ -66,7 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const verToken = await db.verificationToken.findUnique({
-          where: { token: credentials.token as string },
+          where: { token: hashToken(credentials.token as string) },
         });
 
         if (!verToken || verToken.identifier !== credentials.email) {
@@ -76,14 +81,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (verToken.expires < new Date()) {
           // 删除过期的 token
           await db.verificationToken.delete({
-            where: { token: verToken.token },
+            where: { token: hashToken(credentials.token as string) },
           }).catch(() => {});
           return null;
         }
 
         // 删除 token（一次性使用）
         await db.verificationToken.delete({
-          where: { token: verToken.token },
+          where: { token: hashToken(credentials.token as string) },
         });
 
         const user = await db.user.findUnique({
@@ -123,6 +128,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/login",
     error: "/login",
   },
-  trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
 });

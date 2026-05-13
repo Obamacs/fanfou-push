@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       where.city = { contains: city, mode: "insensitive" };
     }
 
-    if (type && EVENT_TYPES.includes(type)) {
+    if (type && (EVENT_TYPES as readonly string[]).includes(type)) {
       where.type = type;
     }
 
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ events });
   } catch (error) {
     return NextResponse.json(
-      { error: "查询活动失败", details: String(error) },
+      { error: "查询活动失败" },
       { status: 500 }
     );
   }
@@ -93,11 +93,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!EVENT_TYPES.includes(type)) {
+    if (!(EVENT_TYPES as readonly string[]).includes(type)) {
       return NextResponse.json(
         { error: "活动类型无效" },
         { status: 400 }
       );
+    }
+
+    if (typeof title !== "string" || title.length > 100) {
+      return NextResponse.json({ error: "活动标题过长" }, { status: 400 });
+    }
+    if (address && typeof address === "string" && address.length > 200) {
+      return NextResponse.json({ error: "活动地址过长" }, { status: 400 });
+    }
+    if (description && typeof description === "string" && description.length > 2000) {
+      return NextResponse.json({ error: "活动描述过长" }, { status: 400 });
     }
 
     const eventDate = new Date(date);
@@ -166,7 +176,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Event creation error:", error);
     return NextResponse.json(
-      { error: "创建活动失败", details: String(error) },
+      { error: "创建活动失败" },
       { status: 500 }
     );
   }

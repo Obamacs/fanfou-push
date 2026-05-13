@@ -41,6 +41,13 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { name, bio, age, gender, city, avatarUrl } = body;
 
+    if (name !== undefined && (typeof name !== "string" || name.length > 50)) {
+      return NextResponse.json({ error: "名字过长" }, { status: 400 });
+    }
+    if (bio !== undefined && typeof bio === "string" && bio.length > 500) {
+      return NextResponse.json({ error: "个人简介过长" }, { status: 400 });
+    }
+
     const user = await db.user.update({
       where: { id: auth.userId },
       data: {

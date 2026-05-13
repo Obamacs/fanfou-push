@@ -33,7 +33,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Use coupon error:", error);
-    const message = error instanceof Error ? error.message : "使用券失败";
-    return NextResponse.json({ error: message }, { status: 400 });
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "使用券失败" }, { status: 400 });
   }
 }

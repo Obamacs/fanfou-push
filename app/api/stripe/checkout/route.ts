@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Checkout error:", error);
     return NextResponse.json(
-      { error: "创建支付会话失败", details: String(error) },
+      { error: "创建支付会话失败" },
       { status: 500 }
     );
   }
