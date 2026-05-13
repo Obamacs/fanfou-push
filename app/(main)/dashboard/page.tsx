@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Heart, Zap, Calendar } from "lucide-react";
+import { Calendar, Heart, MessageCircle, Sparkles, ChevronRight } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -16,172 +16,157 @@ export default async function DashboardPage() {
     where: { id: session.user.id as string },
     include: {
       ratingsReceived: true,
-      interests: {
-        include: { interest: true },
-      },
+      interests: { include: { interest: true } },
       eventAttendances: {
         include: { event: true },
         where: { event: { status: "UPCOMING" } },
       },
       matchMemberships: {
-        where: {
-          match: {
-            status: { in: ["PENDING", "CONFIRMED"] },
-          },
-        },
+        where: { match: { status: { in: ["PENDING", "CONFIRMED"] } } },
       },
     },
   });
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
-  const upcomingEventsCount = user.eventAttendances.length;
+  const upcomingCount = user.eventAttendances.length;
   const avgRating = user.averageRating?.toFixed(1) || "暂无";
-  const activeMatchCount = (user.matchMemberships as any)?.length || 0;
+  const matchCount = (user.matchMemberships as any)?.length || 0;
 
   return (
-    <div>
-      {/* Hero Banner - 背景图 */}
-      <div className="mb-8 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(/dashboard-bg.jpg)' }}>
-        <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-black/10"></div>
-        <div className="flex items-center justify-between relative z-10">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">早上好，{user.name} ✨</h1>
-            <p className="text-lg opacity-95">今天又是美好的一天，准备好去遇见新朋友了吗？</p>
-          </div>
-          <div className="text-6xl">🌟</div>
+    <div className="min-h-screen bg-[#f5f5f7]">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        {/* Greeting */}
+        <div className="mb-10">
+          <h1 className="text-[34px] font-bold text-[#1d1d1f] tracking-tight">
+            {user.name}，下午好
+          </h1>
+          <p className="mt-1 text-[17px] text-[#86868b]">
+            这周想遇见谁？
+          </p>
         </div>
-      </div>
 
-      {/* 完善资料提示 */}
-      {!user.isOnboarded && (
-        <Card className="mb-8 border-0 bg-gradient-to-r from-purple-100 to-pink-100 p-6 shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-2">
-                📝 完善资料，解锁全部功能
-              </h2>
-              <p className="text-gray-700">
-                完成个人资料后，就能开始匹配和参加活动了！
+        {/* Onboarding prompt */}
+        {!user.isOnboarded && (
+          <Card className="mb-8 border-0 shadow-sm rounded-3xl p-6 bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#f5f5f7] flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-[#0071e3]" />
+                </div>
+                <div>
+                  <h2 className="text-[17px] font-semibold text-[#1d1d1f]">完善你的个人资料</h2>
+                  <p className="text-[15px] text-[#86868b]">完成后即可开始匹配和参加活动</p>
+                </div>
+              </div>
+              <Link href="/onboarding">
+                <Button className="rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-medium">
+                  <Sparkles className="w-4 h-4 mr-1.5" />
+                  开始
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        )}
+
+        {/* Quick actions — 3 cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+          <Link href="/match" className="group">
+            <Card className="border-0 shadow-sm rounded-3xl p-6 bg-white hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center mb-5">
+                <Heart className="w-5 h-5 text-[#0071e3]" />
+              </div>
+              <h3 className="text-[17px] font-semibold text-[#1d1d1f] mb-1">匹配</h3>
+              <p className="text-[15px] text-[#86868b] mb-4">
+                根据兴趣和城市，找到志同道合的人
               </p>
-            </div>
-            <Link href="/onboarding">
-              <Button className="btn-brand whitespace-nowrap">
-                立即完善
-              </Button>
-            </Link>
-          </div>
-        </Card>
-      )}
-
-      {/* 快捷入口 - 3列卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Link href="/match">
-          <Card className="p-6 cursor-pointer card-hover h-full bg-white hover:shadow-xl border-0">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF2D55] to-[#FF6B35] flex items-center justify-center">
-                <Heart className="text-white" size={24} />
+              <div className="flex items-center text-[13px] text-[#0071e3] font-medium">
+                {matchCount > 0 ? `${matchCount} 个活跃匹配` : "开始匹配"}
+                <ChevronRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">开始匹配</h3>
-            </div>
-            <p className="text-gray-600 text-sm">
-              根据兴趣和城市，为你匹配志同道合的朋友
-            </p>
-            <div className="mt-4 inline-block text-[#FF2D55] font-semibold text-sm">
-              {activeMatchCount > 0 ? `${activeMatchCount} 个活跃匹配 →` : "现在开始 →"}
-            </div>
-          </Card>
-        </Link>
+            </Card>
+          </Link>
 
-        <Link href="/events">
-          <Card className="p-6 cursor-pointer card-hover h-full bg-white hover:shadow-xl border-0">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FFB84D] flex items-center justify-center">
-                <Calendar className="text-white" size={24} />
+          <Link href="/events" className="group">
+            <Card className="border-0 shadow-sm rounded-3xl p-6 bg-white hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-2xl bg-[#34c759]/10 flex items-center justify-center mb-5">
+                <Calendar className="w-5 h-5 text-[#34c759]" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">浏览活动</h3>
-            </div>
-            <p className="text-gray-600 text-sm">
-              参加各种有趣的线下活动，扩展你的社交圈
-            </p>
-            <div className="mt-4 inline-block text-[#FF2D55] font-semibold text-sm">
-              {upcomingEventsCount > 0 ? `${upcomingEventsCount} 场待参加 →` : "发现活动 →"}
-            </div>
-          </Card>
-        </Link>
-
-        <Link href="/messages">
-          <Card className="p-6 cursor-pointer card-hover h-full bg-white hover:shadow-xl border-0">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF4D7E] to-[#FF2D55] flex items-center justify-center">
-                <Zap className="text-white" size={24} />
+              <h3 className="text-[17px] font-semibold text-[#1d1d1f] mb-1">活动</h3>
+              <p className="text-[15px] text-[#86868b] mb-4">
+                选择你喜欢的活动，出现就好
+              </p>
+              <div className="flex items-center text-[13px] text-[#34c759] font-medium">
+                {upcomingCount > 0 ? `${upcomingCount} 场待参加` : "发现活动"}
+                <ChevronRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">我的消息</h3>
-            </div>
-            <p className="text-gray-600 text-sm">
-              查看与朋友的最新消息，保持联系
-            </p>
-            <div className="mt-4 inline-block text-[#FF2D55] font-semibold text-sm">
-              进入消息 →
-            </div>
-          </Card>
-        </Link>
-      </div>
+            </Card>
+          </Link>
 
-      {/* 统计卡片 - 4列 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="p-6 bg-white border-0 shadow-md rounded-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm font-medium">待参加活动</span>
-            <span className="text-2xl">📅</span>
-          </div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-[#FF2D55] to-[#FF6B35] bg-clip-text text-transparent">
-            {upcomingEventsCount}
-          </p>
-        </Card>
+          <Link href="/messages" className="group">
+            <Card className="border-0 shadow-sm rounded-3xl p-6 bg-white hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-2xl bg-[#ff9500]/10 flex items-center justify-center mb-5">
+                <MessageCircle className="w-5 h-5 text-[#ff9500]" />
+              </div>
+              <h3 className="text-[17px] font-semibold text-[#1d1d1f] mb-1">消息</h3>
+              <p className="text-[15px] text-[#86868b] mb-4">
+                和朋友保持联系，分享生活
+              </p>
+              <div className="flex items-center text-[13px] text-[#ff9500] font-medium">
+                查看消息
+                <ChevronRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </Card>
+          </Link>
+        </div>
 
-        <Card className="p-6 bg-white border-0 shadow-md rounded-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm font-medium">我的评分</span>
-            <span className="text-2xl">⭐</span>
-          </div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-[#FF4D7E] to-[#FFB84D] bg-clip-text text-transparent">
-            {avgRating}
-          </p>
-        </Card>
+        {/* Stats row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+          {[
+            { value: upcomingCount, label: "待参加", color: "text-[#0071e3]" },
+            { value: avgRating, label: "评分", color: "text-[#ff9500]" },
+            { value: matchCount, label: "活跃匹配", color: "text-[#34c759]" },
+            { value: user.interests.length, label: "兴趣", color: "text-[#af52de]" },
+          ].map((stat) => (
+            <Card key={stat.label} className="border-0 shadow-sm rounded-2xl p-5 bg-white text-center">
+              <div className={`text-[28px] font-bold ${stat.color} mb-0.5`}>
+                {stat.value}
+              </div>
+              <div className="text-[13px] text-[#86868b]">{stat.label}</div>
+            </Card>
+          ))}
+        </div>
 
-        <Card className="p-6 bg-white border-0 shadow-md rounded-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm font-medium">活跃匹配</span>
-            <span className="text-2xl">💕</span>
+        {/* How it works — timeleft.com inspired */}
+        <div className="mb-10">
+          <h2 className="text-[21px] font-bold text-[#1d1d1f] mb-5">如何参与</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { step: "1", title: "选择活动", desc: "浏览你所在城市的聚餐、饮品、运动等活动" },
+              { step: "2", title: "报名参加", desc: "选定时间和地点，免费或使用券码报名" },
+              { step: "3", title: "出现就好", desc: "准时赴约，其他的交给我们来安排" },
+            ].map((item) => (
+              <Card key={item.step} className="border-0 shadow-sm rounded-3xl p-6 bg-white">
+                <div className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-sm font-semibold text-[#1d1d1f] mb-4">
+                  {item.step}
+                </div>
+                <h3 className="text-[17px] font-semibold text-[#1d1d1f] mb-2">{item.title}</h3>
+                <p className="text-[15px] text-[#86868b]">{item.desc}</p>
+              </Card>
+            ))}
           </div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-[#FF2D55] to-[#FF4D7E] bg-clip-text text-transparent">
-            {activeMatchCount}
-          </p>
-        </Card>
+        </div>
 
-        <Card className="p-6 bg-white border-0 shadow-md rounded-xl">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm font-medium">我的兴趣</span>
-            <span className="text-2xl">🎯</span>
+        {/* Tips */}
+        <Card className="border-0 shadow-sm rounded-3xl p-6 bg-white">
+          <h3 className="text-[15px] font-semibold text-[#1d1d1f] mb-4">小贴士</h3>
+          <div className="space-y-3 text-[15px] text-[#86868b]">
+            <p>· 完善资料后更容易被志趣相投的人发现</p>
+            <p>· 选择你真正感兴趣的活动类型，匹配更精准</p>
+            <p>· 别紧张 — 走进门就知道，每个人都选择了来这里</p>
           </div>
-          <p className="text-3xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#FFB84D] bg-clip-text text-transparent">
-            {user.interests.length}
-          </p>
         </Card>
       </div>
-
-      {/* 底部建议 */}
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-0 rounded-xl">
-        <h3 className="font-bold text-gray-900 mb-3">💡 小贴士</h3>
-        <ul className="space-y-2 text-sm text-gray-700">
-          <li>✨ 完善你的个人资料，这样更容易被别人发现</li>
-          <li>🎯 选择你真正感兴趣的活动类型，匹配会更精准</li>
-          <li>💬 主动和新朋友聊天，打破交友的冰山</li>
-        </ul>
-      </Card>
     </div>
   );
 }

@@ -1,9 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 import { EVENT_TYPE_COLORS } from "@/lib/constants";
+import { Calendar, MapPin, Users } from "lucide-react";
 import Link from "next/link";
 
 interface EventCardProps {
@@ -12,20 +11,13 @@ interface EventCardProps {
     title: string;
     type: string;
     city: string;
-    address?: string | null;
     date: Date | string;
     imageUrl?: string | null;
     maxAttendees: number;
     priceAmount: number;
     status: string;
-    creator: {
-      id: string;
-      name: string;
-      avatarUrl?: string | null;
-    };
-    _count: {
-      attendances: number;
-    };
+    creator: { id: string; name: string; avatarUrl?: string | null };
+    _count: { attendances: number };
   };
   currentUserId?: string;
 }
@@ -33,94 +25,114 @@ interface EventCardProps {
 export function EventCard({ event }: EventCardProps) {
   const date = new Date(event.date);
   const formattedDate = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
+    weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
 
   const confirmed = event._count.attendances;
-  const percentage = Math.round((confirmed / event.maxAttendees) * 100);
+  const remaining = event.maxAttendees - confirmed;
   const colors = EVENT_TYPE_COLORS[event.type] || EVENT_TYPE_COLORS["其他"];
 
-  const creatorInitial = event.creator.name.charAt(0);
-
   return (
-    <Link href={`/events/${event.id}`}>
-      <Card className="overflow-hidden card-hover cursor-pointer border-0 shadow-md bg-white">
-        {/* Image or gradient placeholder */}
-        <div className="relative h-40 bg-gradient-to-br from-[#FF2D55] via-[#FF4D7E] to-[#FF6B35] overflow-hidden">
+    <Link href={`/events/${event.id}`} className="group block">
+      <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow duration-300 bg-white rounded-3xl">
+        {/* Image area */}
+        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
           {event.imageUrl ? (
             <img
               src={event.imageUrl}
               alt={event.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-5xl">✨</span>
+            <div className={`w-full h-full flex items-center justify-center ${colors.bg}`}>
+              <span className="text-6xl">{colors.icon}</span>
             </div>
           )}
+          {/* Price chip */}
+          <div className="absolute top-4 left-4">
+            {event.priceAmount === 0 ? (
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm text-gray-700 shadow-sm">
+                免费
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-[#1d1d1f]/80 backdrop-blur-sm text-white shadow-sm">
+                ￥{event.priceAmount}
+              </span>
+            )}
+          </div>
+          {/* Type badge */}
+          <div className="absolute top-4 right-4">
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+              {event.type}
+            </span>
+          </div>
+          {/* Cancelled overlay */}
           {event.status === "CANCELLED" && (
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <Badge variant="destructive" className="text-lg">
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+              <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-500">
                 已取消
-              </Badge>
+              </span>
             </div>
           )}
         </div>
 
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <Badge className={`${colors.bg} ${colors.text} border-0 mb-2`}>
-                {event.type}
-              </Badge>
-              <h3 className="font-semibold text-base line-clamp-2">
-                {event.title}
-              </h3>
+        {/* Content */}
+        <div className="p-5 space-y-4">
+          <h3 className="font-semibold text-[17px] leading-snug text-[#1d1d1f] line-clamp-2 group-hover:text-[#0071e3] transition-colors">
+            {event.title}
+          </h3>
+
+          <div className="space-y-2 text-sm text-[#86868b]">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 flex-shrink-0" />
+              <span>{formattedDate}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{event.city}</span>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-3">
-          {/* Location and date */}
-          <div className="space-y-1 text-sm text-gray-600">
-            <div>📍 {event.city}</div>
-            <div>🕐 {formattedDate}</div>
-          </div>
-
-          {/* Attendees progress */}
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-gray-600">
-              <span>参加人数</span>
-              <span>
-                {confirmed} / {event.maxAttendees}
+          {/* Attendees bar */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-[#86868b]" />
+              <span className="text-xs text-[#86868b]">
+                {confirmed}/{event.maxAttendees}
               </span>
+              {remaining > 0 && remaining <= 2 && (
+                <span className="text-xs text-orange-500 font-medium ml-1">
+                  仅剩 {remaining} 席
+                </span>
+              )}
             </div>
-            <Progress value={percentage} className="h-2" />
-          </div>
-
-          {/* Price */}
-          <div className="flex items-center justify-between">
-            {event.priceAmount === 0 ? (
-              <Badge className="bg-green-100 text-green-700 border-0">免费</Badge>
-            ) : (
-              <Badge className="bg-gradient-to-r from-[#FF2D55] to-[#FF6B35] text-white border-0">
-                ￥{event.priceAmount}
-              </Badge>
-            )}
+            {/* Mini progress bar */}
+            <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  confirmed >= event.maxAttendees
+                    ? "bg-orange-400"
+                    : confirmed / event.maxAttendees > 0.7
+                    ? "bg-amber-400"
+                    : "bg-[#0071e3]"
+                }`}
+                style={{ width: `${Math.min(100, (confirmed / event.maxAttendees) * 100)}%` }}
+              />
+            </div>
           </div>
 
           {/* Creator */}
-          <div className="flex items-center gap-2 pt-2 border-t">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FF2D55] to-[#FF6B35] flex items-center justify-center text-xs font-semibold text-white">
-              {creatorInitial}
+          <div className="flex items-center gap-2 pt-3 border-t border-gray-50">
+            <div className="w-6 h-6 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-xs font-medium text-[#0071e3]">
+              {event.creator.name.charAt(0)}
             </div>
-            <span className="text-xs text-gray-600">{event.creator.name}</span>
+            <span className="text-xs text-[#86868b]">{event.creator.name}</span>
           </div>
-        </CardContent>
+        </div>
       </Card>
     </Link>
   );

@@ -5,11 +5,12 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Shield, Sparkles } from "lucide-react";
 
 export default async function NewEventPage({
   searchParams,
 }: {
-  searchParams: { matchId?: string };
+  searchParams: Promise<{ matchId?: string }>;
 }) {
   const session = await auth();
 
@@ -17,81 +18,88 @@ export default async function NewEventPage({
     redirect("/login");
   }
 
-  // 获取用户信息，检查是否有权限创建活动
   const user = await db.user.findUnique({
     where: { id: session.user.id as string },
     select: { canCreateEvents: true, role: true },
   });
 
-  // 只有管理员或授权用户才能创建活动
   if (!user?.canCreateEvents && user?.role !== "ADMIN") {
     return (
-      <div className="max-w-2xl mx-auto py-12 px-4">
-        <Card className="p-8 border-0 shadow-md bg-gradient-to-br from-orange-50 to-red-50">
-          <div className="text-center space-y-6">
-            <div className="text-6xl mb-4">🔒</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              权限限制
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <Card className="border-0 shadow-sm rounded-3xl p-8 bg-white text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#f5f5f7] mb-5">
+              <Shield className="w-7 h-7 text-[#86868b]" />
+            </div>
+            <h1 className="text-[21px] font-bold text-[#1d1d1f] mb-2">
+              需要活动创建权限
             </h1>
-            <p className="text-lg text-gray-700 mb-4">
-              目前只有系统管理员授权的用户可以发起活动。
+            <p className="text-[15px] text-[#86868b] mb-6">
+              目前仅授权用户可发起活动。如果你想成为组织者，请联系我们。
             </p>
-            <p className="text-gray-600 mb-6">
-              如果您想成为活动组织者，请联系我们的管理员。我们期待您的活动创意！
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex gap-3 justify-center">
               <Link href="/events">
-                <Button className="btn-brand text-white">
-                  浏览现有活动
+                <Button className="rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-medium">
+                  浏览活动
                 </Button>
               </Link>
               <Link href="/messages">
-                <Button variant="outline">
+                <Button variant="ghost" className="rounded-full text-[#86868b]">
                   联系管理员
                 </Button>
               </Link>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     );
   }
 
+  const { matchId } = await searchParams;
   let matchData = null;
-  if (searchParams.matchId) {
+  if (matchId) {
     matchData = await db.match.findUnique({
-      where: { id: searchParams.matchId },
+      where: { id: matchId },
       include: {
         members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
+          include: { user: { select: { id: true, name: true } } },
         },
       },
     });
-
-    // 验证当前用户是匹配的成员
     if (!matchData?.members.some((m) => m.userId === session.user?.id)) {
       redirect("/events");
     }
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">创建活动</h1>
-      {matchData && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-blue-700">
-            ✨ 基于匹配创建 - 将邀请{matchData.members.length}位匹配成员自动加入
+    <div className="min-h-screen bg-[#f5f5f7]">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+        <div className="mb-8">
+          <h1 className="text-[34px] font-bold text-[#1d1d1f] tracking-tight">
+            发起活动
+          </h1>
+          <p className="mt-1 text-[17px] text-[#86868b]">
+            选择时间和地点，我们帮你找到合适的伙伴
           </p>
         </div>
-      )}
-      <EventForm mode="create" matchId={searchParams.matchId} matchMembers={matchData?.members.map(m => m.userId) || []} />
+
+        {matchData && (
+          <div className="mb-6 p-4 bg-[#0071e3]/5 border border-[#0071e3]/10 rounded-2xl flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-[#0071e3] flex-shrink-0" />
+            <p className="text-[15px] text-[#0071e3] font-medium">
+              基于匹配创建 — 将自动邀请 {matchData.members.length} 位匹配成员
+            </p>
+          </div>
+        )}
+
+        <Card className="border-0 shadow-sm rounded-3xl p-6 sm:p-8 bg-white">
+          <EventForm
+            mode="create"
+            matchId={matchId}
+            matchMembers={matchData?.members.map((m) => m.userId) || []}
+          />
+        </Card>
+      </div>
     </div>
   );
 }

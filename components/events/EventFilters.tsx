@@ -2,91 +2,84 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { EVENT_TYPES } from "@/lib/constants";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EVENT_TYPES, CITIES } from "@/lib/constants";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
+import { Search, X } from "lucide-react";
 
-export function EventFilters() {
+function EventFiltersInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [city, setCity] = useState(searchParams.get("city") || "");
   const [type, setType] = useState(searchParams.get("type") || "");
 
-  const handleCityChange = useCallback(
-    (value: string) => {
-      setCity(value);
-      const params = new URLSearchParams(searchParams);
-      if (value) {
-        params.set("city", value);
-      } else {
-        params.delete("city");
-      }
-      router.push(`/events?${params.toString()}`);
-    },
-    [searchParams, router]
-  );
-
-  const handleTypeChange = useCallback(
-    (value: string) => {
-      setType(value);
-      const params = new URLSearchParams(searchParams);
-      if (value) {
-        params.set("type", value);
-      } else {
-        params.delete("type");
-      }
-      router.push(`/events?${params.toString()}`);
-    },
-    [searchParams, router]
-  );
-
-  const handleClear = useCallback(() => {
-    setCity("");
-    setType("");
-    router.push("/events");
-  }, [router]);
-
   const hasFilters = city || type;
 
-  return (
-    <div className="flex gap-3 mb-6 flex-wrap">
-      <Input
-        placeholder="搜索城市..."
-        value={city}
-        onChange={(e) => handleCityChange(e.target.value)}
-        className="max-w-xs"
-      />
+  const handleFilter = useCallback(
+    (key: string, value: string) => {
+      const params = new URLSearchParams(searchParams);
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+      router.push(`/events?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
 
-      <Select value={type} onValueChange={(value) => handleTypeChange(value || "")}>
-        <SelectTrigger className="max-w-xs">
-          <SelectValue placeholder="选择类型" />
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="relative max-w-[200px]">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
+        <Input
+          placeholder="搜索城市..."
+          value={city}
+          onChange={(e) => {
+            setCity(e.target.value);
+            handleFilter("city", e.target.value);
+          }}
+          className="pl-9 rounded-xl border-gray-200 bg-white text-[15px] h-10 w-full"
+        />
+      </div>
+
+      <Select value={type} onValueChange={(v) => { setType(v || ""); handleFilter("type", v || ""); }}>
+        <SelectTrigger className="max-w-[160px] rounded-xl border-gray-200 bg-white text-[15px] h-10">
+          <SelectValue placeholder="活动类型" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="">全部类型</SelectItem>
           {EVENT_TYPES.map((t) => (
-            <SelectItem key={t} value={t}>
-              {t}
-            </SelectItem>
+            <SelectItem key={t} value={t}>{t}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       {hasFilters && (
         <Button
-          variant="outline"
-          onClick={handleClear}
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setCity("");
+            setType("");
+            router.push("/events");
+          }}
+          className="rounded-full text-[13px] text-[#86868b] hover:text-[#1d1d1f]"
         >
+          <X className="w-3.5 h-4 mr-1" />
           清除筛选
         </Button>
       )}
     </div>
+  );
+}
+
+export function EventFilters() {
+  return (
+    <Suspense fallback={<div className="h-10" />}>
+      <EventFiltersInner />
+    </Suspense>
   );
 }

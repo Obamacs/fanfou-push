@@ -5,16 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { EVENT_TYPES, CITIES } from "@/lib/constants";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EVENT_TYPES, CITIES, EVENT_TYPE_COLORS } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 
 interface EventFormProps {
   mode: "create" | "edit";
@@ -44,24 +39,19 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
   const [city, setCity] = useState(initialData?.city || "");
   const [address, setAddress] = useState(initialData?.address || "");
   const [date, setDate] = useState(
-    initialData?.date
-      ? new Date(initialData.date).toISOString().slice(0, 16)
-      : ""
+    initialData?.date ? new Date(initialData.date).toISOString().slice(0, 16) : ""
   );
-  const [maxAttendees, setMaxAttendees] = useState(
-    initialData?.maxAttendees?.toString() || "6"
-  );
-  const [priceAmount, setPriceAmount] = useState(
-    initialData?.priceAmount?.toString() || "0"
-  );
+  const [maxAttendees, setMaxAttendees] = useState(initialData?.maxAttendees?.toString() || "6");
+  const [priceAmount, setPriceAmount] = useState(initialData?.priceAmount?.toString() || "0");
   const [description, setDescription] = useState(initialData?.description || "");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
+
+  const selectedColors = EVENT_TYPE_COLORS[type] || EVENT_TYPE_COLORS["其他"];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // Client-side validation
     if (!title.trim() || !type || !city || !date) {
       setError("请填写所有必填项");
       return;
@@ -118,94 +108,106 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
         return;
       }
 
-      if (mode === "create") {
-        router.push("/events");
-      } else {
-        router.push(`/events/${initialData?.id}`);
-      }
-    } catch (err) {
+      router.push(mode === "create" ? "/events" : `/events/${initialData?.id}`);
+      router.refresh();
+    } catch {
       setError("网络错误，请重试");
     } finally {
       setLoading(false);
     }
   };
 
+  const inputClass = "rounded-xl border-gray-200 bg-white focus:border-[#0071e3] focus:ring-[#0071e3] text-[15px] h-12";
+  const labelClass = "text-[13px] font-semibold text-[#1d1d1f] mb-1.5";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-7">
       {/* Title */}
-      <div className="space-y-2">
-        <Label htmlFor="title">活动标题 *</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="title" className={labelClass}>活动标题 *</Label>
         <Input
           id="title"
-          placeholder="例如：周末户外爬山"
+          placeholder="给你的活动起个吸引人的名字"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={loading}
+          className={inputClass}
         />
       </div>
 
-      {/* Type */}
-      <div className="space-y-2">
-        <Label htmlFor="type">活动类型 *</Label>
-        <Select value={type} onValueChange={(value) => setType(value || "")} disabled={loading}>
-          <SelectTrigger>
-            <SelectValue placeholder="选择活动类型" />
-          </SelectTrigger>
-          <SelectContent>
-            {EVENT_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Image Upload */}
+      <div className="space-y-1.5">
+        <Label className={labelClass}>活动封面</Label>
+        <ImageUpload value={imageUrl} onChange={setImageUrl} label="选择活动封面图片" type="event" />
       </div>
 
-      {/* City */}
-      <div className="space-y-2">
-        <Label htmlFor="city">所在城市 *</Label>
-        <Select value={city} onValueChange={(value) => setCity(value || "")} disabled={loading}>
-          <SelectTrigger>
-            <SelectValue placeholder="选择城市" />
-          </SelectTrigger>
-          <SelectContent>
-            {CITIES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Type + City */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className={labelClass}>活动类型 *</Label>
+          <Select value={type} onValueChange={(v) => setType(v || "")} disabled={loading}>
+            <SelectTrigger className={inputClass}>
+              <SelectValue placeholder="选择类型" />
+            </SelectTrigger>
+            <SelectContent>
+              {EVENT_TYPES.map((t) => {
+                const c = EVENT_TYPE_COLORS[t];
+                return (
+                  <SelectItem key={t} value={t}>
+                    <span className="flex items-center gap-2">
+                      <span>{c?.icon}</span> {t}
+                    </span>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className={labelClass}>所在城市 *</Label>
+          <Select value={city} onValueChange={(v) => setCity(v || "")} disabled={loading}>
+            <SelectTrigger className={inputClass}>
+              <SelectValue placeholder="选择城市" />
+            </SelectTrigger>
+            <SelectContent>
+              {CITIES.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Address */}
-      <div className="space-y-2">
-        <Label htmlFor="address">详细地址</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="address" className={labelClass}>详细地址</Label>
         <Input
           id="address"
-          placeholder="具体位置"
+          placeholder="具体位置（选填）"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           disabled={loading}
+          className={inputClass}
         />
       </div>
 
-      {/* Date and Time */}
-      <div className="space-y-2">
-        <Label htmlFor="date">活动时间 *</Label>
+      {/* Date + Time */}
+      <div className="space-y-1.5">
+        <Label htmlFor="date" className={labelClass}>活动时间 *</Label>
         <Input
           id="date"
           type="datetime-local"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           disabled={loading}
+          className={inputClass}
         />
       </div>
 
-      {/* Max Attendees */}
+      {/* Max + Price */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="maxAttendees">最多人数</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="maxAttendees" className={labelClass}>最多人数</Label>
           <Input
             id="maxAttendees"
             type="number"
@@ -214,12 +216,11 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
             value={maxAttendees}
             onChange={(e) => setMaxAttendees(e.target.value)}
             disabled={loading}
+            className={inputClass}
           />
         </div>
-
-        {/* Price */}
-        <div className="space-y-2">
-          <Label htmlFor="priceAmount">活动费用（元）</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="priceAmount" className={labelClass}>活动费用（元）</Label>
           <Input
             id="priceAmount"
             type="number"
@@ -227,48 +228,44 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
             value={priceAmount}
             onChange={(e) => setPriceAmount(e.target.value)}
             disabled={loading}
+            className={inputClass}
           />
         </div>
       </div>
 
       {/* Description */}
-      <div className="space-y-2">
-        <Label htmlFor="description">活动描述</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="description" className={labelClass}>活动描述</Label>
         <Textarea
           id="description"
-          placeholder="详细介绍活动内容、集合地点、注意事项等"
+          placeholder="介绍活动内容、集合地点、注意事项等，让参与者了解更多细节"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={loading}
           rows={4}
+          className="rounded-xl border-gray-200 bg-white focus:border-[#0071e3] text-[15px]"
         />
       </div>
 
-      {/* Image Upload */}
-      <div className="space-y-2">
-        <Label>活动图片</Label>
-        <ImageUpload
-          value={imageUrl}
-          onChange={setImageUrl}
-          label="选择活动图片"
-          type="event"
-        />
-      </div>
+      {/* Error */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-medium">
+          {error}
+        </div>
+      )}
 
-      {/* Error message */}
-      {error && <div className="text-sm text-red-600">{error}</div>}
-
-      {/* Submit button */}
+      {/* Submit */}
       <Button
         type="submit"
         disabled={loading}
-        className="w-full"
+        className="w-full rounded-xl py-3 bg-[#0071e3] hover:bg-[#0077ED] text-white text-[15px] font-semibold h-12"
       >
-        {loading
-          ? "提交中..."
-          : mode === "create"
-          ? "创建活动"
-          : "保存修改"}
+        {loading ? "提交中..." : mode === "create" ? (
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            创建活动
+          </span>
+        ) : "保存修改"}
       </Button>
     </form>
   );

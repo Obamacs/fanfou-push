@@ -3,8 +3,8 @@ import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "饭否 · 找到你的朋友圈",
-  description: "连接志同道合的人，建立真实的友谊",
+  title: "饭否 · 将陌生人变成朋友",
+  description: "无需个人简介，无需滑动匹配，无需费心策划。每周的聚会，让有趣的人自然相遇。",
 };
 
 export default function RootLayout({

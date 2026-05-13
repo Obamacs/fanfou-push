@@ -3,90 +3,96 @@ import { db } from "@/lib/db";
 import { EventCard } from "@/components/events/EventCard";
 import { EventFilters } from "@/components/events/EventFilters";
 import { Button } from "@/components/ui/button";
+import { Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 interface EventsPageProps {
-  searchParams: {
-    city?: string;
-    type?: string;
-  };
+  searchParams: Promise<{ city?: string; type?: string }>;
 }
 
 export default async function EventsPage({ searchParams }: EventsPageProps) {
   const session = await auth();
+  const { city, type } = await searchParams;
 
   const where: any = {
     status: { not: "CANCELLED" },
   };
 
-  if (searchParams.city) {
-    where.city = { contains: searchParams.city, mode: "insensitive" };
+  if (city) {
+    where.city = { contains: city, mode: "insensitive" };
   }
 
-  if (searchParams.type) {
-    where.type = searchParams.type;
+  if (type) {
+    where.type = type;
   }
 
   const events = await db.event.findMany({
     where,
     include: {
-      creator: {
-        select: { id: true, name: true, avatarUrl: true },
-      },
-      _count: {
-        select: {
-          attendances: {
-            where: { status: "CONFIRMED" },
-          },
-        },
-      },
+      creator: { select: { id: true, name: true, avatarUrl: true } },
+      _count: { select: { attendances: { where: { status: "CONFIRMED" } } } },
     },
     orderBy: { date: "asc" },
     take: 20,
   });
 
   return (
-    <div className="py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#f5f5f7]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">发现活动</h1>
-          {session?.user && (
-            <Link href="/events/new">
-              <Button>创建活动</Button>
-            </Link>
-          )}
+        <div className="mb-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-[#1d1d1f] tracking-tight">
+                发现活动
+              </h1>
+              <p className="mt-2 text-[17px] text-[#86868b]">
+                选择你感兴趣的活动，直接出现就好
+              </p>
+            </div>
+            {session?.user && (
+              <Link href="/events/new">
+                <Button className="rounded-full px-5 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white text-[15px] font-medium shadow-sm">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  发起活动
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
-        <EventFilters />
+        <div className="mb-8">
+          <EventFilters />
+        </div>
 
         {/* Events grid */}
         {events.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
               <EventCard
                 key={event.id}
-                event={{
-                  ...event,
-                  date: event.date,
-                }}
+                event={{ ...event, date: event.date }}
                 currentUserId={session?.user?.id}
               />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">📭</div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gray-100 mb-6">
+              <Sparkles className="w-8 h-8 text-[#86868b]" />
+            </div>
+            <h2 className="text-[21px] font-semibold text-[#1d1d1f] mb-2">
               暂无活动
             </h2>
-            <p className="text-gray-600 mb-6">
-              成为第一个发起人，创建属于你的活动吧！
+            <p className="text-[15px] text-[#86868b] mb-8 max-w-sm mx-auto">
+              成为第一个发起人，选择时间地点，我们帮你找到志同道合的伙伴
             </p>
             {session?.user && (
               <Link href="/events/new">
-                <Button>创建活动</Button>
+                <Button className="rounded-full px-6 py-2.5 bg-[#0071e3] hover:bg-[#0077ED] text-white font-medium">
+                  创建第一个活动
+                </Button>
               </Link>
             )}
           </div>
