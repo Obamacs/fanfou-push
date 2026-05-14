@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-
 interface OptionButtonProps {
   value: string;
   label: string;
@@ -45,7 +43,7 @@ export function OptionGrid({
   columns = 2,
 }: OptionGridProps) {
   return (
-    <div className={`grid grid-cols-${columns} gap-3`}>
+    <div className={`grid ${columns === 3 ? "grid-cols-3" : "grid-cols-2"} gap-3`}>
       {options.map((option) => (
         <OptionButton
           key={option.value}

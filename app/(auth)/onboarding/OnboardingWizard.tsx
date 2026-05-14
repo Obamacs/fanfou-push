@@ -313,7 +313,15 @@ export default function OnboardingWizard({
           <StepSection title="回答几个问题">
             <div className="space-y-6">
               {questions.map((question) => {
-                const options = question.options ? JSON.parse(question.options) : [];
+                let options: string[] = [];
+                if (question.options) {
+                  try {
+                    const parsed = JSON.parse(question.options);
+                    options = Array.isArray(parsed) ? parsed : [];
+                  } catch {
+                    options = [];
+                  }
+                }
                 const currentAnswer = state.answers.find(
                   (a) => a.questionId === question.id
                 )?.answer;

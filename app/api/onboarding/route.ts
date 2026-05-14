@@ -7,7 +7,6 @@ import {
   RELATIONSHIP_GOAL_OPTIONS,
   HABIT_OPTIONS,
   CHILDREN_OPTIONS,
-  CITY_OPTIONS,
 } from "@/lib/onboarding-constants";
 
 export async function POST(req: NextRequest) {
@@ -49,8 +48,8 @@ export async function POST(req: NextRequest) {
     if (wantsChildren && !validChildren.includes(wantsChildren)) {
       return NextResponse.json({ error: "生育意愿无效" }, { status: 400 });
     }
-    if (!CITY_OPTIONS.includes(city)) {
-      return NextResponse.json({ error: "城市选择无效" }, { status: 400 });
+    if (!city || typeof city !== "string" || city.trim().length === 0) {
+      return NextResponse.json({ error: "请选择或输入城市" }, { status: 400 });
     }
 
     const userId = session.user.id as string;

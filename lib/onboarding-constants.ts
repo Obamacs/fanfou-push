@@ -41,8 +41,8 @@ export const STEP_VALIDATION = {
     state.smokingHabit !== "" &&
     state.drinkingHabit !== "" &&
     state.wantsChildren !== "",
-  5: (state: any) => true, // 头像可选
-  6: (state: any) => state.selectedInterests.length >= 1, // 至少选1个兴趣
+  5: () => true, // 头像可选
+  6: (state: any) => state.selectedInterests.length >= 3, // 至少选3个兴趣
   7: (state: any) => state.city !== "",
   8: (state: any, questionsCount: number) =>
     state.answers.length === questionsCount,
