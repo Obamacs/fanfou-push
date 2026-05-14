@@ -15,11 +15,11 @@ async function Navbar() {
   return (
     <>
       {/* Desktop navbar — Apple-style translucent */}
-      <nav className="hidden md:block bg-white/80 backdrop-blur-xl border-b border-gray-200/60 sticky top-0 z-40">
+      <nav className="hidden md:block bg-white/85 backdrop-blur-xl border-b border-[#F0E4E0] sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-[#1d1d1f] tracking-tight">饭否</span>
+            <span className="text-xl font-bold text-[#2D2420] tracking-tight">饭否</span>
           </Link>
 
           {/* Nav links */}
@@ -34,7 +34,7 @@ async function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-[13px] text-[#86868b] hover:text-[#1d1d1f] transition-colors"
+                className="text-[13px] text-[#B8A099] hover:text-[#FF2442] transition-colors"
               >
                 {item.label}
               </Link>
@@ -43,11 +43,11 @@ async function Navbar() {
 
           {/* User area */}
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-xs font-semibold text-[#0071e3]">
+            <div className="w-7 h-7 rounded-full bg-[#FF2442]/10 flex items-center justify-center text-xs font-semibold text-[#FF2442]">
               {session.user?.email?.[0]?.toUpperCase() || "U"}
             </div>
             <form action={signOutAction}>
-              <Button type="submit" variant="ghost" size="sm" className="text-[13px] text-[#86868b] hover:text-[#1d1d1f] rounded-full">
+              <Button type="submit" variant="ghost" size="sm" className="text-[13px] text-[#B8A099] hover:text-[#2D2420] rounded-full">
                 退出
               </Button>
             </form>
@@ -56,7 +56,7 @@ async function Navbar() {
       </nav>
 
       {/* Mobile bottom TabBar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200/60 z-40 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/85 backdrop-blur-xl border-t border-[#F0E4E0] z-40 safe-area-bottom">
         <div className="flex justify-around items-center">
           {[
             { href: "/dashboard", icon: Home, label: "首页" },
@@ -68,7 +68,7 @@ async function Navbar() {
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center justify-center py-2.5 text-[#86868b] hover:text-[#0071e3] transition-colors"
+              className="flex-1 flex flex-col items-center justify-center py-2.5 text-[#B8A099] hover:text-[#FF2442] transition-colors"
             >
               <Icon size={22} />
               <span className="text-[10px] mt-0.5">{label}</span>
@@ -86,7 +86,7 @@ export default async function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#f5f5f7] pb-20 md:pb-0">
+    <div className="min-h-screen bg-[#FFFAF8] pb-20 md:pb-0">
       <Navbar />
       <main>{children}</main>
     </div>

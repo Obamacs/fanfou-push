@@ -33,7 +33,7 @@ function EventFiltersInner() {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative max-w-[200px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8A099]" />
         <Input
           placeholder="搜索城市..."
           value={city}
@@ -66,7 +66,7 @@ function EventFiltersInner() {
             setType("");
             router.push("/events");
           }}
-          className="rounded-full text-[13px] text-[#86868b] hover:text-[#1d1d1f]"
+          className="rounded-full text-[13px] text-[#B8A099] hover:text-[#2D2420]"
         >
           <X className="w-3.5 h-4 mr-1" />
           清除筛选

@@ -16,7 +16,7 @@ export default function RootLayout({
     <html
       lang="zh-CN"
       className="h-full antialiased"
-      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', sans-serif" }}
+      style={{ fontFamily: "'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, -apple-system, sans-serif" }}
     >
       <body className="min-h-full flex flex-col">
         <SessionProvider>{children}</SessionProvider>

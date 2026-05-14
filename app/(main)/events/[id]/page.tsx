@@ -54,10 +54,10 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   }).format(eventDate);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7]">
+    <div className="min-h-screen bg-[#FFFAF8]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         {/* Back */}
-        <Link href="/events" className="inline-flex items-center gap-1 text-[15px] text-[#86868b] hover:text-[#1d1d1f] mb-6 transition-colors">
+        <Link href="/events" className="inline-flex items-center gap-1 text-[15px] text-[#B8A099] hover:text-[#2D2420] mb-6 transition-colors">
           <ChevronLeft className="w-4 h-4" />
           返回活动列表
         </Link>
@@ -102,7 +102,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
                event.status === "COMPLETED" ? "已结束" : "已取消"}
             </span>
           </div>
-          <h1 className="text-[34px] font-bold text-[#1d1d1f] tracking-tight leading-tight">
+          <h1 className="text-[34px] font-bold text-[#2D2420] tracking-tight leading-tight">
             {event.title}
           </h1>
         </div>
@@ -111,38 +111,38 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-4 h-4 text-[#1d1d1f]" />
+              <div className="w-9 h-9 rounded-xl bg-[#FFFAF8] flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-4 h-4 text-[#2D2420]" />
               </div>
               <div>
-                <div className="text-xs text-[#86868b] mb-0.5">时间</div>
-                <div className="text-[15px] font-semibold text-[#1d1d1f]">{formattedDate}</div>
-                <div className="text-[13px] text-[#86868b]">{formattedTime}</div>
+                <div className="text-xs text-[#B8A099] mb-0.5">时间</div>
+                <div className="text-[15px] font-semibold text-[#2D2420]">{formattedDate}</div>
+                <div className="text-[13px] text-[#B8A099]">{formattedTime}</div>
               </div>
             </div>
           </Card>
 
           <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-4 h-4 text-[#1d1d1f]" />
+              <div className="w-9 h-9 rounded-xl bg-[#FFFAF8] flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-4 h-4 text-[#2D2420]" />
               </div>
               <div>
-                <div className="text-xs text-[#86868b] mb-0.5">地点</div>
-                <div className="text-[15px] font-semibold text-[#1d1d1f]">{event.city}</div>
-                {event.address && <div className="text-[13px] text-[#86868b]">{event.address}</div>}
+                <div className="text-xs text-[#B8A099] mb-0.5">地点</div>
+                <div className="text-[15px] font-semibold text-[#2D2420]">{event.city}</div>
+                {event.address && <div className="text-[13px] text-[#B8A099]">{event.address}</div>}
               </div>
             </div>
           </Card>
 
           <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center flex-shrink-0">
-                <Ticket className="w-4 h-4 text-[#1d1d1f]" />
+              <div className="w-9 h-9 rounded-xl bg-[#FFFAF8] flex items-center justify-center flex-shrink-0">
+                <Ticket className="w-4 h-4 text-[#2D2420]" />
               </div>
               <div>
-                <div className="text-xs text-[#86868b] mb-0.5">费用</div>
-                <div className="text-[15px] font-semibold text-[#1d1d1f]">
+                <div className="text-xs text-[#B8A099] mb-0.5">费用</div>
+                <div className="text-[15px] font-semibold text-[#2D2420]">
                   {event.priceAmount === 0 ? "免费" : `￥${event.priceAmount}`}
                 </div>
               </div>
@@ -151,17 +151,17 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
 
           <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center flex-shrink-0">
-                <Users className="w-4 h-4 text-[#1d1d1f]" />
+              <div className="w-9 h-9 rounded-xl bg-[#FFFAF8] flex items-center justify-center flex-shrink-0">
+                <Users className="w-4 h-4 text-[#2D2420]" />
               </div>
               <div>
-                <div className="text-xs text-[#86868b] mb-0.5">名额</div>
-                <div className="text-[15px] font-semibold text-[#1d1d1f]">
+                <div className="text-xs text-[#B8A099] mb-0.5">名额</div>
+                <div className="text-[15px] font-semibold text-[#2D2420]">
                   {event._count.attendances} / {event.maxAttendees} 人
                 </div>
                 {isFull && <div className="text-[13px] text-orange-500">已满员</div>}
                 {!isFull && event._count.attendances < event.maxAttendees && (
-                  <div className="text-[13px] text-[#86868b]">
+                  <div className="text-[13px] text-[#B8A099]">
                     剩余 {event.maxAttendees - event._count.attendances} 个名额
                   </div>
                 )}
@@ -173,8 +173,8 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         {/* Description */}
         {event.description && (
           <div className="mb-8">
-            <h2 className="text-[19px] font-semibold text-[#1d1d1f] mb-3">关于活动</h2>
-            <p className="text-[15px] text-[#86868b] leading-relaxed whitespace-pre-wrap">
+            <h2 className="text-[19px] font-semibold text-[#2D2420] mb-3">关于活动</h2>
+            <p className="text-[15px] text-[#B8A099] leading-relaxed whitespace-pre-wrap">
               {event.description}
             </p>
           </div>
@@ -182,7 +182,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
 
         {/* Map */}
         <div className="mb-8">
-          <h2 className="text-[19px] font-semibold text-[#1d1d1f] mb-3">活动地点</h2>
+          <h2 className="text-[19px] font-semibold text-[#2D2420] mb-3">活动地点</h2>
           <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
             <AMap latitude={event.latitude} longitude={event.longitude} address={event.address} city={event.city} title={event.title} />
           </Card>
@@ -190,7 +190,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
 
         {/* Attendees */}
         <div className="mb-8">
-          <h2 className="text-[19px] font-semibold text-[#1d1d1f] mb-3">
+          <h2 className="text-[19px] font-semibold text-[#2D2420] mb-3">
             参加者 ({confirmedAttendees.length})
           </h2>
           <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white">
@@ -198,21 +198,21 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
               <div className="flex flex-wrap gap-4">
                 {confirmedAttendees.map((att) => (
                   <div key={att.userId} className="flex flex-col items-center gap-1.5">
-                    <div className="w-11 h-11 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-sm font-semibold text-[#0071e3]">
+                    <div className="w-11 h-11 rounded-full bg-[#FF2442]/10 flex items-center justify-center text-sm font-semibold text-[#FF2442]">
                       {att.user.name.charAt(0)}
                     </div>
-                    <span className="text-xs text-[#86868b] max-w-[64px] truncate">
+                    <span className="text-xs text-[#B8A099] max-w-[64px] truncate">
                       {att.user.name}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-[15px] text-[#86868b]">还没有参加者，来做第一个吧</p>
+              <p className="text-[15px] text-[#B8A099]">还没有参加者，来做第一个吧</p>
             )}
             {waitlistedCount > 0 && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-sm text-[#86868b]">{waitlistedCount} 人在候补中</p>
+                <p className="text-sm text-[#B8A099]">{waitlistedCount} 人在候补中</p>
               </div>
             )}
           </Card>
@@ -221,12 +221,12 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         {/* Creator */}
         <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#0071e3]/10 flex items-center justify-center font-semibold text-[#0071e3]">
+            <div className="w-10 h-10 rounded-full bg-[#FF2442]/10 flex items-center justify-center font-semibold text-[#FF2442]">
               {event.creator.name.charAt(0)}
             </div>
             <div>
-              <div className="text-xs text-[#86868b]">发起人</div>
-              <div className="text-[15px] font-semibold text-[#1d1d1f]">{event.creator.name}</div>
+              <div className="text-xs text-[#B8A099]">发起人</div>
+              <div className="text-[15px] font-semibold text-[#2D2420]">{event.creator.name}</div>
             </div>
           </div>
         </Card>
@@ -236,7 +236,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
           {isCreator ? (
             <>
               <Link href={`/events/${event.id}/edit`}>
-                <Button className="rounded-full px-6 bg-[#0071e3] hover:bg-[#0077ED] text-white font-medium">
+                <Button className="rounded-full px-6 bg-[#FF2442] hover:bg-[#FF4D63] text-white font-medium">
                   编辑活动
                 </Button>
               </Link>

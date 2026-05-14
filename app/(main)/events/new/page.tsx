@@ -25,26 +25,26 @@ export default async function NewEventPage({
 
   if (!user?.canCreateEvents && user?.role !== "ADMIN") {
     return (
-      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#FFFAF8] flex items-center justify-center px-4">
         <div className="max-w-md w-full">
           <Card className="border-0 shadow-sm rounded-3xl p-8 bg-white text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#f5f5f7] mb-5">
-              <Shield className="w-7 h-7 text-[#86868b]" />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#FFFAF8] mb-5">
+              <Shield className="w-7 h-7 text-[#B8A099]" />
             </div>
-            <h1 className="text-[21px] font-bold text-[#1d1d1f] mb-2">
+            <h1 className="text-[21px] font-bold text-[#2D2420] mb-2">
               需要活动创建权限
             </h1>
-            <p className="text-[15px] text-[#86868b] mb-6">
+            <p className="text-[15px] text-[#B8A099] mb-6">
               目前仅授权用户可发起活动。如果你想成为组织者，请联系我们。
             </p>
             <div className="flex gap-3 justify-center">
               <Link href="/events">
-                <Button className="rounded-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-medium">
+                <Button className="rounded-full bg-[#FF2442] hover:bg-[#FF4D63] text-white font-medium">
                   浏览活动
                 </Button>
               </Link>
               <Link href="/messages">
-                <Button variant="ghost" className="rounded-full text-[#86868b]">
+                <Button variant="ghost" className="rounded-full text-[#B8A099]">
                   联系管理员
                 </Button>
               </Link>
@@ -72,21 +72,21 @@ export default async function NewEventPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7]">
+    <div className="min-h-screen bg-[#FFFAF8]">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-[34px] font-bold text-[#1d1d1f] tracking-tight">
+          <h1 className="text-[34px] font-bold text-[#2D2420] tracking-tight">
             发起活动
           </h1>
-          <p className="mt-1 text-[17px] text-[#86868b]">
+          <p className="mt-1 text-[17px] text-[#B8A099]">
             选择时间和地点，我们帮你找到合适的伙伴
           </p>
         </div>
 
         {matchData && (
-          <div className="mb-6 p-4 bg-[#0071e3]/5 border border-[#0071e3]/10 rounded-2xl flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-[#0071e3] flex-shrink-0" />
-            <p className="text-[15px] text-[#0071e3] font-medium">
+          <div className="mb-6 p-4 bg-[#FF2442]/5 border border-[#FF2442]/10 rounded-2xl flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-[#FF2442] flex-shrink-0" />
+            <p className="text-[15px] text-[#FF2442] font-medium">
               基于匹配创建 — 将自动邀请 {matchData.members.length} 位匹配成员
             </p>
           </div>

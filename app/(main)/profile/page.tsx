@@ -107,7 +107,7 @@ export default function ProfilePage() {
             setEditing(!editing);
           }}
           variant={editing ? "outline" : "default"}
-          className={editing ? "" : "bg-[#FF2D55] hover:bg-[#FF2D55]/90 text-white"}
+          className={editing ? "" : "bg-[#FF2442] hover:bg-[#FF2442]/90 text-white"}
         >
           {editing ? "取消" : "编辑"}
         </Button>
@@ -136,7 +136,7 @@ export default function ProfilePage() {
               type="avatar"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF2D55] to-[#FF6B35] flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF2442] to-[#FF6B35] flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="头像" className="w-full h-full object-cover" />
               ) : (
@@ -239,7 +239,7 @@ export default function ProfilePage() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 bg-[#FF2D55] hover:bg-[#FF2D55]/90 text-white"
+              className="flex-1 bg-[#FF2442] hover:bg-[#FF2442]/90 text-white"
             >
               {saving ? "保存中..." : "保存修改"}
             </Button>

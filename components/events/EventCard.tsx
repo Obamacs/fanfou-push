@@ -38,9 +38,9 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Link href={`/events/${event.id}`} className="group block">
-      <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow duration-300 bg-white rounded-3xl">
+      <Card className="overflow-hidden border-0 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 bg-white rounded-3xl">
         {/* Image area */}
-        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+        <div className="relative aspect-[4/3] bg-[#FFF5F3] overflow-hidden">
           {event.imageUrl ? (
             <img
               src={event.imageUrl}
@@ -59,7 +59,7 @@ export function EventCard({ event }: EventCardProps) {
                 免费
               </span>
             ) : (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-[#1d1d1f]/80 backdrop-blur-sm text-white shadow-sm">
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-[#2D2420]/80 backdrop-blur-sm text-white shadow-sm">
                 ￥{event.priceAmount}
               </span>
             )}
@@ -73,7 +73,7 @@ export function EventCard({ event }: EventCardProps) {
           {/* Cancelled overlay */}
           {event.status === "CANCELLED" && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-              <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-500">
+              <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-[#F0E4E0] text-[#B8A099]">
                 已取消
               </span>
             </div>
@@ -82,11 +82,11 @@ export function EventCard({ event }: EventCardProps) {
 
         {/* Content */}
         <div className="p-5 space-y-4">
-          <h3 className="font-semibold text-[17px] leading-snug text-[#1d1d1f] line-clamp-2 group-hover:text-[#0071e3] transition-colors">
+          <h3 className="font-semibold text-[17px] leading-snug text-[#2D2420] line-clamp-2 group-hover:text-[#FF2442] transition-colors">
             {event.title}
           </h3>
 
-          <div className="space-y-2 text-sm text-[#86868b]">
+          <div className="space-y-2 text-sm text-[#B8A099]">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 flex-shrink-0" />
               <span>{formattedDate}</span>
@@ -100,8 +100,8 @@ export function EventCard({ event }: EventCardProps) {
           {/* Attendees bar */}
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-[#86868b]" />
-              <span className="text-xs text-[#86868b]">
+              <Users className="w-4 h-4 text-[#B8A099]" />
+              <span className="text-xs text-[#B8A099]">
                 {confirmed}/{event.maxAttendees}
               </span>
               {remaining > 0 && remaining <= 2 && (
@@ -111,14 +111,14 @@ export function EventCard({ event }: EventCardProps) {
               )}
             </div>
             {/* Mini progress bar */}
-            <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-16 h-1 bg-[#F0E4E0] rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   confirmed >= event.maxAttendees
                     ? "bg-orange-400"
                     : confirmed / event.maxAttendees > 0.7
                     ? "bg-amber-400"
-                    : "bg-[#0071e3]"
+                    : "bg-[#FF2442]"
                 }`}
                 style={{ width: `${Math.min(100, (confirmed / event.maxAttendees) * 100)}%` }}
               />
@@ -127,10 +127,10 @@ export function EventCard({ event }: EventCardProps) {
 
           {/* Creator */}
           <div className="flex items-center gap-2 pt-3 border-t border-gray-50">
-            <div className="w-6 h-6 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-xs font-medium text-[#0071e3]">
+            <div className="w-6 h-6 rounded-full bg-[#FF2442]/10 flex items-center justify-center text-xs font-medium text-[#FF2442]">
               {event.creator.name.charAt(0)}
             </div>
-            <span className="text-xs text-[#86868b]">{event.creator.name}</span>
+            <span className="text-xs text-[#B8A099]">{event.creator.name}</span>
           </div>
         </div>
       </Card>

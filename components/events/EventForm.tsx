@@ -46,9 +46,7 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
   const [description, setDescription] = useState(initialData?.description || "");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
 
-  const selectedColors = EVENT_TYPE_COLORS[type] || EVENT_TYPE_COLORS["其他"];
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
@@ -117,8 +115,8 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
     }
   };
 
-  const inputClass = "rounded-xl border-gray-200 bg-white focus:border-[#0071e3] focus:ring-[#0071e3] text-[15px] h-12";
-  const labelClass = "text-[13px] font-semibold text-[#1d1d1f] mb-1.5";
+  const inputClass = "rounded-xl border-[#F0E4E0] bg-white focus:border-[#FF2442] focus:ring-[#FF2442] text-[15px] h-12 transition-colors";
+  const labelClass = "text-[13px] font-semibold text-[#2D2420] mb-1.5";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-7">
@@ -243,7 +241,7 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
           onChange={(e) => setDescription(e.target.value)}
           disabled={loading}
           rows={4}
-          className="rounded-xl border-gray-200 bg-white focus:border-[#0071e3] text-[15px]"
+          className="rounded-xl border-gray-200 bg-white focus:border-[#FF2442] text-[15px]"
         />
       </div>
 
@@ -258,7 +256,7 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
       <Button
         type="submit"
         disabled={loading}
-        className="w-full rounded-xl py-3 bg-[#0071e3] hover:bg-[#0077ED] text-white text-[15px] font-semibold h-12"
+        className="w-full rounded-xl py-3 bg-gradient-to-r from-[#FF2442] to-[#FF6B35] hover:from-[#FF4D63] hover:to-[#FF8C69] text-white text-[15px] font-semibold h-12 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
       >
         {loading ? "提交中..." : mode === "create" ? (
           <span className="flex items-center gap-2">

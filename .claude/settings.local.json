@@ -11,7 +11,9 @@
       "Bash(npm -v)",
       "Bash(npx --version)",
       "Bash(npm install *)",
-      "Bash(npx prisma *)"
+      "Bash(npx prisma *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }

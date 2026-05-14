@@ -22,24 +22,24 @@ export const CITIES = [
   "南京",
 ] as const;
 
-// Apple-inspired subtle color palette
+// Xiaohongshu-inspired warm color palette
 export const EVENT_TYPE_COLORS: Record<string, { bg: string; text: string; icon: string }> = {
-  "聚餐晚宴": { bg: "bg-orange-50", text: "text-orange-600", icon: "🍽️" },
-  "饮品小聚": { bg: "bg-amber-50",  text: "text-amber-600",  icon: "🍸" },
-  "运动健身": { bg: "bg-green-50",  text: "text-green-600",  icon: "🏃" },
-  "文化娱乐": { bg: "bg-purple-50", text: "text-purple-600", icon: "🎬" },
-  "户外探索": { bg: "bg-teal-50",   text: "text-teal-600",   icon: "🏕️" },
-  "学习分享": { bg: "bg-blue-50",    text: "text-blue-600",   icon: "📚" },
-  "创意手工": { bg: "bg-rose-50",    text: "text-rose-600",   icon: "🎨" },
-  "其他":     { bg: "bg-gray-50",    text: "text-gray-600",   icon: "✨" },
+  "聚餐晚宴": { bg: "bg-red-50",   text: "text-red-600",   icon: "🍽️" },
+  "饮品小聚": { bg: "bg-rose-50",  text: "text-rose-600",  icon: "🍸" },
+  "运动健身": { bg: "bg-orange-50", text: "text-orange-600", icon: "🏃" },
+  "文化娱乐": { bg: "bg-pink-50",  text: "text-pink-600",  icon: "🎬" },
+  "户外探索": { bg: "bg-amber-50", text: "text-amber-600", icon: "🏕️" },
+  "学习分享": { bg: "bg-red-50",   text: "text-red-500",   icon: "📚" },
+  "创意手工": { bg: "bg-rose-50",  text: "text-rose-500",  icon: "🎨" },
+  "其他":     { bg: "bg-stone-50", text: "text-stone-600",  icon: "✨" },
 };
 
-// Apple-inspired gray scale
+// Xiaohongshu-inspired warm color tokens
 export const COLORS = {
-  bg:       "#f5f5f7",
-  surface:  "#ffffff",
-  text:     "#1d1d1f",
-  textSecondary: "#86868b",
-  border:   "#d2d2d7",
-  accent:   "#0071e3",   // Apple blue
+  bg:       "#FFFAF8",
+  surface:  "#FFFFFF",
+  text:     "#2D2420",
+  textSecondary: "#B8A099",
+  border:   "#F0E4E0",
+  accent:   "#FF2442",
 } as const;
