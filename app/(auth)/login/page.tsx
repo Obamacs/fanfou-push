@@ -18,11 +18,6 @@ function LoginContent() {
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
   const [loginMode, setLoginMode] = useState<"magic" | "admin">("magic");
-  const [location, setLocation] = useState<{
-    city?: string;
-    latitude?: number;
-    longitude?: number;
-  } | null>(null);
 
   const errorParam = searchParams.get("error");
   const detailsParam = searchParams.get("details");
@@ -58,30 +53,6 @@ function LoginContent() {
     }
   }, [errorParam, detailsParam, successParam]);
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-            );
-            const data = await response.json();
-            const city = data.address?.city || data.address?.town || data.address?.county || "未知";
-            setLocation({ city, latitude, longitude });
-          } catch (err) {
-            console.error("地理编码失败:", err);
-            setLocation({ latitude, longitude });
-          }
-        },
-        (error) => {
-          console.log("位置获取失败:", error.message);
-        }
-      );
-    }
-  }, []);
-
   const handleMagicLinkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -114,19 +85,6 @@ function LoginContent() {
       if (!response.ok) {
         setError(data.error || "发送失败，请重试");
         return;
-      }
-
-      // 异步更新位置，不阻塞主流程
-      if (location?.latitude && location?.longitude) {
-        fetch("/api/user/location", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            latitude: location.latitude,
-            longitude: location.longitude,
-            city: location.city,
-          }),
-        }).catch((err) => console.error("位置更新失败:", err));
       }
 
       setSentEmail(email);

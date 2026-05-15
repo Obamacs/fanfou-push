@@ -59,6 +59,7 @@ export default function OnboardingWizard({
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [stepError, setStepError] = useState("");
   const [state, setState] = useState<OnboardingState>({
     ageGroup: "",
     gender: "",
@@ -375,10 +376,15 @@ export default function OnboardingWizard({
 
           {renderStepContent()}
 
-          <div className="flex gap-3 mt-8">
+          {stepError && (
+            <div className="p-3 bg-[#FFF0F3] border border-[#FF2442]/20 rounded-xl text-[#FF2442] text-sm text-center mt-4">
+              {stepError}
+            </div>
+          )}
+          <div className="flex gap-3 mt-4">
             <button
               type="button"
-              onClick={() => setStep(Math.max(1, step - 1))}
+              onClick={() => { setStepError(""); setStep(Math.max(1, step - 1)); }}
               disabled={step === 1 || loading}
               className="flex-1 inline-flex items-center justify-center rounded-lg border border-[#F0E4E0] bg-white h-10 px-4 text-sm font-medium text-[#2D2420] hover:bg-[#FFF5F3] transition-colors disabled:opacity-50 disabled:pointer-events-none"
             >
@@ -386,9 +392,20 @@ export default function OnboardingWizard({
             </button>
             <button
               type="button"
-              onClick={step === 8 ? handleSubmit : () => setStep(step + 1)}
-              disabled={!canProceed() || loading}
-              className="flex-1 inline-flex items-center justify-center rounded-lg h-10 px-4 text-sm font-semibold text-white bg-gradient-to-r from-[#FF2442] to-[#FF6B35] hover:from-[#FF4D63] hover:to-[#FF8C69] shadow-md transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]"
+              onClick={() => {
+                setStepError("");
+                if (!canProceed()) {
+                  setStepError("请先完成当前步骤的选择");
+                  return;
+                }
+                if (step === 8) {
+                  handleSubmit();
+                } else {
+                  setStep(step + 1);
+                }
+              }}
+              disabled={loading}
+              className="flex-1 inline-flex items-center justify-center rounded-lg h-10 px-4 text-sm font-semibold text-white bg-gradient-to-r from-[#FF2442] to-[#FF6B35] hover:from-[#FF4D63] hover:to-[#FF8C69] shadow-md transition-all duration-200 active:scale-[0.98]"
             >
               {step === 8 ? (loading ? "提交中..." : "完成引导") : "下一步"}
             </button>
