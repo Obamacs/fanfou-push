@@ -35,7 +35,7 @@ export default function GalleryPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold gradient-text mb-2">活动图片库</h1>
-        <p className="text-gray-600">
+        <p className="text-[#B8A099]">
           精心生成的高质量图片，展现饭否社区的多样化活动和年轻人的社交风采
         </p>
       </div>
@@ -43,7 +43,7 @@ export default function GalleryPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {images.map((image, index) => (
           <Card key={index} className="overflow-hidden border-0 shadow-lg card-hover">
-            <div className="relative h-64 bg-gray-200">
+            <div className="relative h-64 bg-[#F0E4E0]">
               <Image
                 src={image.src}
                 alt={image.alt}
@@ -53,18 +53,18 @@ export default function GalleryPage() {
               />
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-[#2D2420] mb-2">
                 {image.title}
               </h3>
-              <p className="text-gray-600">{image.description}</p>
+              <p className="text-[#B8A099]">{image.description}</p>
             </div>
           </Card>
         ))}
       </div>
 
       <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-0">
-        <h3 className="font-bold text-gray-900 mb-3">📸 图片生成信息</h3>
-        <ul className="space-y-2 text-sm text-gray-700">
+        <h3 className="font-bold text-[#2D2420] mb-3">📸 图片生成信息</h3>
+        <ul className="space-y-2 text-sm text-[#2D2420]">
           <li>✨ 所有图片由 AI 生成，展现多样化的年轻中国人和少数民族</li>
           <li>🎨 采用时尚现代的视觉风格，符合小红书美学</li>
           <li>📝 图片中最小化文字，强调视觉设计和真实连接</li>

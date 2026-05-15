@@ -98,7 +98,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">我的资料</h1>
+        <h1 className="text-3xl font-bold text-[#2D2420]">我的资料</h1>
         <Button
           onClick={() => {
             if (editing) {
@@ -125,9 +125,9 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <Card className="bg-white border border-gray-200 p-8 space-y-6">
+      <Card className="bg-white border border-[#F0E4E0] p-8 space-y-6">
         <div className="space-y-4">
-          <label className="block text-sm font-semibold text-gray-900">头像</label>
+          <label className="block text-sm font-semibold text-[#2D2420]">头像</label>
           {editing ? (
             <ImageUpload
               value={formData.avatarUrl || ""}
@@ -147,27 +147,27 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-900">邮箱</label>
-          <div className="p-3 bg-gray-50 rounded-lg text-gray-700">{profile.email}</div>
+          <label className="block text-sm font-semibold text-[#2D2420]">邮箱</label>
+          <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.email}</div>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-900">名字</label>
+          <label className="block text-sm font-semibold text-[#2D2420]">名字</label>
           {editing ? (
             <Input
               name="name"
               value={formData.name || ""}
               onChange={handleChange}
               placeholder="输入你的名字"
-              className="border-gray-200"
+              className="border-[#F0E4E0]"
             />
           ) : (
-            <div className="p-3 bg-gray-50 rounded-lg text-gray-700">{profile.name || "-"}</div>
+            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.name || "-"}</div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-900">年龄</label>
+          <label className="block text-sm font-semibold text-[#2D2420]">年龄</label>
           {editing ? (
             <Input
               name="age"
@@ -175,21 +175,21 @@ export default function ProfilePage() {
               value={formData.age || ""}
               onChange={handleChange}
               placeholder="输入你的年龄"
-              className="border-gray-200"
+              className="border-[#F0E4E0]"
             />
           ) : (
-            <div className="p-3 bg-gray-50 rounded-lg text-gray-700">{profile.age || "-"}</div>
+            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.age || "-"}</div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-900">性别</label>
+          <label className="block text-sm font-semibold text-[#2D2420]">性别</label>
           {editing ? (
             <select
               name="gender"
               value={formData.gender || ""}
               onChange={(e) => setFormData((prev) => ({ ...prev, gender: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2 border border-[#F0E4E0] rounded-lg"
             >
               <option value="">选择性别</option>
               <option value="男">男</option>
@@ -197,27 +197,27 @@ export default function ProfilePage() {
               <option value="其他">其他</option>
             </select>
           ) : (
-            <div className="p-3 bg-gray-50 rounded-lg text-gray-700">{profile.gender || "-"}</div>
+            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.gender || "-"}</div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-900">城市</label>
+          <label className="block text-sm font-semibold text-[#2D2420]">城市</label>
           {editing ? (
             <Input
               name="city"
               value={formData.city || ""}
               onChange={handleChange}
               placeholder="输入你的城市"
-              className="border-gray-200"
+              className="border-[#F0E4E0]"
             />
           ) : (
-            <div className="p-3 bg-gray-50 rounded-lg text-gray-700">{profile.city || "-"}</div>
+            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.city || "-"}</div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-900">个人简介</label>
+          <label className="block text-sm font-semibold text-[#2D2420]">个人简介</label>
           {editing ? (
             <textarea
               name="bio"
@@ -225,10 +225,10 @@ export default function ProfilePage() {
               onChange={handleChange}
               placeholder="介绍一下你自己"
               rows={4}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2 border border-[#F0E4E0] rounded-lg"
             />
           ) : (
-            <div className="p-3 bg-gray-50 rounded-lg text-gray-700 whitespace-pre-wrap">
+            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420] whitespace-pre-wrap">
               {profile.bio || "-"}
             </div>
           )}

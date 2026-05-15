@@ -114,10 +114,10 @@ async function RecentUsers() {
           </div>
           <div className="flex gap-2">
             {user.isBanned && (
-              <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded">已禁用</span>
+              <span className="px-2 py-1 bg-red-500/20 text-[#FF2442] text-xs rounded">已禁用</span>
             )}
             {!user.isActive && (
-              <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">非活跃</span>
+              <span className="px-2 py-1 bg-yellow-500/20 text-[#FF6B35] text-xs rounded">非活跃</span>
             )}
           </div>
         </div>

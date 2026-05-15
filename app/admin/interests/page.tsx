@@ -116,10 +116,10 @@ export default function AdminInterestsPage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm">{error}</div>
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-[#FF2442] text-sm">{error}</div>
       )}
       {success && (
-        <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-400 text-sm">{success}</div>
+        <div className="p-4 bg-[#FF6B35]/10 border border-green-500/20 rounded-2xl text-[#FF6B35] text-sm">{success}</div>
       )}
 
       {/* Add/Edit Form */}
@@ -180,7 +180,7 @@ export default function AdminInterestsPage() {
               <Button size="sm" variant="ghost" onClick={() => startEdit(interest)} className="text-[#B8A099] hover:text-white h-7 px-2">
                 <Edit3 className="w-3.5 h-3.5" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => handleDelete(interest.id)} className="text-[#B8A099] hover:text-red-400 h-7 px-2">
+              <Button size="sm" variant="ghost" onClick={() => handleDelete(interest.id)} className="text-[#B8A099] hover:text-[#FF2442] h-7 px-2">
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>

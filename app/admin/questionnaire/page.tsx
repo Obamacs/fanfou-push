@@ -142,10 +142,10 @@ export default function AdminQuestionnairePage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm">{error}</div>
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-[#FF2442] text-sm">{error}</div>
       )}
       {success && (
-        <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-400 text-sm">{success}</div>
+        <div className="p-4 bg-[#FF6B35]/10 border border-green-500/20 rounded-2xl text-[#FF6B35] text-sm">{success}</div>
       )}
 
       {/* Add/Edit Form */}
@@ -259,7 +259,7 @@ export default function AdminQuestionnairePage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleDelete(q.id)}
-                        className="text-[#B8A099] hover:text-red-400"
+                        className="text-[#B8A099] hover:text-[#FF2442]"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

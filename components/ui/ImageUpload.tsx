@@ -85,7 +85,7 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
       />
 
       {value ? (
-        <div className="relative w-full aspect-video bg-gray-100 rounded-2xl overflow-hidden group">
+        <div className="relative w-full aspect-video bg-[#FFF5F3] rounded-2xl overflow-hidden group">
           <Image
             src={value}
             alt="Preview"
@@ -129,19 +129,19 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
           className={`w-full aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
             dragOver
               ? "border-blue-400 bg-blue-50"
-              : "border-gray-200 hover:border-gray-300 bg-gray-50/50"
+              : "border-[#F0E4E0] hover:border-gray-300 bg-[#FFF5F3]/50"
           }`}
         >
           {loading ? (
             <>
               <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-              <span className="text-sm text-gray-500">上传中...</span>
+              <span className="text-sm text-[#B8A099]">上传中...</span>
             </>
           ) : (
             <>
-              <ImageIcon className="w-8 h-8 text-gray-300" />
-              <span className="text-sm text-gray-500">{label}</span>
-              <span className="text-xs text-gray-400">支持 JPG、PNG、WebP，最大 10MB</span>
+              <ImageIcon className="w-8 h-8 text-[#B8A099]" />
+              <span className="text-sm text-[#B8A099]">{label}</span>
+              <span className="text-xs text-[#B8A099]">支持 JPG、PNG、WebP，最大 10MB</span>
             </>
           )}
         </button>

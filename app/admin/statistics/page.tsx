@@ -94,45 +94,45 @@ export default async function StatisticsPage() {
 
       {/* 关键指标 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card className="bg-gray-900 border-gray-800 p-6">
+        <Card className="bg-[#241918] border-[#2D1E1A] p-6">
           <div className="space-y-2">
-            <p className="text-gray-400 text-sm">活跃用户率</p>
+            <p className="text-[#B8A099] text-sm">活跃用户率</p>
             <p className="text-3xl font-bold text-white">
               {totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}%
             </p>
-            <p className="text-gray-500 text-xs">
+            <p className="text-[#6B5A55] text-xs">
               {activeUsers} / {totalUsers}
             </p>
           </div>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800 p-6">
+        <Card className="bg-[#241918] border-[#2D1E1A] p-6">
           <div className="space-y-2">
-            <p className="text-gray-400 text-sm">活动完成率</p>
+            <p className="text-[#B8A099] text-sm">活动完成率</p>
             <p className="text-3xl font-bold text-white">
               {totalEvents > 0 ? ((completedEvents / totalEvents) * 100).toFixed(1) : 0}%
             </p>
-            <p className="text-gray-500 text-xs">
+            <p className="text-[#6B5A55] text-xs">
               {completedEvents} / {totalEvents}
             </p>
           </div>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800 p-6">
+        <Card className="bg-[#241918] border-[#2D1E1A] p-6">
           <div className="space-y-2">
-            <p className="text-gray-400 text-sm">匹配确认率</p>
+            <p className="text-[#B8A099] text-sm">匹配确认率</p>
             <p className="text-3xl font-bold text-white">
               {totalMatches > 0 ? ((confirmedMatches / totalMatches) * 100).toFixed(1) : 0}%
             </p>
-            <p className="text-gray-500 text-xs">
+            <p className="text-[#6B5A55] text-xs">
               {confirmedMatches} / {totalMatches}
             </p>
           </div>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800 p-6">
+        <Card className="bg-[#241918] border-[#2D1E1A] p-6">
           <div className="space-y-2">
-            <p className="text-gray-400 text-sm">举报处理率</p>
+            <p className="text-[#B8A099] text-sm">举报处理率</p>
             <p className="text-3xl font-bold text-white">
               {resolvedReports + openReports > 0
                 ? (
@@ -140,7 +140,7 @@ export default async function StatisticsPage() {
                   ).toFixed(1)
                 : 0}%
             </p>
-            <p className="text-gray-500 text-xs">
+            <p className="text-[#6B5A55] text-xs">
               {resolvedReports} 已处理
             </p>
           </div>
@@ -149,45 +149,45 @@ export default async function StatisticsPage() {
 
       {/* 增长数据 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <Card className="bg-gray-900 border-gray-800 p-6">
+        <Card className="bg-[#241918] border-[#2D1E1A] p-6">
           <h2 className="text-lg font-bold text-white mb-4">最近7天新增</h2>
           <div className="space-y-3">
             <div>
-              <p className="text-gray-400 text-sm">新用户</p>
-              <p className="text-2xl font-bold text-green-400">{newUsersWeek}</p>
+              <p className="text-[#B8A099] text-sm">新用户</p>
+              <p className="text-2xl font-bold text-[#FF6B35]">{newUsersWeek}</p>
             </div>
             <div>
-              <p className="text-gray-400 text-sm">新活动</p>
-              <p className="text-2xl font-bold text-blue-400">{newEventsWeek}</p>
+              <p className="text-[#B8A099] text-sm">新活动</p>
+              <p className="text-2xl font-bold text-[#FF2442]">{newEventsWeek}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800 p-6">
+        <Card className="bg-[#241918] border-[#2D1E1A] p-6">
           <h2 className="text-lg font-bold text-white mb-4">需要关注</h2>
           <div className="space-y-3">
             <div>
-              <p className="text-gray-400 text-sm">被禁用用户</p>
-              <p className="text-2xl font-bold text-red-400">{bannedUsers}</p>
+              <p className="text-[#B8A099] text-sm">被禁用用户</p>
+              <p className="text-2xl font-bold text-[#FF2442]">{bannedUsers}</p>
             </div>
             <div>
-              <p className="text-gray-400 text-sm">待处理举报</p>
-              <p className="text-2xl font-bold text-yellow-400">{openReports}</p>
+              <p className="text-[#B8A099] text-sm">待处理举报</p>
+              <p className="text-2xl font-bold text-[#FF6B35]">{openReports}</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* 城市分布 */}
-      <Card className="bg-gray-900 border-gray-800 p-6 mb-8">
+      <Card className="bg-[#241918] border-[#2D1E1A] p-6 mb-8">
         <h2 className="text-lg font-bold text-white mb-4">用户城市分布（Top 10）</h2>
         <div className="space-y-2">
           {cityDistribution.map((item: any) => (
             <div key={item.city} className="flex items-center justify-between">
-              <span className="text-gray-400">{item.city || "未设置"}</span>
+              <span className="text-[#B8A099]">{item.city || "未设置"}</span>
               <div className="flex items-center gap-3">
-                <div className="h-2 bg-blue-600 rounded" style={{ width: `${((item._count || 0) / totalUsers) * 200}px` }} />
-                <span className="text-gray-300">{item._count || 0}</span>
+                <div className="h-2 bg-[#FF2442] rounded" style={{ width: `${((item._count || 0) / totalUsers) * 200}px` }} />
+                <span className="text-[#B8A099]">{item._count || 0}</span>
               </div>
             </div>
           ))}
@@ -195,15 +195,15 @@ export default async function StatisticsPage() {
       </Card>
 
       {/* 活动类型分布 */}
-      <Card className="bg-gray-900 border-gray-800 p-6">
+      <Card className="bg-[#241918] border-[#2D1E1A] p-6">
         <h2 className="text-lg font-bold text-white mb-4">活动类型分布</h2>
         <div className="space-y-2">
           {eventTypeDistribution.map((item: any) => (
             <div key={item.type} className="flex items-center justify-between">
-              <span className="text-gray-400">{item.type}</span>
+              <span className="text-[#B8A099]">{item.type}</span>
               <div className="flex items-center gap-3">
-                <div className="h-2 bg-purple-600 rounded" style={{ width: `${((item._count || 0) / totalEvents) * 200}px` }} />
-                <span className="text-gray-300">{item._count || 0}</span>
+                <div className="h-2 bg-[#FF4D94] rounded" style={{ width: `${((item._count || 0) / totalEvents) * 200}px` }} />
+                <span className="text-[#B8A099]">{item._count || 0}</span>
               </div>
             </div>
           ))}

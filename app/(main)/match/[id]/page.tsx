@@ -64,7 +64,7 @@ export default async function MatchDetailPage({
     return (
       <div className="py-8 px-4">
         <div className="max-w-4xl mx-auto">
-          <Link href="/match" className="text-indigo-600 hover:text-indigo-700 mb-6 inline-block">
+          <Link href="/match" className="text-[#FF2442] hover:text-[#FF2442] mb-6 inline-block">
             ← 返回匹配
           </Link>
 
@@ -75,11 +75,11 @@ export default async function MatchDetailPage({
               <Card key={member.userId}>
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-2xl font-semibold text-indigo-700 mb-3">
+                    <div className="w-16 h-16 rounded-full bg-[#FFF0F3] flex items-center justify-center text-2xl font-semibold text-[#FF2442] mb-3">
                       {member.user.name.charAt(0)}
                     </div>
                     <h3 className="font-semibold mb-1">{member.user.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-[#B8A099] mb-3">
                       {member.user.ageGroup} · {member.user.city}
                     </p>
                     {member.user.interests.length > 0 && (
@@ -110,13 +110,13 @@ export default async function MatchDetailPage({
   return (
     <div className="py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <Link href="/match" className="text-indigo-600 hover:text-indigo-700 mb-6 inline-block">
+        <Link href="/match" className="text-[#FF2442] hover:text-[#FF2442] mb-6 inline-block">
           ← 返回匹配
         </Link>
 
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">你的匹配已就绪！</h1>
-          <p className="text-gray-600">
+          <p className="text-[#B8A099]">
             {hoursLeft}小时 {minutesLeft}分钟后过期
           </p>
         </div>
@@ -132,11 +132,11 @@ export default async function MatchDetailPage({
             <Card key={member.userId}>
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-2xl font-semibold text-indigo-700 mb-3">
+                  <div className="w-16 h-16 rounded-full bg-[#FFF0F3] flex items-center justify-center text-2xl font-semibold text-[#FF2442] mb-3">
                     {member.user.name.charAt(0)}
                   </div>
                   <h3 className="font-semibold mb-1">{member.user.name}</h3>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-[#B8A099] mb-3">
                     {member.user.ageGroup} · {member.user.city}
                   </p>
                   {member.user.interests.length > 0 && (

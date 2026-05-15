@@ -64,14 +64,14 @@ export default function ReportsPage() {
   const filteredReports = reports.filter((r) => r.status === filterStatus);
 
   if (loading) {
-    return <div className="text-gray-400">加载中...</div>;
+    return <div className="text-[#B8A099]">加载中...</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">举报管理</h1>
-        <div className="text-gray-400">共 {reports.length} 个举报</div>
+        <div className="text-[#B8A099]">共 {reports.length} 个举报</div>
       </div>
 
       {/* Status Filter */}
@@ -84,12 +84,12 @@ export default function ReportsPage() {
             className={
               filterStatus === status
                 ? status === "OPEN"
-                  ? "bg-red-600"
+                  ? "bg-[#FF2442]"
                   : status === "REVIEWING"
                   ? "bg-yellow-600"
                   : status === "RESOLVED"
-                  ? "bg-green-600"
-                  : "bg-gray-600"
+                  ? "bg-[#FF6B35]"
+                  : "bg-[#FF2442]"
                 : ""
             }
           >
@@ -107,35 +107,35 @@ export default function ReportsPage() {
       {/* Reports List */}
       <div className="space-y-4">
         {filteredReports.length === 0 ? (
-          <Card className="bg-gray-900 border-gray-800 p-6 text-center text-gray-400">
+          <Card className="bg-[#241918] border-[#2D1E1A] p-6 text-center text-[#B8A099]">
             暂无举报
           </Card>
         ) : (
           filteredReports.map((report) => (
             <Card
               key={report.id}
-              className="bg-gray-900 border-gray-800 p-6 hover:bg-gray-800/50"
+              className="bg-[#241918] border-[#2D1E1A] p-6 hover:bg-[#1A1311]/50"
             >
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">
                     {report.reason}
                   </h3>
-                  <p className="text-gray-400 mb-3">{report.description}</p>
-                  <div className="flex gap-4 text-sm text-gray-400">
+                  <p className="text-[#B8A099] mb-3">{report.description}</p>
+                  <div className="flex gap-4 text-sm text-[#B8A099]">
                     <div>
-                      <span className="text-gray-500">举报人：</span>
+                      <span className="text-[#6B5A55]">举报人：</span>
                       {report.reportedBy.name} ({report.reportedBy.email})
                     </div>
                     {report.reportedUser && (
                       <div>
-                        <span className="text-gray-500">被举报用户：</span>
+                        <span className="text-[#6B5A55]">被举报用户：</span>
                         {report.reportedUser.name} ({report.reportedUser.email})
                       </div>
                     )}
                     {report.reportedEvent && (
                       <div>
-                        <span className="text-gray-500">被举报活动：</span>
+                        <span className="text-[#6B5A55]">被举报活动：</span>
                         {report.reportedEvent.title}
                       </div>
                     )}
@@ -144,12 +144,12 @@ export default function ReportsPage() {
                 <span
                   className={`px-3 py-1 text-xs rounded whitespace-nowrap ${
                     report.status === "OPEN"
-                      ? "bg-red-500/20 text-red-400"
+                      ? "bg-red-500/20 text-[#FF2442]"
                       : report.status === "REVIEWING"
-                      ? "bg-yellow-500/20 text-yellow-400"
+                      ? "bg-yellow-500/20 text-[#FF6B35]"
                       : report.status === "RESOLVED"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-gray-500/20 text-gray-400"
+                      ? "bg-[#FF6B35]/20 text-[#FF6B35]"
+                      : "bg-[#2D1E1A] text-[#B8A099]"
                   }`}
                 >
                   {report.status === "OPEN"
@@ -162,7 +162,7 @@ export default function ReportsPage() {
                 </span>
               </div>
 
-              <div className="flex gap-2 pt-4 border-t border-gray-800">
+              <div className="flex gap-2 pt-4 border-t border-[#2D1E1A]">
                 {report.status === "OPEN" && (
                   <>
                     <Button
@@ -186,7 +186,7 @@ export default function ReportsPage() {
                     <Button
                       size="sm"
                       onClick={() => handleResolveReport(report.id, "RESOLVED")}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-[#FF6B35] hover:bg-green-700"
                     >
                       标记已解决
                     </Button>

@@ -108,17 +108,17 @@ export default function RegisterPage() {
           <div className="p-8">
             <div className="md:hidden text-center mb-8">
               <h1 className="gradient-text text-4xl font-bold">饭否</h1>
-              <p className="text-sm text-gray-600 mt-2">遇见同频的人</p>
+              <p className="text-sm text-[#B8A099] mt-2">遇见同频的人</p>
             </div>
 
             {emailSent ? (
               <div className="text-center space-y-4">
                 <div className="text-6xl mb-4">📬</div>
-                <h2 className="text-2xl font-bold text-gray-900">请查收邮件</h2>
-                <p className="text-gray-600 text-sm">
+                <h2 className="text-2xl font-bold text-[#2D2420]">请查收邮件</h2>
+                <p className="text-[#B8A099] text-sm">
                   我们已将验证链接发送到：
                 </p>
-                <p className="font-semibold text-gray-900 break-all">{formData.email}</p>
+                <p className="font-semibold text-[#2D2420] break-all">{formData.email}</p>
                 <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 text-left">
                   <p className="font-semibold mb-1">💡 提示：</p>
                   <ul className="list-disc list-inside space-y-1">
@@ -141,8 +141,8 @@ export default function RegisterPage() {
               </div>
             ) : (
               <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">创建账户</h2>
-                <p className="text-gray-500 text-sm mb-6">输入邮箱和名字开始</p>
+                <h2 className="text-2xl font-bold text-[#2D2420] mb-2">创建账户</h2>
+                <p className="text-[#B8A099] text-sm mb-6">输入邮箱和名字开始</p>
 
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -158,7 +158,7 @@ export default function RegisterPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">名字</label>
+                    <label className="block text-sm font-medium text-[#2D2420] mb-2">名字</label>
                     <Input
                       type="text"
                       name="name"
@@ -166,13 +166,13 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="你的名字"
                       disabled={loading}
-                      className="border-gray-200 rounded-lg"
+                      className="border-[#F0E4E0] rounded-lg"
                       autoComplete="name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
+                    <label className="block text-sm font-medium text-[#2D2420] mb-2">邮箱</label>
                     <Input
                       type="email"
                       name="email"
@@ -180,14 +180,14 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="you@example.com"
                       disabled={loading}
-                      className="border-gray-200 rounded-lg"
+                      className="border-[#F0E4E0] rounded-lg"
                       autoComplete="email"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      邀请码 <span className="text-gray-400 font-normal">(可选)</span>
+                    <label className="block text-sm font-medium text-[#2D2420] mb-2">
+                      邀请码 <span className="text-[#B8A099] font-normal">(可选)</span>
                     </label>
                     <Input
                       type="text"
@@ -196,7 +196,7 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="填写邀请码领取免费券"
                       disabled={loading}
-                      className="border-gray-200 rounded-lg uppercase"
+                      className="border-[#F0E4E0] rounded-lg uppercase"
                     />
                   </div>
 
@@ -209,7 +209,7 @@ export default function RegisterPage() {
                   </Button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-gray-600">
+                <div className="mt-6 text-center text-sm text-[#B8A099]">
                   已有账号？{" "}
                   <Link href="/login" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
                     立即登录

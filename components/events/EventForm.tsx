@@ -241,7 +241,7 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
           onChange={(e) => setDescription(e.target.value)}
           disabled={loading}
           rows={4}
-          className="rounded-xl border-gray-200 bg-white focus:border-[#FF2442] text-[15px]"
+          className="rounded-xl border-[#F0E4E0] bg-white focus:border-[#FF2442] text-[15px]"
         />
       </div>
 

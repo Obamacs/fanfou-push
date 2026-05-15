@@ -55,7 +55,7 @@ export function EventCard({ event }: EventCardProps) {
           {/* Price chip */}
           <div className="absolute top-4 left-4">
             {event.priceAmount === 0 ? (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm text-gray-700 shadow-sm">
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm text-[#2D2420] shadow-sm">
                 免费
               </span>
             ) : (
@@ -126,7 +126,7 @@ export function EventCard({ event }: EventCardProps) {
           </div>
 
           {/* Creator */}
-          <div className="flex items-center gap-2 pt-3 border-t border-gray-50">
+          <div className="flex items-center gap-2 pt-3 border-t border-[#F0E4E0]">
             <div className="w-6 h-6 rounded-full bg-[#FF2442]/10 flex items-center justify-center text-xs font-medium text-[#FF2442]">
               {event.creator.name.charAt(0)}
             </div>

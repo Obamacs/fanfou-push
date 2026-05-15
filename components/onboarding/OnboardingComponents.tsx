@@ -20,8 +20,8 @@ export function OptionButton({
       onClick={() => onClick(value)}
       className={`p-4 rounded-lg border-2 transition font-medium ${className} ${
         isSelected
-          ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-          : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300"
+          ? "border-[#FF2442] bg-[#FFF0F3] text-[#FF2442]"
+          : "border-[#F0E4E0] bg-white text-[#2D2420] hover:border-[#FF6B35]/30"
       }`}
     >
       {label}
@@ -67,8 +67,8 @@ export function StepSection({ title, subtitle, children }: StepSectionProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">{title}</h2>
-        {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
+        <h2 className="text-xl font-semibold text-[#2D2420] mb-2">{title}</h2>
+        {subtitle && <p className="text-sm text-[#B8A099]">{subtitle}</p>}
       </div>
       {children}
     </div>

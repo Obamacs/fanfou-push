@@ -52,7 +52,7 @@ export default function MessagesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">加载中...</p>
+        <p className="text-[#B8A099]">加载中...</p>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function MessagesPage() {
 
       {filteredConversations.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-gray-500 mb-4">
+          <p className="text-[#B8A099] mb-4">
             {conversations.length === 0 ? "暂无对话" : "未找到匹配的对话"}
           </p>
           <Link href="/events">
@@ -88,7 +88,7 @@ export default function MessagesPage() {
         <div className="space-y-2">
           {filteredConversations.map((conv) => (
             <Link key={conv.partnerId} href={`/messages/${conv.partnerId}`}>
-              <Card className="p-4 hover:bg-gray-50 cursor-pointer transition">
+              <Card className="p-4 hover:bg-[#FFF5F3] cursor-pointer transition">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {conv.partnerAvatar ? (
@@ -103,16 +103,16 @@ export default function MessagesPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-[#2D2420]">
                         {conv.partnerName}
                       </h3>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-[#B8A099] truncate">
                         {conv.lastMessage}
                       </p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 ml-4">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-[#B8A099]">
                       {new Date(conv.lastMessageTime).toLocaleDateString()}
                     </span>
                     {conv.unreadCount > 0 && (

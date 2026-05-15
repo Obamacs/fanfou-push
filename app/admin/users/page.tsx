@@ -92,14 +92,14 @@ export default function UsersPage() {
   });
 
   if (loading) {
-    return <div className="text-gray-400">加载中...</div>;
+    return <div className="text-[#B8A099]">加载中...</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">用户管理</h1>
-        <div className="text-gray-400">共 {users.length} 个用户</div>
+        <div className="text-[#B8A099]">共 {users.length} 个用户</div>
       </div>
 
       {/* Filters */}
@@ -108,73 +108,73 @@ export default function UsersPage() {
           placeholder="搜索邮箱或名字..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-gray-900 border-gray-800 text-white"
+          className="bg-[#241918] border-[#2D1E1A] text-white"
         />
         <Button
           variant={filterBanned ? "default" : "outline"}
           onClick={() => setFilterBanned(!filterBanned)}
-          className={filterBanned ? "bg-red-600" : ""}
+          className={filterBanned ? "bg-[#FF2442]" : ""}
         >
           {filterBanned ? "已禁用" : "全部"}
         </Button>
       </div>
 
       {/* Users Table */}
-      <Card className="bg-gray-900 border-gray-800 overflow-hidden">
+      <Card className="bg-[#241918] border-[#2D1E1A] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800 border-b border-gray-700">
+            <thead className="bg-[#1A1311] border-b border-[#2D1E1A]">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#B8A099]">
                   用户
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#B8A099]">
                   城市
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#B8A099]">
                   活动
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#B8A099]">
                   状态
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#B8A099]">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-[#2D1E1A]">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-800/50">
+                <tr key={user.id} className="hover:bg-[#1A1311]/50">
                   <td className="px-6 py-4">
                     <div>
                       <p className="text-white font-medium">{user.name}</p>
-                      <p className="text-gray-400 text-sm">{user.email}</p>
+                      <p className="text-[#B8A099] text-sm">{user.email}</p>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-300">{user.city}</td>
-                  <td className="px-6 py-4 text-gray-300">
+                  <td className="px-6 py-4 text-[#B8A099]">{user.city}</td>
+                  <td className="px-6 py-4 text-[#B8A099]">
                     创建: {user._count.eventsCreated} | 参加:{" "}
                     {user._count.eventAttendances}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       {user.isBanned && (
-                        <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded">
+                        <span className="px-2 py-1 bg-red-500/20 text-[#FF2442] text-xs rounded">
                           已禁用
                         </span>
                       )}
                       {!user.isActive && (
-                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">
+                        <span className="px-2 py-1 bg-yellow-500/20 text-[#FF6B35] text-xs rounded">
                           非活跃
                         </span>
                       )}
                       {user.role === "ADMIN" && (
-                        <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded">
+                        <span className="px-2 py-1 bg-[#FF4D94]/20 text-[#FF4D94] text-xs rounded">
                           管理员
                         </span>
                       )}
                       {user.canCreateEvents && (
-                        <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">
+                        <span className="px-2 py-1 bg-[#FF6B35]/20 text-[#FF6B35] text-xs rounded">
                           可创建活动
                         </span>
                       )}
@@ -188,8 +188,8 @@ export default function UsersPage() {
                         onClick={() => handleToggleEventCreation(user.id, user.canCreateEvents)}
                         className={
                           user.canCreateEvents
-                            ? "text-yellow-400 hover:text-yellow-300"
-                            : "text-blue-400 hover:text-blue-300"
+                            ? "text-[#FF6B35] hover:text-yellow-300"
+                            : "text-[#FF2442] hover:text-[#FF4D63]"
                         }
                       >
                         {user.canCreateEvents ? "撤销活动权限" : "授予活动权限"}
@@ -200,8 +200,8 @@ export default function UsersPage() {
                         onClick={() => handleBanUser(user.id, user.isBanned)}
                         className={
                           user.isBanned
-                            ? "text-green-400 hover:text-green-300"
-                            : "text-red-400 hover:text-red-300"
+                            ? "text-[#FF6B35] hover:text-[#FF8C69]"
+                            : "text-[#FF2442] hover:text-[#FF4D63]"
                         }
                       >
                         {user.isBanned ? "解禁" : "禁用"}

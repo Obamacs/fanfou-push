@@ -112,7 +112,7 @@ export default function ChatPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">加载中...</p>
+        <p className="text-[#B8A099]">加载中...</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function ChatPage() {
   if (!otherUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">用户不存在</p>
+        <p className="text-[#B8A099]">用户不存在</p>
       </div>
     );
   }
@@ -151,10 +151,10 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#FFF5F3]">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">暂无消息，开始聊天吧</p>
+            <p className="text-[#B8A099]">暂无消息，开始聊天吧</p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -167,7 +167,7 @@ export default function ChatPage() {
               <div
                 className={`max-w-xs px-4 py-2 rounded-lg ${
                   msg.senderId === userId
-                    ? "bg-white border border-gray-200"
+                    ? "bg-white border border-[#F0E4E0]"
                     : "bg-blue-500 text-white"
                 }`}
               >
@@ -175,7 +175,7 @@ export default function ChatPage() {
                 <p
                   className={`text-xs mt-1 ${
                     msg.senderId === userId
-                      ? "text-gray-400"
+                      ? "text-[#B8A099]"
                       : "text-blue-100"
                   }`}
                 >

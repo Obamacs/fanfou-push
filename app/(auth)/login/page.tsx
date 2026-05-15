@@ -215,9 +215,9 @@ function LoginContent() {
           {emailSent ? (
             <div className="text-center space-y-4">
               <div className="text-6xl mb-4">📬</div>
-              <h2 className="text-2xl font-bold text-gray-900">请查收邮件</h2>
-              <p className="text-gray-600 text-sm">我们已将验证链接发送到：</p>
-              <p className="font-semibold text-gray-900 break-all">{sentEmail}</p>
+              <h2 className="text-2xl font-bold text-[#2D2420]">请查收邮件</h2>
+              <p className="text-[#B8A099] text-sm">我们已将验证链接发送到：</p>
+              <p className="font-semibold text-[#2D2420] break-all">{sentEmail}</p>
               <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 text-left">
                 <p className="font-semibold mb-1">💡 提示：</p>
                 <ul className="list-disc list-inside space-y-1">
@@ -243,10 +243,10 @@ function LoginContent() {
           <div className="space-y-8">
             <div className="md:hidden text-center mb-8">
               <h1 className="gradient-text text-4xl font-bold">饭否</h1>
-              <p className="text-sm text-gray-600 mt-2">遇见有趣的灵魂</p>
+              <p className="text-sm text-[#B8A099] mt-2">遇见有趣的灵魂</p>
             </div>
 
-            <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+            <div className="flex gap-2 bg-[#FFF5F3] p-1 rounded-lg">
               <button
                 onClick={() => {
                   setLoginMode("magic");
@@ -255,8 +255,8 @@ function LoginContent() {
                 }}
                 className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                   loginMode === "magic"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-white text-[#2D2420] shadow-sm"
+                    : "text-[#B8A099] hover:text-[#2D2420]"
                 }`}
               >
                 用户登录
@@ -269,8 +269,8 @@ function LoginContent() {
                 }}
                 className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                   loginMode === "admin"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-white text-[#2D2420] shadow-sm"
+                    : "text-[#B8A099] hover:text-[#2D2420]"
                 }`}
               >
                 管理员登录
@@ -278,10 +278,10 @@ function LoginContent() {
             </div>
 
             <div>
-              <h2 className="text-3xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-3xl font-semibold text-[#2D2420] mb-2">
                 {loginMode === "magic" ? "欢迎回来" : "管理员登录"}
               </h2>
-              <p className="text-gray-500 text-sm">
+              <p className="text-[#B8A099] text-sm">
                 {loginMode === "magic"
                   ? "输入邮箱，我们将发送验证链接"
                   : "输入邮箱和密码登录管理后台"}
@@ -303,14 +303,14 @@ function LoginContent() {
             {loginMode === "magic" ? (
               <form onSubmit={handleMagicLinkSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">邮箱</label>
+                  <label className="block text-sm font-medium text-[#2D2420] mb-3">邮箱</label>
                   <Input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     disabled={loading}
-                    className="border-gray-200 rounded-xl h-11"
+                    className="border-[#F0E4E0] rounded-xl h-11"
                   />
                 </div>
 
@@ -325,26 +325,26 @@ function LoginContent() {
             ) : (
               <form onSubmit={handleAdminSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">邮箱</label>
+                  <label className="block text-sm font-medium text-[#2D2420] mb-3">邮箱</label>
                   <Input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@meal-meet.com"
                     disabled={loading}
-                    className="border-gray-200 rounded-xl h-11"
+                    className="border-[#F0E4E0] rounded-xl h-11"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">密码</label>
+                  <label className="block text-sm font-medium text-[#2D2420] mb-3">密码</label>
                   <Input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="输入密码"
                     disabled={loading}
-                    className="border-gray-200 rounded-xl h-11"
+                    className="border-[#F0E4E0] rounded-xl h-11"
                   />
                 </div>
 
@@ -359,7 +359,7 @@ function LoginContent() {
             )}
 
             {loginMode === "magic" && (
-              <div className="text-center text-sm text-gray-600">
+              <div className="text-center text-sm text-[#B8A099]">
                 还没有账号？{" "}
                 <Link href="/register" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
                   立即注册

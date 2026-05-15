@@ -42,7 +42,7 @@ export default async function AdminEditEventPage({
   return (
     <div>
       <h1 className="text-3xl font-bold text-white mb-8">编辑活动</h1>
-      <Card className="bg-gray-900 border-gray-800 p-8">
+      <Card className="bg-[#241918] border-[#2D1E1A] p-8">
         <EventForm mode="edit" initialData={event} />
       </Card>
     </div>

@@ -72,7 +72,7 @@ export default function EventsPage() {
   });
 
   if (loading) {
-    return <div className="text-gray-400">加载中...</div>;
+    return <div className="text-[#B8A099]">加载中...</div>;
   }
 
   return (
@@ -80,7 +80,7 @@ export default function EventsPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">活动管理</h1>
         <Link href="/admin/events/create">
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+          <Button className="bg-[#FF2442] hover:bg-[#FF4D63] text-white">
             + 创建活动
           </Button>
         </Link>
@@ -92,12 +92,12 @@ export default function EventsPage() {
           placeholder="搜索活动标题..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-gray-900 border-gray-800 text-white placeholder-gray-500"
+          className="bg-[#241918] border-[#2D1E1A] text-white placeholder-gray-500"
         />
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 bg-gray-900 border border-gray-800 text-white rounded-lg font-medium"
+          className="px-4 py-2 bg-[#241918] border border-[#2D1E1A] text-white rounded-lg font-medium"
         >
           <option value="all">全部状态</option>
           <option value="UPCOMING">即将开始</option>
@@ -108,10 +108,10 @@ export default function EventsPage() {
       </div>
 
       {/* Events Table */}
-      <Card className="bg-gray-900 border-gray-800 overflow-hidden">
+      <Card className="bg-[#241918] border-[#2D1E1A] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800 border-b border-gray-700">
+            <thead className="bg-[#1A1311] border-b border-[#2D1E1A]">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-bold text-white">
                   活动
@@ -133,13 +133,13 @@ export default function EventsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-[#2D1E1A]">
               {filteredEvents.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-800/50 transition-colors">
+                <tr key={event.id} className="hover:bg-[#1A1311]/50 transition-colors">
                   <td className="px-6 py-4">
                     <div>
                       <p className="text-white font-semibold text-base">{event.title}</p>
-                      <p className="text-gray-400 text-sm mt-1">
+                      <p className="text-[#B8A099] text-sm mt-1">
                         {event.city} · {event.type}
                       </p>
                     </div>
@@ -147,31 +147,31 @@ export default function EventsPage() {
                   <td className="px-6 py-4">
                     <div>
                       <p className="text-white font-medium text-sm">{event.creator.name}</p>
-                      <p className="text-gray-400 text-xs mt-1">
+                      <p className="text-[#B8A099] text-xs mt-1">
                         {event.creator.email}
                       </p>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-300 text-sm font-medium">
+                  <td className="px-6 py-4 text-[#B8A099] text-sm font-medium">
                     {new Date(event.date).toLocaleDateString("zh-CN", {
                       year: "numeric",
                       month: "2-digit",
                       day: "2-digit",
                     })}
                   </td>
-                  <td className="px-6 py-4 text-gray-300 font-medium">
+                  <td className="px-6 py-4 text-[#B8A099] font-medium">
                     {event._count.attendances} 人
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 text-xs font-semibold rounded-full inline-block ${
                         event.status === "UPCOMING"
-                          ? "bg-blue-500/20 text-blue-300"
+                          ? "bg-[#FF2442]/20 text-[#FF4D63]"
                           : event.status === "ONGOING"
-                          ? "bg-green-500/20 text-green-300"
+                          ? "bg-[#FF6B35]/20 text-[#FF8C69]"
                           : event.status === "COMPLETED"
-                          ? "bg-gray-500/20 text-gray-300"
-                          : "bg-red-500/20 text-red-300"
+                          ? "bg-[#2D1E1A] text-[#B8A099]"
+                          : "bg-red-500/20 text-[#FF4D63]"
                       }`}
                     >
                       {event.status === "UPCOMING"
@@ -189,7 +189,7 @@ export default function EventsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 font-medium"
+                          className="text-[#FF2442] hover:text-[#FF4D63] hover:bg-[#FF2442]/10 font-medium"
                         >
                           编辑
                         </Button>
@@ -198,7 +198,7 @@ export default function EventsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteEvent(event.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 font-medium"
+                        className="text-[#FF2442] hover:text-[#FF4D63] hover:bg-red-500/10 font-medium"
                       >
                         删除
                       </Button>
@@ -213,9 +213,9 @@ export default function EventsPage() {
 
       {/* Empty state */}
       {filteredEvents.length === 0 && (
-        <Card className="bg-gray-900 border-gray-800 p-12 text-center">
+        <Card className="bg-[#241918] border-[#2D1E1A] p-12 text-center">
           <div className="text-6xl mb-4">📭</div>
-          <p className="text-gray-400 text-lg">暂无活动</p>
+          <p className="text-[#B8A099] text-lg">暂无活动</p>
         </Card>
       )}
     </div>

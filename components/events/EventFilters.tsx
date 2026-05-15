@@ -41,12 +41,12 @@ function EventFiltersInner() {
             setCity(e.target.value);
             handleFilter("city", e.target.value);
           }}
-          className="pl-9 rounded-xl border-gray-200 bg-white text-[15px] h-10 w-full"
+          className="pl-9 rounded-xl border-[#F0E4E0] bg-white text-[15px] h-10 w-full"
         />
       </div>
 
       <Select value={type} onValueChange={(v) => { setType(v || ""); handleFilter("type", v || ""); }}>
-        <SelectTrigger className="max-w-[160px] rounded-xl border-gray-200 bg-white text-[15px] h-10">
+        <SelectTrigger className="max-w-[160px] rounded-xl border-[#F0E4E0] bg-white text-[15px] h-10">
           <SelectValue placeholder="活动类型" />
         </SelectTrigger>
         <SelectContent>

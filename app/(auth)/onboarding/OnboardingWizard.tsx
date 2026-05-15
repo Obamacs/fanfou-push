@@ -183,14 +183,14 @@ export default function OnboardingWizard({
                   onClick={() => updateState("relationshipGoal", option.value)}
                   className={`w-full p-4 rounded-lg border-2 transition text-left ${
                     state.relationshipGoal === option.value
-                      ? "border-indigo-600 bg-indigo-50"
-                      : "border-gray-200 bg-white hover:border-indigo-300"
+                      ? "border-[#FF2442] bg-[#FFF0F3]"
+                      : "border-[#F0E4E0] bg-white hover:border-[#FF6B35]/30"
                   }`}
                 >
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-[#2D2420]">
                     {option.label}
                   </div>
-                  <div className="text-sm text-gray-600">{option.desc}</div>
+                  <div className="text-sm text-[#B8A099]">{option.desc}</div>
                 </button>
               ))}
             </div>
@@ -202,7 +202,7 @@ export default function OnboardingWizard({
           <StepSection title="你的生活方式">
             <div className="space-y-6">
               <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-3">
+                <Label className="block text-sm font-medium text-[#2D2420] mb-3">
                   吸烟习惯
                 </Label>
                 <OptionGrid
@@ -217,7 +217,7 @@ export default function OnboardingWizard({
               </div>
 
               <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-3">
+                <Label className="block text-sm font-medium text-[#2D2420] mb-3">
                   饮酒习惯
                 </Label>
                 <OptionGrid
@@ -232,7 +232,7 @@ export default function OnboardingWizard({
               </div>
 
               <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-3">
+                <Label className="block text-sm font-medium text-[#2D2420] mb-3">
                   关于孩子
                 </Label>
                 <OptionGrid
@@ -270,8 +270,8 @@ export default function OnboardingWizard({
                   onClick={() => handleInterestToggle(interest.id)}
                   className={`p-3 rounded-lg border-2 transition text-sm ${
                     state.selectedInterests.includes(interest.id)
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300"
+                      ? "border-[#FF2442] bg-[#FFF0F3] text-[#FF2442]"
+                      : "border-[#F0E4E0] bg-white text-[#2D2420] hover:border-[#FF6B35]/30"
                   }`}
                 >
                   {interest.icon} {interest.name}
@@ -327,7 +327,7 @@ export default function OnboardingWizard({
 
                 return (
                   <div key={question.id}>
-                    <Label className="block text-sm font-medium text-gray-700 mb-3">
+                    <Label className="block text-sm font-medium text-[#2D2420] mb-3">
                       {question.text}
                     </Label>
                     <div className="space-y-2">
@@ -337,8 +337,8 @@ export default function OnboardingWizard({
                           onClick={() => handleQuestionAnswer(question.id, option)}
                           className={`w-full p-3 rounded-lg border-2 transition text-sm text-left ${
                             currentAnswer === option
-                              ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300"
+                              ? "border-[#FF2442] bg-[#FFF0F3] text-[#FF2442]"
+                              : "border-[#F0E4E0] bg-white text-[#2D2420] hover:border-[#FF6B35]/30"
                           }`}
                         >
                           {option}
@@ -363,10 +363,10 @@ export default function OnboardingWizard({
         <div className="p-8">
           <div className="mb-8">
             <div className="flex justify-between mb-2">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-[#2D2420]">
                 欢迎, {userName}！
               </h1>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-[#B8A099]">
                 第 {step} / 8 步
               </span>
             </div>
