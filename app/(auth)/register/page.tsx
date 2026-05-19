@@ -91,13 +91,25 @@ export default function RegisterPage() {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20"></div>
 
-        <div className="text-center z-10">
+        <div className="text-center z-10 max-w-lg">
           <h1 className="text-6xl font-bold mb-6">加入饭否</h1>
-          <p className="text-2xl mb-6 font-light">将陌生人变成朋友</p>
-          <div className="text-lg opacity-95 max-w-sm leading-relaxed space-y-3">
-            <div>无需填写资料，无需繁琐操作</div>
-            <div>我们为你匹配志同道合的朋友</div>
-            <div className="text-base opacity-90">只需要出现，其余的交给我们</div>
+          <p className="text-2xl mb-6 font-light">体验最纯粹的盲盒交友</p>
+          <div className="text-lg opacity-95 leading-relaxed space-y-4 text-left bg-black/20 p-6 rounded-2xl backdrop-blur-sm">
+            <div className="flex items-start gap-3">
+              <span className="font-bold text-[#FF2442]">01</span>
+              <span>完成一份深度的个性化问卷。</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="font-bold text-[#FF2442]">02</span>
+              <span>报名参加本周四晚 20:00 的同城盲盒晚餐。</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="font-bold text-[#FF2442]">03</span>
+              <span>周三晚由算法为你精选 5 位同桌伙伴，周四准时揭晓神秘餐厅。</span>
+            </div>
+            <div className="text-base text-center font-medium opacity-100 pt-4 text-[#FFFAF8]">
+              只需出现，剩下的浪漫交给我们。
+            </div>
           </div>
         </div>
       </div>
@@ -108,7 +120,7 @@ export default function RegisterPage() {
           <div className="p-8">
             <div className="md:hidden text-center mb-8">
               <h1 className="gradient-text text-4xl font-bold">饭否</h1>
-              <p className="text-sm text-[#B8A099] mt-2">遇见同频的人</p>
+              <p className="text-sm text-[#B8A099] mt-2">每周四晚，一场 6 个人的盲盒晚餐</p>
             </div>
 
             {emailSent ? (

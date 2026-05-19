@@ -1,100 +1,95 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { EventCard } from "@/components/events/EventCard";
-import { EventFilters } from "@/components/events/EventFilters";
 import { Button } from "@/components/ui/button";
-import { Plus, Sparkles } from "lucide-react";
+import { Sparkles, Calendar } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-interface EventsPageProps {
-  searchParams: Promise<{ city?: string; type?: string }>;
-}
-
-export default async function EventsPage({ searchParams }: EventsPageProps) {
+export default async function EventsPage() {
   const session = await auth();
-  const { city, type } = await searchParams;
-
-  const where: any = {
-    status: { not: "CANCELLED" },
-  };
-
-  if (city) {
-    where.city = { contains: city, mode: "insensitive" };
+  
+  if (!session?.user?.id) {
+    redirect("/login");
   }
 
-  if (type) {
-    where.type = type;
-  }
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { city: true },
+  });
 
-  const events = await db.event.findMany({
-    where,
+  const userCity = user?.city || "Shanghai"; // Default fallback
+
+  // 1. 获取用户即将参加的盲盒晚餐 (Matchmaking 已经跑完，分配到具体桌)
+  const upcomingDinners = await db.event.findMany({
+    where: {
+      type: "DINNER",
+      status: "UPCOMING",
+      attendances: {
+        some: { userId: session.user.id, status: { in: ["PENDING", "CONFIRMED"] } },
+      },
+    },
     include: {
       creator: { select: { id: true, name: true, avatarUrl: true } },
       _count: { select: { attendances: { where: { status: "CONFIRMED" } } } },
     },
     orderBy: { date: "asc" },
-    take: 20,
   });
+
+  // 2. 获取当前城市本周的等候池 (POOL)
+  // 如果用户已经在这个池子里了，EventCard 会显示“已报名”
+  const poolEvents = await db.event.findMany({
+    where: {
+      type: "POOL",
+      status: "UPCOMING",
+      city: { contains: userCity, mode: "insensitive" },
+    },
+    include: {
+      creator: { select: { id: true, name: true, avatarUrl: true } },
+      _count: { select: { attendances: { where: { status: "CONFIRMED" } } } },
+    },
+    orderBy: { date: "asc" },
+    take: 1, // 只显示最近的一个周四等候池
+  });
+
+  const eventsToShow = [...upcomingDinners, ...poolEvents];
 
   return (
     <div className="min-h-screen bg-[#FFFAF8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-[#2D2420] tracking-tight">
-                发现活动
-              </h1>
-              <p className="mt-2 text-[17px] text-[#B8A099]">
-                选择你感兴趣的活动，直接出现就好
-              </p>
-            </div>
-            {session?.user && (
-              <Link href="/events/new">
-                <Button className="rounded-full px-5 py-2.5 bg-[#FF2442] hover:bg-[#FF4D63] text-white text-[15px] font-medium shadow-sm">
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  发起活动
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-8">
-          <EventFilters />
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-bold text-[#2D2420] tracking-tight">
+            预订本周四的座位
+          </h1>
+          <p className="mt-3 text-[17px] text-[#B8A099] max-w-2xl mx-auto">
+            每周四晚 20:00。不需要费心挑选餐厅，也不需要尬聊破冰。选择你的城市，报名入池。周三我们会通过算法为你分配最契合的 5 位陌生人，并在当天揭晓神秘餐厅。
+          </p>
         </div>
 
         {/* Events grid */}
-        {events.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard
-                key={event.id}
-                event={{ ...event, date: event.date }}
-                currentUserId={session?.user?.id}
-              />
+        {eventsToShow.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+            {eventsToShow.map((event) => (
+              <div key={event.id} className="w-full max-w-md">
+                <EventCard
+                  event={{ ...event, date: event.date }}
+                  currentUserId={session?.user?.id}
+                />
+              </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gray-100 mb-6">
-              <Sparkles className="w-8 h-8 text-[#B8A099]" />
+          <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-[#F0E4E0] max-w-2xl mx-auto">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#FFF5F3] mb-6">
+              <Calendar className="w-8 h-8 text-[#FF2442]" />
             </div>
             <h2 className="text-[21px] font-semibold text-[#2D2420] mb-2">
-              暂无活动
+              本周活动正在筹备中
             </h2>
             <p className="text-[15px] text-[#B8A099] mb-8 max-w-sm mx-auto">
-              成为第一个发起人，选择时间地点，我们帮你找到志同道合的伙伴
+              你所在城市 ({userCity}) 的周四晚餐池尚未开启，请稍后再来看看。
             </p>
-            {session?.user && (
-              <Link href="/events/new">
-                <Button className="rounded-full px-6 py-2.5 bg-[#FF2442] hover:bg-[#FF4D63] text-white font-medium">
-                  创建第一个活动
-                </Button>
-              </Link>
-            )}
           </div>
         )}
       </div>

@@ -192,12 +192,14 @@ export default function ProfilePage() {
               className="w-full px-3 py-2 border border-[#F0E4E0] rounded-lg"
             >
               <option value="">选择性别</option>
-              <option value="男">男</option>
-              <option value="女">女</option>
-              <option value="其他">其他</option>
+              <option value="MALE">男</option>
+              <option value="FEMALE">女</option>
+              <option value="OTHER">其他</option>
             </select>
           ) : (
-            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.gender || "-"}</div>
+            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">
+              {profile.gender === "MALE" ? "男" : profile.gender === "FEMALE" ? "女" : profile.gender === "OTHER" ? "其他" : "-"}
+            </div>
           )}
         </div>
 
@@ -258,7 +260,7 @@ export default function ProfilePage() {
       </Card>
 
       <div className="mt-8 space-y-3">
-        <Link href="/onboarding">
+        <Link href="/onboarding?edit=true">
           <Button variant="outline" className="w-full">
             重新完成问卷
           </Button>

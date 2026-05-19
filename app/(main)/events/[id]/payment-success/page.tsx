@@ -19,12 +19,12 @@ export default async function PaymentSuccessPage({
           <h1 className="text-3xl font-bold text-green-600">支付成功！</h1>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-center text-gray-600">
+          <p className="text-center text-[#B8A099]">
             感谢您的报名，我们期待与您相见！
           </p>
 
           {searchParams.session_id && (
-            <div className="bg-gray-100 rounded p-3 text-xs text-gray-600 break-all">
+            <div className="bg-[#FFF5F3] rounded p-3 text-xs text-[#B8A099] break-all">
               <div className="font-semibold mb-1">订单号：</div>
               {searchParams.session_id}
             </div>
@@ -41,7 +41,7 @@ export default async function PaymentSuccessPage({
             </Link>
           </div>
 
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-[#B8A099] text-center">
             页面将在 3 秒后自动返回...
           </p>
         </CardContent>

@@ -3,7 +3,12 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import OnboardingWizard from "./OnboardingWizard";
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage(
+  props: { searchParams?: Promise<{ edit?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const isEditMode = searchParams?.edit === "true";
+
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -15,7 +20,7 @@ export default async function OnboardingPage() {
     where: { id: session.user.id as string },
   });
 
-  if (user?.isOnboarded) {
+  if (user?.isOnboarded && !isEditMode) {
     redirect("/dashboard");
   }
 

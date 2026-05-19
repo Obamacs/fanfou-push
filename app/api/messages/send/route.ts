@@ -62,6 +62,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Timeleft Chat Gatekeeping: Only allow messaging if they share a started event
+    const sharedEventsCount = await db.event.count({
+      where: {
+        date: { lte: new Date() }, // Event has started
+        AND: [
+          {
+            attendances: {
+              some: { userId: session.user.id, status: "CONFIRMED" }
+            }
+          },
+          {
+            attendances: {
+              some: { userId: receiverId, status: "CONFIRMED" }
+            }
+          }
+        ]
+      }
+    });
+
+    if (sharedEventsCount === 0) {
+      return NextResponse.json(
+        { error: "破冰从见面开始！私聊将在你们共同参加的聚餐开始后解锁。" },
+        { status: 403 }
+      );
+    }
+
     const message = await db.directMessage.create({
       data: {
         senderId: session.user.id,

@@ -69,35 +69,19 @@ export default async function DashboardPage() {
           </Card>
         )}
 
-        {/* Quick actions — 3 cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-          <Link href="/match" className="group">
-            <Card className="border-0 shadow-sm rounded-3xl p-6 bg-white hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 rounded-2xl bg-[#FF2442]/10 flex items-center justify-center mb-5">
-                <Heart className="w-5 h-5 text-[#FF2442]" />
-              </div>
-              <h3 className="text-[17px] font-semibold text-[#2D2420] mb-1">匹配</h3>
-              <p className="text-[15px] text-[#B8A099] mb-4">
-                根据兴趣和城市，找到志同道合的人
-              </p>
-              <div className="flex items-center text-[13px] text-[#FF2442] font-medium">
-                {matchCount > 0 ? `${matchCount} 个活跃匹配` : "开始匹配"}
-                <ChevronRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-            </Card>
-          </Link>
-
+        {/* Quick actions — 2 cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
           <Link href="/events" className="group">
             <Card className="border-0 shadow-sm rounded-3xl p-6 bg-white hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 rounded-2xl bg-[#34c759]/10 flex items-center justify-center mb-5">
-                <Calendar className="w-5 h-5 text-[#34c759]" />
+              <div className="w-10 h-10 rounded-2xl bg-[#FF2442]/10 flex items-center justify-center mb-5">
+                <Calendar className="w-5 h-5 text-[#FF2442]" />
               </div>
-              <h3 className="text-[17px] font-semibold text-[#2D2420] mb-1">活动</h3>
+              <h3 className="text-[17px] font-semibold text-[#2D2420] mb-1">预订这周四</h3>
               <p className="text-[15px] text-[#B8A099] mb-4">
-                选择你喜欢的活动，出现就好
+                报名参与你所在城市的本周盲盒晚餐
               </p>
-              <div className="flex items-center text-[13px] text-[#34c759] font-medium">
-                {upcomingCount > 0 ? `${upcomingCount} 场待参加` : "发现活动"}
+              <div className="flex items-center text-[13px] text-[#FF2442] font-medium">
+                {upcomingCount > 0 ? `已报名 ${upcomingCount} 场` : "查看报名"}
                 <ChevronRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </Card>
@@ -110,7 +94,7 @@ export default async function DashboardPage() {
               </div>
               <h3 className="text-[17px] font-semibold text-[#2D2420] mb-1">消息</h3>
               <p className="text-[15px] text-[#B8A099] mb-4">
-                和朋友保持联系，分享生活
+                和已见面的同桌朋友保持联系
               </p>
               <div className="flex items-center text-[13px] text-[#ff9500] font-medium">
                 查看消息
@@ -125,7 +109,7 @@ export default async function DashboardPage() {
           {[
             { value: upcomingCount, label: "待参加", color: "text-[#FF2442]" },
             { value: avgRating, label: "评分", color: "text-[#ff9500]" },
-            { value: matchCount, label: "活跃匹配", color: "text-[#34c759]" },
+            { value: matchCount, label: "历史同桌", color: "text-[#34c759]" },
             { value: user.interests.length, label: "兴趣", color: "text-[#af52de]" },
           ].map((stat) => (
             <Card key={stat.label} className="border-0 shadow-sm rounded-2xl p-5 bg-white text-center">
@@ -142,9 +126,9 @@ export default async function DashboardPage() {
           <h2 className="text-[21px] font-bold text-[#2D2420] mb-5">如何参与</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { step: "1", title: "选择活动", desc: "浏览你所在城市的聚餐、饮品、运动等活动" },
-              { step: "2", title: "报名参加", desc: "选定时间和地点，免费或使用券码报名" },
-              { step: "3", title: "出现就好", desc: "准时赴约，其他的交给我们来安排" },
+              { step: "1", title: "预订周四座位", desc: "选择你所在城市，报名加入本周四晚的聚餐等候池" },
+              { step: "2", title: "匹配与揭晓", desc: "周三算法将为你分配 5 位契合的陌生人，周四揭晓餐厅" },
+              { step: "3", title: "出现就好", desc: "周四晚 20:00 准时赴约，享受纯粹的盲盒社交体验" },
             ].map((item) => (
               <Card key={item.step} className="border-0 shadow-sm rounded-3xl p-6 bg-white">
                 <div className="w-8 h-8 rounded-full bg-[#FFFAF8] flex items-center justify-center text-sm font-semibold text-[#2D2420] mb-4">
@@ -161,9 +145,9 @@ export default async function DashboardPage() {
         <Card className="border-0 shadow-sm rounded-3xl p-6 bg-white">
           <h3 className="text-[15px] font-semibold text-[#2D2420] mb-4">小贴士</h3>
           <div className="space-y-3 text-[15px] text-[#B8A099]">
-            <p>· 完善资料后更容易被志趣相投的人发现</p>
-            <p>· 选择你真正感兴趣的活动类型，匹配更精准</p>
-            <p>· 别紧张 — 走进门就知道，每个人都选择了来这里</p>
+            <p>· 完善个性化问卷能让算法更精准地为你找到契合的同桌</p>
+            <p>· 餐厅地址将在活动开始前 12 小时揭晓，保持神秘感</p>
+            <p>· 别紧张 — 走进门就知道，每个人都和你一样期待今晚</p>
           </div>
         </Card>
       </div>

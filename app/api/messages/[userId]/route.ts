@@ -28,6 +28,32 @@ export async function GET(
       );
     }
 
+    // Timeleft Chat Gatekeeping: Check if they share a started event
+    const sharedEventsCount = await db.event.count({
+      where: {
+        date: { lte: new Date() }, // Event has started
+        AND: [
+          {
+            attendances: {
+              some: { userId: session.user.id, status: "CONFIRMED" }
+            }
+          },
+          {
+            attendances: {
+              some: { userId: userId, status: "CONFIRMED" }
+            }
+          }
+        ]
+      }
+    });
+
+    if (sharedEventsCount === 0) {
+      return NextResponse.json(
+        { error: "破冰从见面开始！聊天将在你们共同参加的聚餐开始后解锁。" },
+        { status: 403 }
+      );
+    }
+
     // Get all messages between the two users
     const messages = await db.directMessage.findMany({
       where: {

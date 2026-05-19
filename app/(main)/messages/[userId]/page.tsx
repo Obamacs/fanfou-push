@@ -168,7 +168,7 @@ export default function ChatPage() {
                 className={`max-w-xs px-4 py-2 rounded-lg ${
                   msg.senderId === userId
                     ? "bg-white border border-[#F0E4E0]"
-                    : "bg-blue-500 text-white"
+                    : "bg-[#FFF0F3]0 text-white"
                 }`}
               >
                 <p className="break-words">{msg.content}</p>
@@ -176,7 +176,7 @@ export default function ChatPage() {
                   className={`text-xs mt-1 ${
                     msg.senderId === userId
                       ? "text-[#B8A099]"
-                      : "text-blue-100"
+                      : "text-[#FF4D63]"
                   }`}
                 >
                   {new Date(msg.createdAt).toLocaleTimeString()}

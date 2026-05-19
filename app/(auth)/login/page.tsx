@@ -11,13 +11,11 @@ import { Input } from "@/components/ui/input";
 function LoginContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
-  const [loginMode, setLoginMode] = useState<"magic" | "admin">("magic");
 
   const errorParam = searchParams.get("error");
   const detailsParam = searchParams.get("details");
@@ -59,7 +57,6 @@ function LoginContent() {
     setError("");
     setSuccess("");
 
-    // 验证邮箱
     if (!email) {
       setError("请输入邮箱");
       setLoading(false);
@@ -98,60 +95,6 @@ function LoginContent() {
     }
   };
 
-  const handleAdminSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    // 验证输入
-    if (!email || !password) {
-      setError("邮箱和密码为必填项");
-      setLoading(false);
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("请输入有效的邮箱地址");
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("密码长度至少为 6 位");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        console.error("Admin login error:", result.error);
-        setError("邮箱或密码错误");
-        return;
-      }
-
-      if (result?.ok) {
-        setSuccess("登录成功，正在跳转...");
-        // 使用 router 而不是 window.location 以获得更好的 UX
-        setTimeout(() => {
-          window.location.href = "/admin";
-        }, 500);
-      }
-    } catch (err) {
-      console.error("Admin login exception:", err);
-      setError("登录失败，请重试");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex">
       <div
@@ -159,12 +102,15 @@ function LoginContent() {
         style={{ backgroundImage: "url(/login-hero-final.jpg)", backgroundPosition: "center" }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/40"></div>
-        <div className="text-center z-10 max-w-xl space-y-4">
+        <div className="text-center z-10 max-w-xl space-y-4 px-4">
           <h1 className="text-8xl font-semibold tracking-tight leading-none text-white">饭否</h1>
-          <p className="text-2xl font-light leading-relaxed text-white">将陌生人变成朋友</p>
-          <p className="text-base font-light leading-relaxed text-white/80 pt-2">
-            每周的聚会，让有趣的人自然相遇
-          </p>
+          <p className="text-2xl font-light leading-relaxed text-white">每周四晚的盲盒社交晚餐</p>
+          <div className="text-base font-light leading-relaxed text-white/90 pt-4 space-y-2 text-left bg-black/20 p-6 rounded-2xl backdrop-blur-sm inline-block">
+            <p>📍 选择所在城市，报名预订本周四晚的聚餐座位。</p>
+            <p>🤖 周三晚，算法将为你精准匹配 5 位同频的陌生人作为同桌。</p>
+            <p>🤫 周四活动前 12 小时，才为你揭晓神秘餐厅的真实地址。</p>
+            <p className="font-medium pt-2 text-center text-[#FFFAF8]">不用做攻略，不用尬聊破冰，只需准时赴约。</p>
+          </div>
         </div>
       </div>
 
@@ -201,48 +147,15 @@ function LoginContent() {
           <div className="space-y-8">
             <div className="md:hidden text-center mb-8">
               <h1 className="gradient-text text-4xl font-bold">饭否</h1>
-              <p className="text-sm text-[#B8A099] mt-2">遇见有趣的灵魂</p>
-            </div>
-
-            <div className="flex gap-2 bg-[#FFF5F3] p-1 rounded-lg">
-              <button
-                onClick={() => {
-                  setLoginMode("magic");
-                  setError("");
-                  setSuccess("");
-                }}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                  loginMode === "magic"
-                    ? "bg-white text-[#2D2420] shadow-sm"
-                    : "text-[#B8A099] hover:text-[#2D2420]"
-                }`}
-              >
-                用户登录
-              </button>
-              <button
-                onClick={() => {
-                  setLoginMode("admin");
-                  setError("");
-                  setSuccess("");
-                }}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                  loginMode === "admin"
-                    ? "bg-white text-[#2D2420] shadow-sm"
-                    : "text-[#B8A099] hover:text-[#2D2420]"
-                }`}
-              >
-                管理员登录
-              </button>
+              <p className="text-sm text-[#B8A099] mt-2">每周四晚，一场 6 个人的盲盒晚餐</p>
             </div>
 
             <div>
               <h2 className="text-3xl font-semibold text-[#2D2420] mb-2">
-                {loginMode === "magic" ? "欢迎回来" : "管理员登录"}
+                欢迎回来
               </h2>
               <p className="text-[#B8A099] text-sm">
-                {loginMode === "magic"
-                  ? "输入邮箱，我们将发送验证链接"
-                  : "输入邮箱和密码登录管理后台"}
+                输入邮箱，我们将发送验证链接
               </p>
             </div>
 
@@ -258,72 +171,34 @@ function LoginContent() {
               </div>
             )}
 
-            {loginMode === "magic" ? (
-              <form onSubmit={handleMagicLinkSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-[#2D2420] mb-3">邮箱</label>
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    disabled={loading}
-                    className="border-[#F0E4E0] rounded-xl h-11"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
+            <form onSubmit={handleMagicLinkSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-[#2D2420] mb-3">邮箱</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
                   disabled={loading}
-                  className="w-full btn-brand text-white font-semibold h-11 rounded-xl mt-6"
-                >
-                  {loading ? "发送中..." : "发送验证链接"}
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handleAdminSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-[#2D2420] mb-3">邮箱</label>
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@meal-meet.com"
-                    disabled={loading}
-                    className="border-[#F0E4E0] rounded-xl h-11"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#2D2420] mb-3">密码</label>
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="输入密码"
-                    disabled={loading}
-                    className="border-[#F0E4E0] rounded-xl h-11"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full btn-brand text-white font-semibold h-11 rounded-xl mt-6"
-                >
-                  {loading ? "登录中..." : "登录"}
-                </Button>
-              </form>
-            )}
-
-            {loginMode === "magic" && (
-              <div className="text-center text-sm text-[#B8A099]">
-                还没有账号？{" "}
-                <Link href="/register" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
-                  立即注册
-                </Link>
+                  className="border-[#F0E4E0] rounded-xl h-11"
+                />
               </div>
-            )}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full btn-brand text-white font-semibold h-11 rounded-xl mt-6"
+              >
+                {loading ? "发送中..." : "发送验证链接"}
+              </Button>
+            </form>
+
+            <div className="text-center text-sm text-[#B8A099]">
+              还没有账号？{" "}
+              <Link href="/register" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
+                立即注册
+              </Link>
+            </div>
           </div>
           )}
         </div>

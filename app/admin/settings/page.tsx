@@ -130,7 +130,7 @@ export default function SettingsPage() {
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-[#FF2442] hover:bg-blue-700 text-white font-semibold py-2 rounded-lg"
+            className="w-full bg-[#FF2442] hover:bg-[#FF4D63] text-white font-semibold py-2 rounded-lg"
           >
             {saving ? "保存中..." : "保存设置"}
           </Button>

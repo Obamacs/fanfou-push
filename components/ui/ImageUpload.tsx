@@ -128,13 +128,13 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
           disabled={loading}
           className={`w-full aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
             dragOver
-              ? "border-blue-400 bg-blue-50"
-              : "border-[#F0E4E0] hover:border-gray-300 bg-[#FFF5F3]/50"
+              ? "border-[#FF2442] bg-[#FFF0F3]"
+              : "border-[#F0E4E0] hover:border-[#F0E4E0] bg-[#FFF5F3]/50"
           }`}
         >
           {loading ? (
             <>
-              <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#F0E4E0] border-t-gray-600 rounded-full animate-spin" />
               <span className="text-sm text-[#B8A099]">上传中...</span>
             </>
           ) : (

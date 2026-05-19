@@ -28,6 +28,9 @@ async function AdminNavbar() {
           <Link href="/admin/events" className="text-[#B8A099] hover:text-white transition-colors font-medium">
             活动
           </Link>
+          <Link href="/admin/matchmaking" className="text-[#FF2442] hover:text-[#FF4D63] transition-colors font-semibold">
+            分桌引擎
+          </Link>
           <Link href="/admin/questionnaire" className="text-[#B8A099] hover:text-white transition-colors font-medium">
             问卷管理
           </Link>

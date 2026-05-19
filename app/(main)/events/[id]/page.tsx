@@ -6,7 +6,7 @@ import { AMap } from "@/components/events/AMap";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EVENT_TYPE_COLORS } from "@/lib/constants";
-import { Calendar, MapPin, Users, Clock, Ticket, ChevronLeft, User } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Ticket, ChevronLeft, User, Lock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -26,7 +26,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
       creator: { select: { id: true, name: true, avatarUrl: true } },
       attendances: {
         where: { status: { in: ["CONFIRMED", "PENDING", "WAITLISTED"] } },
-        include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+        include: { user: { select: { id: true, name: true, avatarUrl: true, gender: true, ageGroup: true } } },
         orderBy: { joinedAt: "asc" },
       },
       _count: { select: { attendances: { where: { status: "CONFIRMED" } } } },
@@ -53,6 +53,16 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
     weekday: "short", hour: "2-digit", minute: "2-digit",
   }).format(eventDate);
 
+  // Timeleft Reveal System Logic
+  const now = new Date();
+  
+  // 1. Address Reveal: 12 hours before event
+  const revealTime = new Date(eventDate.getTime() - 12 * 60 * 60 * 1000);
+  const isAddressRevealed = now >= revealTime || isCreator;
+  
+  // 2. Attendee Reveal: At event start time
+  const isAttendeeRevealed = now >= eventDate || isCreator;
+
   return (
     <div className="min-h-screen bg-[#FFFAF8]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -75,7 +85,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         )}
 
         {/* Hero image */}
-        <div className="relative aspect-[2/1] bg-gray-100 rounded-3xl overflow-hidden mb-8">
+        <div className="relative aspect-[2/1] bg-[#FFF5F3] rounded-3xl overflow-hidden mb-8">
           {event.imageUrl ? (
             <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
           ) : (
@@ -92,9 +102,9 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
               {colors.icon} {event.type}
             </span>
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-              event.status === "UPCOMING" ? "bg-blue-50 text-blue-600" :
+              event.status === "UPCOMING" ? "bg-[#FFF0F3] text-[#FF2442]" :
               event.status === "ONGOING" ? "bg-green-50 text-green-600" :
-              event.status === "COMPLETED" ? "bg-gray-100 text-gray-600" :
+              event.status === "COMPLETED" ? "bg-[#FFF5F3] text-[#B8A099]" :
               "bg-red-50 text-red-600"
             }`}>
               {event.status === "UPCOMING" ? "即将开始" :
@@ -130,7 +140,16 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
               <div>
                 <div className="text-xs text-[#B8A099] mb-0.5">地点</div>
                 <div className="text-[15px] font-semibold text-[#2D2420]">{event.city}</div>
-                {event.address && <div className="text-[13px] text-[#B8A099]">{event.address}</div>}
+                {event.address && (
+                  <div className="text-[13px] text-[#B8A099] flex items-center gap-1">
+                    {isAddressRevealed ? event.address : (
+                      <>
+                        <Lock className="w-3 h-3" />
+                        地点将在活动前12小时揭晓
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </Card>
@@ -181,12 +200,37 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         )}
 
         {/* Map */}
-        <div className="mb-8">
-          <h2 className="text-[19px] font-semibold text-[#2D2420] mb-3">活动地点</h2>
-          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
-            <AMap latitude={event.latitude} longitude={event.longitude} address={event.address} city={event.city} title={event.title} />
-          </Card>
-        </div>
+        {event.type !== "POOL" ? (
+          <div className="mb-8">
+            <h2 className="text-[19px] font-semibold text-[#2D2420] mb-3">活动地点</h2>
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+              {isAddressRevealed ? (
+                <AMap latitude={event.latitude} longitude={event.longitude} address={event.address} city={event.city} title={event.title} />
+              ) : (
+                <div className="h-[200px] bg-[#FFF5F3] flex flex-col items-center justify-center p-6 text-center">
+                  <Lock className="w-8 h-8 text-[#B8A099] mb-3 opacity-50" />
+                  <p className="text-[15px] font-medium text-[#2D2420]">保持神秘，遇见惊喜</p>
+                  <p className="text-[13px] text-[#B8A099] mt-1 max-w-[250px]">
+                    为了给你最纯粹的盲盒交友体验，具体地点将在活动开始前 12 小时准时揭晓
+                  </p>
+                </div>
+              )}
+            </Card>
+          </div>
+        ) : (
+          <div className="mb-8">
+            <h2 className="text-[19px] font-semibold text-[#2D2420] mb-3">餐厅安排</h2>
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+              <div className="h-[200px] bg-[#FFF5F3] flex flex-col items-center justify-center p-6 text-center">
+                <Lock className="w-8 h-8 text-[#B8A099] mb-3 opacity-50" />
+                <p className="text-[15px] font-medium text-[#2D2420]">算法分桌中</p>
+                <p className="text-[13px] text-[#B8A099] mt-1 max-w-[280px]">
+                  周三我们将为你精准匹配 5 位同桌伙伴，周四你将收到具体的餐厅地址和座位信息。
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Attendees */}
         <div className="mb-8">
@@ -196,23 +240,35 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
           <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white">
             {confirmedAttendees.length > 0 ? (
               <div className="flex flex-wrap gap-4">
-                {confirmedAttendees.map((att) => (
-                  <div key={att.userId} className="flex flex-col items-center gap-1.5">
-                    <div className="w-11 h-11 rounded-full bg-[#FF2442]/10 flex items-center justify-center text-sm font-semibold text-[#FF2442]">
-                      {att.user.name.charAt(0)}
+                {confirmedAttendees.map((att) => {
+                  const isMe = session?.user?.id === att.userId;
+                  const showReal = isAttendeeRevealed || isMe;
+                  const genderLabel = att.user.gender === "MALE" ? "男生" : att.user.gender === "FEMALE" ? "女生" : "神秘人";
+                  
+                  return (
+                    <div key={att.userId} className="flex flex-col items-center gap-1.5">
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-semibold ${showReal ? 'bg-[#FF2442]/10 text-[#FF2442]' : 'bg-[#FFF5F3] text-[#B8A099]'}`}>
+                        {showReal ? att.user.name.charAt(0) : "?"}
+                      </div>
+                      <span className="text-xs text-[#B8A099] max-w-[64px] truncate text-center">
+                        {showReal ? att.user.name : (att.user.ageGroup ? `${att.user.ageGroup} ${genderLabel}` : genderLabel)}
+                      </span>
                     </div>
-                    <span className="text-xs text-[#B8A099] max-w-[64px] truncate">
-                      {att.user.name}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-[15px] text-[#B8A099]">还没有参加者，来做第一个吧</p>
             )}
             {waitlistedCount > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="mt-4 pt-4 border-t border-[#F0E4E0]">
                 <p className="text-sm text-[#B8A099]">{waitlistedCount} 人在候补中</p>
+              </div>
+            )}
+            {!isAttendeeRevealed && confirmedAttendees.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-[#F0E4E0] flex items-center gap-2 text-sm text-[#B8A099]">
+                <Lock className="w-3 h-3" />
+                <span>小伙伴的真实身份将在活动开始时揭晓</span>
               </div>
             )}
           </Card>
@@ -260,3 +316,4 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
     </div>
   );
 }
+

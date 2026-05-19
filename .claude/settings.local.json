@@ -13,7 +13,8 @@
       "Bash(npm install *)",
       "Bash(npx prisma *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

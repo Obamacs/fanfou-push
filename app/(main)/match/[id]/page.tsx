@@ -121,8 +121,8 @@ export default async function MatchDetailPage({
           </p>
         </div>
 
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-blue-700">
+        <div className="mb-6 p-4 bg-[#FFF0F3] border border-[#FF2442]/20 rounded-lg">
+          <p className="text-[#FF2442]">
             {confirmedCount} / {totalMembers} 人已确认
           </p>
         </div>

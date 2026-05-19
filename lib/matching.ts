@@ -7,6 +7,8 @@ interface Candidate {
   wantsChildren?: string | null;
   interests: { interest: { id: string; name: string } }[];
   answers: { questionId: string; answer: string }[];
+  score?: number;
+  originalUser?: any;
 }
 
 interface Question {
