@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 
 interface Message {
@@ -28,7 +27,6 @@ interface OtherUser {
 }
 
 export default function ChatPage() {
-  const router = useRouter();
   const params = useParams();
   const userId = params.userId as string;
 
@@ -41,37 +39,49 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
+    let isMounted = true;
+
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/messages/${userId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (isMounted) {
+            setError(data.error || "获取消息失败");
+          }
+          return;
+        }
+
+        if (isMounted) {
+          setOtherUser(data.otherUser);
+          setMessages(data.messages);
+        }
+      } catch {
+        if (isMounted) {
+          setError("网络错误，请重试");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchMessages();
+    const interval = setInterval(() => {
+      void fetchMessages();
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [userId]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const res = await fetch(`/api/messages/${userId}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "获取消息失败");
-        return;
-      }
-
-      setOtherUser(data.otherUser);
-      setMessages(data.messages);
-    } catch (err) {
-      setError("网络错误，请重试");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,8 +111,8 @@ export default function ChatPage() {
 
       setMessageInput("");
       setMessages([...messages, data.message]);
-      scrollToBottom();
-    } catch (err) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    } catch {
       setError("网络错误，请重试");
     } finally {
       setSending(false);

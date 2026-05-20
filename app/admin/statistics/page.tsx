@@ -3,6 +3,12 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 
+interface DistributionItem {
+  city?: string;
+  type?: string;
+  _count: number;
+}
+
 export default async function StatisticsPage() {
   const session = await auth();
 
@@ -40,17 +46,17 @@ export default async function StatisticsPage() {
     take: 100,
   });
 
-  const cityDistribution = cities.reduce((acc: any, user) => {
+  const cityDistribution = cities.reduce<DistributionItem[]>((acc, user) => {
     const city = user.city || "未设置";
-    const existing = acc.find((item: any) => item.city === city);
+    const existing = acc.find((item) => item.city === city);
     if (existing) {
-      existing._count = (existing._count || 0) + 1;
+      existing._count += 1;
     } else {
       acc.push({ city, _count: 1 });
     }
     return acc;
   }, [])
-    .sort((a: any, b: any) => (b._count || 0) - (a._count || 0))
+    .sort((a, b) => b._count - a._count)
     .slice(0, 10);
 
   // 获取活动类型分布（简化版）
@@ -58,20 +64,20 @@ export default async function StatisticsPage() {
     select: { type: true },
   });
 
-  const eventTypeDistribution = events.reduce((acc: any, event) => {
+  const eventTypeDistribution = events.reduce<DistributionItem[]>((acc, event) => {
     const type = event.type || "未分类";
-    const existing = acc.find((item: any) => item.type === type);
+    const existing = acc.find((item) => item.type === type);
     if (existing) {
-      existing._count = (existing._count || 0) + 1;
+      existing._count += 1;
     } else {
       acc.push({ type, _count: 1 });
     }
     return acc;
   }, [])
-    .sort((a: any, b: any) => (b._count || 0) - (a._count || 0));
+    .sort((a, b) => b._count - a._count);
 
   // 获取用户增长趋势（最近7天）
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
   const newUsersWeek = await db.user.count({
     where: {
       createdAt: {
@@ -182,12 +188,12 @@ export default async function StatisticsPage() {
       <Card className="bg-[#241918] border-[#2D1E1A] p-6 mb-8">
         <h2 className="text-lg font-bold text-white mb-4">用户城市分布（Top 10）</h2>
         <div className="space-y-2">
-          {cityDistribution.map((item: any) => (
+          {cityDistribution.map((item) => (
             <div key={item.city} className="flex items-center justify-between">
               <span className="text-[#B8A099]">{item.city || "未设置"}</span>
               <div className="flex items-center gap-3">
-                <div className="h-2 bg-[#FF2442] rounded" style={{ width: `${((item._count || 0) / totalUsers) * 200}px` }} />
-                <span className="text-[#B8A099]">{item._count || 0}</span>
+                <div className="h-2 bg-[#FF2442] rounded" style={{ width: `${(item._count / totalUsers) * 200}px` }} />
+                <span className="text-[#B8A099]">{item._count}</span>
               </div>
             </div>
           ))}
@@ -198,12 +204,12 @@ export default async function StatisticsPage() {
       <Card className="bg-[#241918] border-[#2D1E1A] p-6">
         <h2 className="text-lg font-bold text-white mb-4">活动类型分布</h2>
         <div className="space-y-2">
-          {eventTypeDistribution.map((item: any) => (
+          {eventTypeDistribution.map((item) => (
             <div key={item.type} className="flex items-center justify-between">
               <span className="text-[#B8A099]">{item.type}</span>
               <div className="flex items-center gap-3">
-                <div className="h-2 bg-[#FF4D94] rounded" style={{ width: `${((item._count || 0) / totalEvents) * 200}px` }} />
-                <span className="text-[#B8A099]">{item._count || 0}</span>
+                <div className="h-2 bg-[#FF4D94] rounded" style={{ width: `${(item._count / totalEvents) * 200}px` }} />
+                <span className="text-[#B8A099]">{item._count}</span>
               </div>
             </div>
           ))}

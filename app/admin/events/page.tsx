@@ -25,22 +25,30 @@ export default function EventsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    let isMounted = true;
 
-  const fetchEvents = async () => {
-    try {
-      const res = await fetch("/api/admin/events");
-      const data = await res.json();
-      if (res.ok) {
-        setEvents(data.events);
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch("/api/admin/events");
+        const data = await res.json();
+        if (res.ok && isMounted) {
+          setEvents(data.events);
+        }
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      console.error("Failed to fetch events:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    void fetchEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleDeleteEvent = async (eventId: string) => {
     if (!confirm("确定要删除这个活动吗？")) return;

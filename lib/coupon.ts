@@ -82,7 +82,7 @@ export async function getValidCoupons(userId: string) {
 }
 
 // 使用券报名活动
-export async function useCouponForEvent(
+export async function redeemCouponForEvent(
   userId: string,
   couponCode: string,
   eventId: string

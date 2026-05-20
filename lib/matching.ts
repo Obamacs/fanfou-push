@@ -8,12 +8,6 @@ interface Candidate {
   interests: { interest: { id: string; name: string } }[];
   answers: { questionId: string; answer: string }[];
   score?: number;
-  originalUser?: any;
-}
-
-interface Question {
-  id: string;
-  weight: number;
 }
 
 // 活动类型与兴趣的映射

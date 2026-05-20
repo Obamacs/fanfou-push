@@ -26,22 +26,30 @@ export default function UsersPage() {
   const [filterBanned, setFilterBanned] = useState(false);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    let isMounted = true;
 
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/admin/users");
-      const data = await res.json();
-      if (res.ok) {
-        setUsers(data.users);
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/admin/users");
+        const data = await res.json();
+        if (res.ok && isMounted) {
+          setUsers(data.users);
+        }
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    void fetchUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleBanUser = async (userId: string, isBanned: boolean) => {
     try {

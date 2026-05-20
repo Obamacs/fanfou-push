@@ -38,9 +38,8 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Link href={`/events/${event.id}`} className="group block">
-      <Card className="overflow-hidden border-0 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 bg-white rounded-3xl">
-        {/* Image area */}
-        <div className="relative aspect-[4/3] bg-[#FFF5F3] overflow-hidden">
+      <Card className="surface-card overflow-hidden rounded-lg p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(80,35,30,0.14)]">
+        <div className="relative aspect-[4/3] overflow-hidden bg-[#fff0ef]">
           {event.imageUrl ? (
             <img
               src={event.imageUrl}
@@ -52,41 +51,38 @@ export function EventCard({ event }: EventCardProps) {
               <span className="text-6xl">{colors.icon}</span>
             </div>
           )}
-          {/* Price chip */}
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
           <div className="absolute top-4 left-4">
             {event.priceAmount === 0 ? (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm text-[#2D2420] shadow-sm">
+              <span className="inline-flex items-center rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#271f1d] shadow-sm backdrop-blur-sm">
                 免费
               </span>
             ) : (
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-[#2D2420]/80 backdrop-blur-sm text-white shadow-sm">
+              <span className="inline-flex items-center rounded-full bg-[#271f1d]/82 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
                 ￥{event.priceAmount}
               </span>
             )}
           </div>
-          {/* Type badge */}
           <div className="absolute top-4 right-4">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium shadow-sm ${colors.bg} ${colors.text}`}>
               {event.type}
             </span>
           </div>
-          {/* Cancelled overlay */}
           {event.status === "CANCELLED" && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-              <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-[#F0E4E0] text-[#B8A099]">
+              <span className="rounded-full bg-[#f0dfda] px-4 py-1.5 text-sm font-semibold text-[#9d8580]">
                 已取消
               </span>
             </div>
           )}
         </div>
 
-        {/* Content */}
         <div className="p-5 space-y-4">
-          <h3 className="font-semibold text-[17px] leading-snug text-[#2D2420] line-clamp-2 group-hover:text-[#FF2442] transition-colors">
+          <h3 className="line-clamp-2 text-[18px] font-semibold leading-snug text-[#271f1d] transition-colors group-hover:text-[#ff2442]">
             {event.title}
           </h3>
 
-          <div className="space-y-2 text-sm text-[#B8A099]">
+          <div className="space-y-2 text-sm text-[#9d8580]">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 flex-shrink-0" />
               <span>{formattedDate}</span>
@@ -97,11 +93,10 @@ export function EventCard({ event }: EventCardProps) {
             </div>
           </div>
 
-          {/* Attendees bar */}
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-[#B8A099]" />
-              <span className="text-xs text-[#B8A099]">
+              <Users className="h-4 w-4 text-[#9d8580]" />
+              <span className="text-xs text-[#9d8580]">
                 {confirmed}/{event.maxAttendees}
               </span>
               {remaining > 0 && remaining <= 2 && (
@@ -110,27 +105,25 @@ export function EventCard({ event }: EventCardProps) {
                 </span>
               )}
             </div>
-            {/* Mini progress bar */}
-            <div className="w-16 h-1 bg-[#F0E4E0] rounded-full overflow-hidden">
+            <div className="h-1 w-16 overflow-hidden rounded-full bg-[#f0dfda]">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   confirmed >= event.maxAttendees
                     ? "bg-orange-400"
                     : confirmed / event.maxAttendees > 0.7
                     ? "bg-amber-400"
-                    : "bg-[#FF2442]"
+                    : "bg-[#ff2442]"
                 }`}
                 style={{ width: `${Math.min(100, (confirmed / event.maxAttendees) * 100)}%` }}
               />
             </div>
           </div>
 
-          {/* Creator */}
-          <div className="flex items-center gap-2 pt-3 border-t border-[#F0E4E0]">
-            <div className="w-6 h-6 rounded-full bg-[#FF2442]/10 flex items-center justify-center text-xs font-medium text-[#FF2442]">
+          <div className="flex items-center gap-2 border-t border-[#f0dfda] pt-3">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ff2442]/10 text-xs font-medium text-[#ff2442]">
               {event.creator.name.charAt(0)}
             </div>
-            <span className="text-xs text-[#B8A099]">{event.creator.name}</span>
+            <span className="text-xs text-[#9d8580]">{event.creator.name}</span>
           </div>
         </div>
       </Card>

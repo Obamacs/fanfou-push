@@ -23,7 +23,33 @@ export default function AdminInterestsPage() {
 
   const [form, setForm] = useState({ name: "", icon: "" });
 
-  useEffect(() => { fetchInterests(); }, []);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadInterests = async () => {
+      try {
+        const res = await fetch("/api/admin/interests");
+        const data = await res.json();
+        if (isMounted) {
+          setInterests(data.interests || []);
+        }
+      } catch {
+        if (isMounted) {
+          setError("获取兴趣标签失败");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadInterests();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const fetchInterests = async () => {
     try {

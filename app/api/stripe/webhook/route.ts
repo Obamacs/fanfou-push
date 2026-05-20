@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
+import type Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let event;
+    let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
     } catch (err) {
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // Handle checkout.session.completed
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as any;
+      const session = event.data.object as Stripe.Checkout.Session;
 
       const eventId = session.metadata?.eventId;
       const userId = session.metadata?.userId;

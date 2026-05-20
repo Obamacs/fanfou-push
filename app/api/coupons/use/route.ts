@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { useCouponForEvent } from "@/lib/coupon";
+import { redeemCouponForEvent } from "@/lib/coupon";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { coupon, attendance } = await useCouponForEvent(
+    const { coupon, attendance } = await redeemCouponForEvent(
       session.user.id,
       couponCode.toUpperCase(),
       eventId

@@ -75,7 +75,10 @@ export default function OnboardingWizard({
 
   const progress = (step / 8) * 100;
 
-  const updateState = (key: keyof OnboardingState, value: any) => {
+  const updateState = <K extends keyof OnboardingState>(
+    key: K,
+    value: OnboardingState[K]
+  ) => {
     setState((prev) => ({ ...prev, [key]: value }));
   };
 

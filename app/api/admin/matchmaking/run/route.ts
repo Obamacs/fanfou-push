@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
+    const adminUserId = session.user.id;
 
     const { poolEventId } = await req.json();
 
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
             maxAttendees: TABLE_SIZE,
             priceAmount: 0, // already paid
             status: "UPCOMING",
-            creatorId: session.user.id, // Admin is creator
+            creatorId: adminUserId, // Admin is creator
             matchId: match.id,
             // Address remains empty until Admin fills it, but it's hidden by reveal logic anyway
             address: "", 
@@ -169,7 +170,12 @@ export async function POST(req: NextRequest) {
 }
 
 // Simplified generic scoring for the chunking seed
-function calculateBaseScore(user: any, candidate: any): number {
+interface ScoreUser {
+  gender?: string | null;
+  relationshipGoal?: string | null;
+}
+
+function calculateBaseScore(user: ScoreUser, candidate: ScoreUser): number {
   let score = 50;
   // Relationship
   if (user.relationshipGoal && candidate.relationshipGoal && user.relationshipGoal === candidate.relationshipGoal) score += 15;

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
-import { useCouponForEvent } from "@/lib/coupon";
+import { redeemCouponForEvent } from "@/lib/coupon";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Try to use coupon first if provided
     if (couponCode) {
       try {
-        await useCouponForEvent(userId, couponCode.toUpperCase(), eventId);
+        await redeemCouponForEvent(userId, couponCode.toUpperCase(), eventId);
         return NextResponse.json({
           usedCoupon: true,
           redirectUrl: `/events/${eventId}?payment=success`,

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
@@ -99,7 +100,7 @@ export async function PATCH(
       }
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.EventUpdateInput = {};
     if (title !== undefined) updateData.title = title;
     if (type !== undefined) updateData.type = type;
     if (city !== undefined) updateData.city = city;

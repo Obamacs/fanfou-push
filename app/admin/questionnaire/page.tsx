@@ -32,7 +32,33 @@ export default function AdminQuestionnairePage() {
     order: 0,
   });
 
-  useEffect(() => { fetchQuestions(); }, []);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadQuestions = async () => {
+      try {
+        const res = await fetch("/api/admin/questionnaire");
+        const data = await res.json();
+        if (isMounted) {
+          setQuestions(data.questions || []);
+        }
+      } catch {
+        if (isMounted) {
+          setError("获取问题列表失败");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadQuestions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const fetchQuestions = async () => {
     try {

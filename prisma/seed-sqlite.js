@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 // 直接使用SQLite3库初始化数据库
 const sqlite3 = require('sqlite3').verbose();

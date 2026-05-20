@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { ArrowRight, MailCheck, Sparkles } from "lucide-react";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -31,7 +32,6 @@ export default function RegisterPage() {
     setError("");
     setSuccess("");
 
-    // 验证
     if (!formData.name.trim() || !formData.email.trim()) {
       setError("请填写所有字段");
       setLoading(false);
@@ -83,61 +83,55 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* 左侧品牌区 */}
+    <div className="min-h-screen bg-[#fff9f7] lg:grid lg:grid-cols-[1.02fr_0.98fr]">
       <div
-        className="hidden md:flex md:w-1/2 text-white flex-col justify-center items-center p-8 relative overflow-hidden bg-cover bg-center"
-        style={{ backgroundImage: "url(/register-hero-text.jpg)" }}
+        className="relative hidden overflow-hidden bg-cover bg-center p-10 text-white lg:flex lg:flex-col lg:justify-end xl:p-14"
+        style={{ backgroundImage: "url(/login-hero.jpg)" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(18,10,9,0.78),rgba(18,10,9,0.36)_48%,rgba(255,36,66,0.14))]" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
 
-        <div className="text-center z-10 max-w-lg">
-          <h1 className="text-6xl font-bold mb-6">加入饭否</h1>
-          <p className="text-2xl mb-6 font-light">体验最纯粹的盲盒交友</p>
-          <div className="text-lg opacity-95 leading-relaxed space-y-4 text-left bg-black/20 p-6 rounded-2xl backdrop-blur-sm">
-            <div className="flex items-start gap-3">
-              <span className="font-bold text-[#FF2442]">01</span>
-              <span>完成一份深度的个性化问卷。</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="font-bold text-[#FF2442]">02</span>
-              <span>报名参加本周四晚 20:00 的同城盲盒晚餐。</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="font-bold text-[#FF2442]">03</span>
-              <span>周三晚由算法为你精选 5 位同桌伙伴，周四准时揭晓神秘餐厅。</span>
-            </div>
-            <div className="text-base text-center font-medium opacity-100 pt-4 text-[#FFFAF8]">
-              只需出现，剩下的浪漫交给我们。
-            </div>
+        <div className="relative z-10 max-w-2xl">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm text-white/90 backdrop-blur-md">
+            <Sparkles className="h-4 w-4" />
+            只需出现，剩下的交给饭否
+          </div>
+          <h1 className="max-w-xl text-6xl font-semibold leading-[0.98] tracking-tight xl:text-7xl">
+            新朋友，从一顿好好吃饭开始。
+          </h1>
+          <div className="mt-8 grid max-w-xl gap-3">
+            {[
+              ["01", "完成轻量问卷，让匹配更懂你。"],
+              ["02", "报名周四晚 20:00 的同城餐桌。"],
+              ["03", "周三匹配同桌，活动前揭晓餐厅。"],
+            ].map(([step, text]) => (
+              <div key={step} className="flex items-center gap-4 rounded-lg border border-white/18 bg-white/12 p-4 backdrop-blur-md">
+                <span className="text-sm font-semibold text-white">{step}</span>
+                <span className="text-sm leading-6 text-white/86">{text}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* 右侧表单区 */}
-      <div className="w-full md:w-1/2 bg-white md:bg-gradient-to-br md:from-[#FFF8F6] md:to-white flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-xl border-0">
-          <div className="p-8">
-            <div className="md:hidden text-center mb-8">
-              <h1 className="gradient-text text-4xl font-bold">饭否</h1>
-              <p className="text-sm text-[#B8A099] mt-2">每周四晚，一场 6 个人的盲盒晚餐</p>
+      <div className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 lg:min-h-0">
+        <Card className="surface-card w-full max-w-md rounded-lg border-white/70 p-0 shadow-[0_24px_70px_rgba(90,35,30,0.12)]">
+          <div className="p-7 sm:p-9">
+            <div className="mb-8 lg:hidden">
+              <h1 className="gradient-text text-4xl font-semibold tracking-tight">饭否</h1>
+              <p className="mt-2 text-sm text-[#9d8580]">每周四晚，一场 6 个人的盲盒晚餐</p>
             </div>
 
             {emailSent ? (
-              <div className="text-center space-y-4">
-                <div className="text-6xl mb-4">📬</div>
-                <h2 className="text-2xl font-bold text-[#2D2420]">请查收邮件</h2>
-                <p className="text-[#B8A099] text-sm">
-                  我们已将验证链接发送到：
-                </p>
-                <p className="font-semibold text-[#2D2420] break-all">{formData.email}</p>
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 text-left">
-                  <p className="font-semibold mb-1">💡 提示：</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>请检查收件箱和垃圾邮件</li>
-                    <li>链接 5 分钟内有效</li>
-                    <li>点击邮件中的链接完成验证</li>
-                  </ul>
+              <div className="text-center">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#ff2442]/10 text-[#ff2442]">
+                  <MailCheck className="h-7 w-7" />
+                </div>
+                <h2 className="text-2xl font-semibold tracking-tight text-[#271f1d]">请查收邮件</h2>
+                <p className="mt-3 text-sm leading-6 text-[#9d8580]">验证链接已发送到</p>
+                <p className="mt-1 break-all font-semibold text-[#271f1d]">{formData.email}</p>
+                <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-left text-sm leading-6 text-amber-800">
+                  链接 5 分钟内有效。若未收到，请检查收件箱和垃圾邮件。
                 </div>
                 <Button
                   onClick={() => {
@@ -146,31 +140,37 @@ export default function RegisterPage() {
                     setFormData({ name: "", email: "", inviteCode: "" });
                   }}
                   variant="outline"
-                  className="w-full mt-4"
+                  className="mt-5 w-full rounded-lg border-[#eadbd6] bg-white"
                 >
                   使用其他邮箱
                 </Button>
               </div>
             ) : (
               <>
-                <h2 className="text-2xl font-bold text-[#2D2420] mb-2">创建账户</h2>
-                <p className="text-[#B8A099] text-sm mb-6">输入邮箱和名字开始</p>
+                <div className="mb-8">
+                  <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#fff0ef] px-3 py-1.5 text-xs font-semibold text-[#ff2442]">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    New table
+                  </div>
+                  <h2 className="text-3xl font-semibold tracking-tight text-[#271f1d]">创建账户</h2>
+                  <p className="mt-3 text-sm leading-6 text-[#9d8580]">留下名字和邮箱，先为你的周四晚留一个位置。</p>
+                </div>
 
                 {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                    ❌ {error}
+                  <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    {error}
                   </div>
                 )}
 
                 {success && !emailSent && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-                    ✅ {success}
+                  <div className="mb-5 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+                    {success}
                   </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2420] mb-2">名字</label>
+                    <label className="mb-2 block text-sm font-semibold text-[#271f1d]">名字</label>
                     <Input
                       type="text"
                       name="name"
@@ -178,13 +178,13 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="你的名字"
                       disabled={loading}
-                      className="border-[#F0E4E0] rounded-lg"
+                      className="h-12 rounded-lg border-[#eadbd6] bg-white/90 px-4"
                       autoComplete="name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2420] mb-2">邮箱</label>
+                    <label className="mb-2 block text-sm font-semibold text-[#271f1d]">邮箱</label>
                     <Input
                       type="email"
                       name="email"
@@ -192,14 +192,14 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="you@example.com"
                       disabled={loading}
-                      className="border-[#F0E4E0] rounded-lg"
+                      className="h-12 rounded-lg border-[#eadbd6] bg-white/90 px-4"
                       autoComplete="email"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2420] mb-2">
-                      邀请码 <span className="text-[#B8A099] font-normal">(可选)</span>
+                    <label className="mb-2 block text-sm font-semibold text-[#271f1d]">
+                      邀请码 <span className="font-normal text-[#9d8580]">(可选)</span>
                     </label>
                     <Input
                       type="text"
@@ -208,20 +208,21 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="填写邀请码领取免费券"
                       disabled={loading}
-                      className="border-[#F0E4E0] rounded-lg uppercase"
+                      className="h-12 rounded-lg border-[#eadbd6] bg-white/90 px-4 uppercase"
                     />
                   </div>
 
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full btn-brand text-white font-semibold h-11 rounded-lg mt-6"
+                    className="gradient-btn mt-6 h-12 w-full text-white"
                   >
                     {loading ? "注册中..." : "注册并发送验证链接"}
+                    {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-[#B8A099]">
+                <div className="mt-7 text-center text-sm text-[#9d8580]">
                   已有账号？{" "}
                   <Link href="/login" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
                     立即登录

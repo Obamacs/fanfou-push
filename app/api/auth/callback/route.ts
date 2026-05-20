@@ -8,11 +8,19 @@ function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+type SupabaseOtpType =
+  | "signup"
+  | "invite"
+  | "magiclink"
+  | "recovery"
+  | "email_change"
+  | "email";
+
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
   const token_hash = url.searchParams.get("token_hash");
-  const type = url.searchParams.get("type") as any;
+  const type = url.searchParams.get("type") as SupabaseOtpType | null;
   const errorParam = url.searchParams.get("error");
   const errorDescription =
     url.searchParams.get("error_description") ||

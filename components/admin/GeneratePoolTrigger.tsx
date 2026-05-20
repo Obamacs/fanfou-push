@@ -23,8 +23,9 @@ export function GeneratePoolTrigger() {
 
       alert(`✅ ${data.message}`);
       router.refresh();
-    } catch (err: any) {
-      alert(`❌ 错误: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "生成失败";
+      alert(`❌ 错误: ${message}`);
     } finally {
       setLoading(false);
     }

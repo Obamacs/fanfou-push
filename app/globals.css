@@ -49,30 +49,30 @@
 }
 
 :root {
-  --background: #FFFAF8;
-  --foreground: #2D2420;
+  --background: #fff9f7;
+  --foreground: #271f1d;
   --card: #FFFFFF;
-  --card-foreground: #2D2420;
+  --card-foreground: #271f1d;
   --popover: #FFFFFF;
-  --popover-foreground: #2D2420;
-  --primary: #FF2442;
+  --popover-foreground: #271f1d;
+  --primary: #ff2442;
   --primary-foreground: #FFFFFF;
-  --secondary: #FFF5F3;
-  --secondary-foreground: #FF2442;
-  --muted: #FFF5F3;
-  --muted-foreground: #B8A099;
-  --accent: #FF6B35;
+  --secondary: #fff0ef;
+  --secondary-foreground: #d91636;
+  --muted: #fff3f1;
+  --muted-foreground: #9d8580;
+  --accent: #ff7a59;
   --accent-foreground: #FFFFFF;
-  --destructive: #FF2442;
-  --border: #F0E4E0;
-  --input: #F0E4E0;
-  --ring: #FF2442;
-  --chart-1: #FF2442;
-  --chart-2: #FF6B35;
-  --chart-3: #FF8C00;
-  --chart-4: #FF4D94;
-  --chart-5: #FF2442;
-  --radius: 1rem;
+  --destructive: #ff2442;
+  --border: #f0dfda;
+  --input: #eadbd6;
+  --ring: #ff2442;
+  --chart-1: #ff2442;
+  --chart-2: #ff7a59;
+  --chart-3: #f5ad42;
+  --chart-4: #8f6ae8;
+  --chart-5: #2fbf9d;
+  --radius: 0.5rem;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #2D2420;
   --sidebar-primary: #FF2442;
@@ -123,6 +123,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    background:
+      radial-gradient(circle at 8% -8%, rgba(255, 36, 66, 0.10), transparent 28rem),
+      linear-gradient(135deg, #fff9f7 0%, #fff4f1 42%, #ffffff 100%);
+    min-height: 100vh;
   }
   html {
     @apply font-sans;
@@ -131,11 +135,11 @@
 
 @layer components {
   .btn-brand {
-    @apply bg-[#FF2442] text-white font-semibold rounded-xl px-6 py-3 hover:bg-[#FF4D63] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95;
+    @apply bg-[#ff2442] text-white font-semibold rounded-lg px-6 py-3 hover:bg-[#ee1838] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95;
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-[#FF2442] to-[#FF6B35] bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[#ff2442] via-[#ff5b76] to-[#ff7a59] bg-clip-text text-transparent;
   }
 
   .card-hover {
@@ -143,14 +147,30 @@
   }
 
   .gradient-btn {
-    @apply bg-gradient-to-r from-[#FF2442] to-[#FF6B35] text-white font-semibold rounded-xl px-6 py-3 hover:from-[#FF4D63] hover:to-[#FF8C69] transition-all duration-200 shadow-md hover:shadow-lg active:scale-95;
+    @apply bg-gradient-to-r from-[#ff2442] to-[#ff7a59] text-white font-semibold rounded-lg px-6 py-3 hover:from-[#ee1838] hover:to-[#ff6843] transition-all duration-200 shadow-md hover:shadow-lg active:scale-95;
   }
 
   .xhs-badge {
-    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-gradient-to-r from-[#FF2442] to-[#FF6B35] text-white shadow-sm;
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-gradient-to-r from-[#ff2442] to-[#ff7a59] text-white shadow-sm;
   }
 
   .card-blush {
-    @apply bg-white rounded-2xl border border-[#F0E4E0] shadow-sm hover:shadow-md transition-all duration-300;
+    @apply bg-white rounded-lg border border-[#f0dfda] shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .page-shell {
+    @apply min-h-screen bg-transparent;
+  }
+
+  .surface-card {
+    @apply bg-white/90 border border-white/70 shadow-[0_18px_50px_rgba(80,35,30,0.08)] backdrop-blur-xl;
+  }
+
+  .soft-panel {
+    @apply bg-[#fff7f5]/80 border border-[#f2dfda];
+  }
+
+  .hairline {
+    @apply border-[#f0dfda];
   }
 }

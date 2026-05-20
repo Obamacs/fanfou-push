@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/app/actions/auth";
+import { AdminNavLinks } from "./AdminNavLinks";
 
 async function AdminNavbar() {
   const session = await auth();
@@ -19,33 +20,7 @@ async function AdminNavbar() {
         </Link>
 
         <div className="flex items-center space-x-4">
-          <Link href="/admin" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            仪表板
-          </Link>
-          <Link href="/admin/users" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            用户
-          </Link>
-          <Link href="/admin/events" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            活动
-          </Link>
-          <Link href="/admin/matchmaking" className="text-[#FF2442] hover:text-[#FF4D63] transition-colors font-semibold">
-            分桌引擎
-          </Link>
-          <Link href="/admin/questionnaire" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            问卷管理
-          </Link>
-          <Link href="/admin/interests" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            兴趣管理
-          </Link>
-          <Link href="/admin/reports" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            举报
-          </Link>
-          <Link href="/admin/statistics" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            统计
-          </Link>
-          <Link href="/admin/settings" className="text-[#B8A099] hover:text-white transition-colors font-medium">
-            设置
-          </Link>
+          <AdminNavLinks />
           <div className="flex items-center space-x-3 border-l border-[#2D1E1A] pl-4">
             <span className="text-sm text-[#B8A099]">{session.user?.email}</span>
             <form action={signOutAction}>

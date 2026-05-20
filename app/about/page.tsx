@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Heart, Users, Sparkles, Globe, ChevronRight } from "lucide-react";
+import { Coffee, Dumbbell, Heart, Sparkles, Utensils, Users, ChevronRight } from "lucide-react";
 
 export default function AboutPage() {
   const values = [
@@ -17,37 +17,37 @@ export default function AboutPage() {
     },
     {
       icon: Sparkles,
-      title: "简单直接",
-      description: "无需个人简介，无需滑动匹配，无需费心策划。选择活动，出现就好。",
-    },
-    {
-      icon: Globe,
-      title: "本地社区",
-      description: "从你所在的城市开始，每周都有新的聚会等着你。",
+      title: "轻松出现",
+      description: "无需个人简介、无需滑动匹配。选择活动，出现就好。",
     },
   ];
 
-  const milestones = [
+  const stats = [
     { number: "9", label: "覆盖城市" },
     { number: "20+", label: "兴趣类型" },
     { number: "每周", label: "活动频次" },
     { number: "3步", label: "参与流程" },
   ];
 
+  const activities = [
+    { icon: Utensils, title: "聚餐晚宴", desc: "在温暖餐桌里，享受美食和自然对话。" },
+    { icon: Coffee, title: "饮品小聚", desc: "轻松环境中，和新朋友交换故事。" },
+    { icon: Dumbbell, title: "运动健身", desc: "用共同兴趣开启更有活力的连接。" },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#FFFAF8]">
-      {/* Nav */}
-      <nav className="bg-white/80 backdrop-blur-xl border-b border-[#F0E4E0] sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-[#2D2420] tracking-tight">
+    <div className="min-h-screen bg-[#fff9f7] text-[#271f1d]">
+      <nav className="sticky top-0 z-40 border-b border-[#f0e4e0] bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="text-xl font-semibold tracking-tight">
             饭否
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/login">
-              <Button variant="ghost" className="rounded-full text-[#B8A099] text-sm">登录</Button>
+              <Button variant="ghost" className="rounded-full text-sm text-[#9d8580]">登录</Button>
             </Link>
             <Link href="/register">
-              <Button className="rounded-full bg-[#FF2442] hover:bg-[#FF4D63] text-white text-sm font-medium">
+              <Button className="gradient-btn h-9 rounded-full px-5 text-sm text-white">
                 注册
               </Button>
             </Link>
@@ -55,121 +55,126 @@ export default function AboutPage() {
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-16 space-y-20">
-        {/* Hero */}
-        <div className="text-center space-y-5">
-          <h1 className="text-[48px] font-bold text-[#2D2420] tracking-tight leading-tight">
-            将陌生人<br />变成朋友
-          </h1>
-          <p className="text-[21px] text-[#B8A099] max-w-lg mx-auto leading-relaxed">
-            无需个人简介，无需滑动匹配，无需费心策划。<br />
-            每周的聚会，让有趣的人自然相遇。
-          </p>
-        </div>
+      <main>
+        <section className="mx-auto grid min-h-[calc(100vh-56px)] max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
+          <div className="max-w-xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#fff0ef] px-3 py-1.5 text-xs font-semibold text-[#ff2442]">
+              <Sparkles className="h-3.5 w-3.5" />
+              Thursday Dinner Club
+            </div>
+            <h1 className="text-5xl font-semibold leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl">
+              将陌生人变成朋友。
+            </h1>
+            <p className="mt-6 max-w-lg text-lg leading-8 text-[#8f7771]">
+              无需个人简介，无需滑动匹配。饭否把城市里的有趣的人，放到同一张温暖餐桌旁。
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/register">
+                <Button className="gradient-btn h-11 rounded-full px-6 text-white">
+                  立即加入
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="outline" className="h-11 rounded-full border-[#eadbd6] bg-white px-6 text-[#271f1d]">
+                  登录
+                </Button>
+              </Link>
+            </div>
+          </div>
 
-        {/* How it works */}
-        <div className="space-y-6">
-          <h2 className="text-[28px] font-bold text-[#2D2420] text-center">如何参与</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {[
-              { step: "1", title: "选择活动", desc: "浏览你所在城市的聚餐、饮品、运动等聚会" },
-              { step: "2", title: "报名参加", desc: "选定时间和地点，免费或使用券码报名" },
-              { step: "3", title: "出现就好", desc: "准时赴约，其他的交给我们来安排。别紧张，每个人都选择了来这里。" },
-            ].map((item) => (
-              <Card key={item.step} className="border-0 shadow-sm rounded-3xl p-7 bg-white">
-                <div className="w-9 h-9 rounded-full bg-[#FFFAF8] flex items-center justify-center text-sm font-semibold text-[#2D2420] mb-5">
-                  {item.step}
+          <div className="relative min-h-[520px] overflow-hidden rounded-lg bg-cover bg-center shadow-[0_24px_70px_rgba(90,35,30,0.18)]" style={{ backgroundImage: "url(/login-hero.jpg)" }}>
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,10,8,0.05),rgba(20,10,8,0.58))]" />
+            <div className="absolute bottom-6 left-6 right-6 grid gap-3 sm:grid-cols-3">
+              {stats.slice(0, 3).map((stat) => (
+                <div key={stat.label} className="rounded-lg border border-white/18 bg-white/14 p-4 text-white backdrop-blur-md">
+                  <p className="text-2xl font-semibold">{stat.number}</p>
+                  <p className="mt-1 text-sm text-white/82">{stat.label}</p>
                 </div>
-                <h3 className="text-[19px] font-semibold text-[#2D2420] mb-2">{item.title}</h3>
-                <p className="text-[15px] text-[#B8A099] leading-relaxed">{item.desc}</p>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-[#f0e4e0] bg-white/72">
+          <div className="mx-auto grid max-w-7xl gap-4 px-4 py-12 sm:grid-cols-3 sm:px-6 lg:px-8">
+            {[
+              { step: "01", title: "选择活动", desc: "浏览同城餐桌、饮品、运动等聚会。" },
+              { step: "02", title: "报名参加", desc: "选定时间，免费或使用券码报名。" },
+              { step: "03", title: "出现就好", desc: "准时赴约，剩下交给饭否安排。" },
+            ].map((item) => (
+              <Card key={item.step} className="rounded-lg border-[#f0e4e0] bg-white p-6 shadow-sm">
+                <p className="text-sm font-semibold text-[#ff2442]">{item.step}</p>
+                <h2 className="mt-4 text-xl font-semibold tracking-tight">{item.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-[#8f7771]">{item.desc}</p>
               </Card>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Mission */}
-        <Card className="border-0 shadow-sm rounded-3xl p-10 bg-white text-center">
-          <h2 className="text-[28px] font-bold text-[#2D2420] mb-4">我们的使命</h2>
-          <p className="text-[17px] text-[#B8A099] max-w-xl mx-auto leading-relaxed">
-            在一个越来越孤独的世界里，我们相信友谊是最强大的力量。
-            饭否致力于将陌生人变成朋友，创造有意义的连接，
-            帮助每个人找到志同道合的伙伴。
-          </p>
-        </Card>
-
-        {/* Values */}
-        <div className="space-y-6">
-          <h2 className="text-[28px] font-bold text-[#2D2420] text-center">核心价值观</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {values.map((value, index) => {
+        <section className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+          <div>
+            <p className="text-sm font-semibold text-[#ff2442]">Mission</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight">让城市关系重新变得松弛。</h2>
+            <p className="mt-5 text-base leading-8 text-[#8f7771]">
+              在越来越忙的生活里，我们相信友谊不应该只靠偶然。饭否用稳定的活动节奏和温和的匹配方式，让人自然相遇。
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {values.map((value) => {
               const Icon = value.icon;
               return (
-                <Card key={index} className="border-0 shadow-sm rounded-3xl p-7 bg-white">
-                  <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-2xl bg-[#FFFAF8] flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-[#FF2442]" />
-                    </div>
-                    <div>
-                      <h3 className="text-[17px] font-semibold text-[#2D2420] mb-2">{value.title}</h3>
-                      <p className="text-[15px] text-[#B8A099] leading-relaxed">{value.description}</p>
-                    </div>
+                <Card key={value.title} className="rounded-lg border-[#f0e4e0] bg-white p-6 shadow-sm">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fff0ef] text-[#ff2442]">
+                    <Icon className="h-5 w-5" />
                   </div>
+                  <h3 className="mt-5 text-lg font-semibold">{value.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#8f7771]">{value.description}</p>
                 </Card>
               );
             })}
           </div>
-        </div>
+        </section>
 
-        {/* Activities */}
-        <div className="space-y-6">
-          <h2 className="text-[28px] font-bold text-[#2D2420] text-center">活动类型</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {[
-              { icon: "🍽️", title: "聚餐晚宴", desc: "在温馨的氛围中，享受美食与深度对话" },
-              { icon: "🍸", title: "饮品小聚", desc: "轻松的环境里，与新朋友分享故事" },
-              { icon: "🏃", title: "运动健身", desc: "通过共同的运动爱好，建立友谊与健康" },
-            ].map((item) => (
-              <Card key={item.title} className="border-0 shadow-sm rounded-3xl p-7 bg-white text-center">
-                <div className="text-5xl mb-4">{item.icon}</div>
-                <h3 className="text-[19px] font-semibold text-[#2D2420] mb-2">{item.title}</h3>
-                <p className="text-[15px] text-[#B8A099] leading-relaxed">{item.desc}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Stats */}
-        <Card className="border-0 shadow-sm rounded-3xl p-10 bg-white">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-            {milestones.map((m) => (
-              <div key={m.label} className="text-center">
-                <p className="text-[32px] font-bold text-[#FF2442] mb-1">{m.number}</p>
-                <p className="text-[15px] text-[#B8A099]">{m.label}</p>
+        <section className="bg-[#271f1d] text-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div className="mb-8 flex items-end justify-between gap-6">
+              <div>
+                <p className="text-sm font-semibold text-white/60">Activities</p>
+                <h2 className="mt-3 text-4xl font-semibold tracking-tight">从一顿饭开始，也可以从共同兴趣开始。</h2>
               </div>
-            ))}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {activities.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Card key={item.title} className="rounded-lg border-white/10 bg-white/8 p-6 text-white shadow-none backdrop-blur">
+                    <Icon className="h-7 w-7 text-[#ff6b5f]" />
+                    <h3 className="mt-5 text-xl font-semibold">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-white/64">{item.desc}</p>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-        </Card>
+        </section>
 
-        {/* CTA */}
-        <div className="text-center space-y-5 py-10">
-          <h2 className="text-[34px] font-bold text-[#2D2420] tracking-tight">
-            准备好加入了吗？
-          </h2>
-          <p className="text-[17px] text-[#B8A099]">
-            选择你的第一场活动，开始建立真实的友谊
-          </p>
-          <Link href="/register">
-            <Button className="rounded-full px-8 py-3 bg-[#FF2442] hover:bg-[#FF4D63] text-white text-[17px] font-semibold h-auto">
-              立即加入
-              <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </Link>
-        </div>
+        <section className="mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="text-4xl font-semibold tracking-tight">准备好加入了吗？</h2>
+            <p className="mt-4 text-base text-[#8f7771]">选择你的第一场活动，开始建立真实的友谊。</p>
+            <Link href="/register" className="mt-8 inline-flex">
+              <Button className="gradient-btn h-12 rounded-full px-8 text-white">
+                立即加入
+                <ChevronRight className="ml-1 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#FFFAF8] border-t border-[#F0E4E0]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 text-center text-[13px] text-[#B8A099]">
+      <footer className="border-t border-[#f0e4e0]">
+        <div className="mx-auto max-w-7xl px-4 py-8 text-center text-sm text-[#9d8580] sm:px-6 lg:px-8">
           饭否 · 将陌生人变成朋友
         </div>
       </footer>

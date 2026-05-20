@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,33 +16,46 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchConversations();
-  }, []);
+    let isMounted = true;
 
-  const fetchConversations = async () => {
-    try {
-      const res = await fetch("/api/messages/conversations");
-      const data = await res.json();
+    const fetchConversations = async () => {
+      try {
+        const res = await fetch("/api/messages/conversations");
+        const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "获取对话列表失败");
-        return;
+        if (!res.ok) {
+          if (isMounted) {
+            setError(data.error || "获取对话列表失败");
+          }
+          return;
+        }
+
+        if (isMounted) {
+          setConversations(data.conversations);
+        }
+      } catch {
+        if (isMounted) {
+          setError("网络错误，请重试");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
+    };
 
-      setConversations(data.conversations);
-    } catch (err) {
-      setError("网络错误，请重试");
-    } finally {
-      setLoading(false);
-    }
-  };
+    void fetchConversations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredConversations = conversations.filter((conv) =>
     conv.partnerName.toLowerCase().includes(searchQuery.toLowerCase())

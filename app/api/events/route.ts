@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { EVENT_TYPES } from "@/lib/constants";
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
     const city = searchParams.get("city");
     const type = searchParams.get("type");
 
-    const where: any = {
+    const where: Prisma.EventWhereInput = {
       status: { not: "CANCELLED" },
     };
 

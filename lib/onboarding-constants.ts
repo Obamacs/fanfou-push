@@ -32,18 +32,30 @@ export const CHILDREN_OPTIONS = [
 
 export const CITY_OPTIONS = ["长沙", "北京", "上海", "广州", "深圳", "成都", "杭州", "武汉", "南京"];
 
+interface OnboardingValidationState {
+  ageGroup: string;
+  gender: string;
+  relationshipGoal: string;
+  smokingHabit: string;
+  drinkingHabit: string;
+  wantsChildren: string;
+  selectedInterests: string[];
+  city: string;
+  answers: Array<{ questionId: string; answer: string }>;
+}
+
 // Validation rules for each step
 export const STEP_VALIDATION = {
-  1: (state: any) => state.ageGroup !== "",
-  2: (state: any) => state.gender !== "",
-  3: (state: any) => state.relationshipGoal !== "",
-  4: (state: any) =>
+  1: (state: OnboardingValidationState) => state.ageGroup !== "",
+  2: (state: OnboardingValidationState) => state.gender !== "",
+  3: (state: OnboardingValidationState) => state.relationshipGoal !== "",
+  4: (state: OnboardingValidationState) =>
     state.smokingHabit !== "" &&
     state.drinkingHabit !== "" &&
     state.wantsChildren !== "",
   5: () => true, // 头像可选
-  6: (state: any) => state.selectedInterests.length >= 3, // 至少选3个兴趣
-  7: (state: any) => state.city !== "",
-  8: (state: any, questionsCount: number) =>
+  6: (state: OnboardingValidationState) => state.selectedInterests.length >= 3, // 至少选3个兴趣
+  7: (state: OnboardingValidationState) => state.city !== "",
+  8: (state: OnboardingValidationState, questionsCount: number) =>
     state.answers.length === questionsCount,
 };

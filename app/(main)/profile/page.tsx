@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { signOutAction } from "@/app/actions/auth";
 import Link from "next/link";
+import { LogOut, Pencil, Sparkles } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -31,26 +32,37 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    let isMounted = true;
 
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch("/api/user/profile");
-      if (!res.ok) {
-        router.push("/login");
-        return;
+    const loadProfile = async () => {
+      try {
+        const res = await fetch("/api/user/profile");
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+        const data = await res.json();
+        if (!isMounted) return;
+        setProfile(data.user);
+        setFormData(data.user);
+      } catch (err) {
+        console.error("获取个人资料失败:", err);
+        if (isMounted) {
+          setError("获取个人资料失败");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      const data = await res.json();
-      setProfile(data.user);
-      setFormData(data.user);
-    } catch (err) {
-      console.error("获取个人资料失败:", err);
-      setError("获取个人资料失败");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    void loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -80,7 +92,7 @@ export default function ProfilePage() {
       setEditing(false);
       setSuccess("个人资料已更新");
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err) {
+    } catch {
       setError("保存失败，请重试");
     } finally {
       setSaving(false);
@@ -88,17 +100,23 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">加载中...</div>;
+    return <div className="py-12 text-center text-[#9d8580]">加载中...</div>;
   }
 
   if (!profile) {
-    return <div className="text-center py-12">无法加载个人资料</div>;
+    return <div className="py-12 text-center text-[#9d8580]">无法加载个人资料</div>;
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-[#2D2420]">我的资料</h1>
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:py-12">
+      <div className="mb-8 flex items-center justify-between rounded-lg border border-white/70 bg-white/70 p-6 shadow-[0_18px_50px_rgba(80,35,30,0.07)] backdrop-blur-xl">
+        <div>
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#fff0ef] px-3 py-1.5 text-xs font-semibold text-[#ff2442]">
+            <Sparkles className="h-3.5 w-3.5" />
+            Profile
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight text-[#271f1d]">我的资料</h1>
+        </div>
         <Button
           onClick={() => {
             if (editing) {
@@ -107,27 +125,28 @@ export default function ProfilePage() {
             setEditing(!editing);
           }}
           variant={editing ? "outline" : "default"}
-          className={editing ? "" : "bg-[#FF2442] hover:bg-[#FF2442]/90 text-white"}
+          className={editing ? "rounded-lg border-[#eadbd6] bg-white" : "rounded-lg bg-[#ff2442] text-white hover:bg-[#ee1838]"}
         >
+          {!editing && <Pencil className="mr-1.5 h-4 w-4" />}
           {editing ? "取消" : "编辑"}
         </Button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-700">
           {success}
         </div>
       )}
 
-      <Card className="bg-white border border-[#F0E4E0] p-8 space-y-6">
+      <Card className="surface-card space-y-6 rounded-lg p-6 sm:p-8">
         <div className="space-y-4">
-          <label className="block text-sm font-semibold text-[#2D2420]">头像</label>
+          <label className="block text-sm font-semibold text-[#271f1d]">头像</label>
           {editing ? (
             <ImageUpload
               value={formData.avatarUrl || ""}
@@ -136,7 +155,7 @@ export default function ProfilePage() {
               type="avatar"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF2442] to-[#FF6B35] flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff2442] to-[#ff7a59] text-2xl font-bold text-white shadow-[0_18px_40px_rgba(255,36,66,0.18)]">
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="头像" className="w-full h-full object-cover" />
               ) : (
@@ -147,27 +166,27 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#2D2420]">邮箱</label>
-          <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.email}</div>
+          <label className="block text-sm font-semibold text-[#271f1d]">邮箱</label>
+          <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d]">{profile.email}</div>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#2D2420]">名字</label>
+          <label className="block text-sm font-semibold text-[#271f1d]">名字</label>
           {editing ? (
             <Input
               name="name"
               value={formData.name || ""}
               onChange={handleChange}
               placeholder="输入你的名字"
-              className="border-[#F0E4E0]"
+              className="rounded-lg border-[#eadbd6] bg-white/90"
             />
           ) : (
-            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.name || "-"}</div>
+            <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d]">{profile.name || "-"}</div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#2D2420]">年龄</label>
+          <label className="block text-sm font-semibold text-[#271f1d]">年龄</label>
           {editing ? (
             <Input
               name="age"
@@ -175,21 +194,21 @@ export default function ProfilePage() {
               value={formData.age || ""}
               onChange={handleChange}
               placeholder="输入你的年龄"
-              className="border-[#F0E4E0]"
+              className="rounded-lg border-[#eadbd6] bg-white/90"
             />
           ) : (
-            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.age || "-"}</div>
+            <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d]">{profile.age || "-"}</div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#2D2420]">性别</label>
+          <label className="block text-sm font-semibold text-[#271f1d]">性别</label>
           {editing ? (
             <select
               name="gender"
               value={formData.gender || ""}
               onChange={(e) => setFormData((prev) => ({ ...prev, gender: e.target.value }))}
-              className="w-full px-3 py-2 border border-[#F0E4E0] rounded-lg"
+              className="w-full rounded-lg border border-[#eadbd6] bg-white/90 px-3 py-2"
             >
               <option value="">选择性别</option>
               <option value="MALE">男</option>
@@ -197,29 +216,29 @@ export default function ProfilePage() {
               <option value="OTHER">其他</option>
             </select>
           ) : (
-            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">
+            <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d]">
               {profile.gender === "MALE" ? "男" : profile.gender === "FEMALE" ? "女" : profile.gender === "OTHER" ? "其他" : "-"}
             </div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#2D2420]">城市</label>
+          <label className="block text-sm font-semibold text-[#271f1d]">城市</label>
           {editing ? (
             <Input
               name="city"
               value={formData.city || ""}
               onChange={handleChange}
               placeholder="输入你的城市"
-              className="border-[#F0E4E0]"
+              className="rounded-lg border-[#eadbd6] bg-white/90"
             />
           ) : (
-            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420]">{profile.city || "-"}</div>
+            <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d]">{profile.city || "-"}</div>
           )}
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#2D2420]">个人简介</label>
+          <label className="block text-sm font-semibold text-[#271f1d]">个人简介</label>
           {editing ? (
             <textarea
               name="bio"
@@ -227,10 +246,10 @@ export default function ProfilePage() {
               onChange={handleChange}
               placeholder="介绍一下你自己"
               rows={4}
-              className="w-full px-3 py-2 border border-[#F0E4E0] rounded-lg"
+              className="w-full rounded-lg border border-[#eadbd6] bg-white/90 px-3 py-2"
             />
           ) : (
-            <div className="p-3 bg-[#FFF5F3] rounded-lg text-[#2D2420] whitespace-pre-wrap">
+            <div className="whitespace-pre-wrap rounded-lg bg-[#fff4f1] p-3 text-[#271f1d]">
               {profile.bio || "-"}
             </div>
           )}
@@ -241,7 +260,7 @@ export default function ProfilePage() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 bg-[#FF2442] hover:bg-[#FF2442]/90 text-white"
+              className="flex-1 rounded-lg bg-[#ff2442] text-white hover:bg-[#ee1838]"
             >
               {saving ? "保存中..." : "保存修改"}
             </Button>
@@ -251,7 +270,7 @@ export default function ProfilePage() {
                 setFormData(profile);
               }}
               variant="outline"
-              className="flex-1"
+              className="flex-1 rounded-lg border-[#eadbd6] bg-white"
             >
               取消
             </Button>
@@ -261,12 +280,13 @@ export default function ProfilePage() {
 
       <div className="mt-8 space-y-3">
         <Link href="/onboarding?edit=true">
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full rounded-lg border-[#eadbd6] bg-white/80">
             重新完成问卷
           </Button>
         </Link>
         <form action={signOutAction}>
-          <Button type="submit" variant="outline" className="w-full text-red-600 hover:text-red-700">
+          <Button type="submit" variant="outline" className="w-full rounded-lg border-red-100 bg-white/80 text-red-600 hover:text-red-700">
+            <LogOut className="mr-1.5 h-4 w-4" />
             退出登录
           </Button>
         </form>

@@ -113,7 +113,7 @@ export default async function MatchPage() {
   const confirmedCount = match.members.filter((m) => m.confirmed).length;
   const totalMembers = match.members.length;
 
-  const timeLeft = new Date(match.expiresAt).getTime() - Date.now();
+  const timeLeft = new Date(match.expiresAt).getTime() - new Date().getTime();
   const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
   const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
 

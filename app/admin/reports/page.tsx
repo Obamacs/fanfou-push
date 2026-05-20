@@ -21,22 +21,30 @@ export default function ReportsPage() {
   const [filterStatus, setFilterStatus] = useState("OPEN");
 
   useEffect(() => {
-    fetchReports();
-  }, []);
+    let isMounted = true;
 
-  const fetchReports = async () => {
-    try {
-      const res = await fetch("/api/admin/reports");
-      const data = await res.json();
-      if (res.ok) {
-        setReports(data.reports);
+    const fetchReports = async () => {
+      try {
+        const res = await fetch("/api/admin/reports");
+        const data = await res.json();
+        if (res.ok && isMounted) {
+          setReports(data.reports);
+        }
+      } catch (err) {
+        console.error("Failed to fetch reports:", err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      console.error("Failed to fetch reports:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    void fetchReports();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleResolveReport = async (
     reportId: string,

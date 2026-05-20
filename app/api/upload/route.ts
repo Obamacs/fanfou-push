@@ -42,7 +42,7 @@ async function ensureBucket(supabase: ReturnType<typeof getSupabaseServiceClient
         }
       }
     }
-  } catch (e: any) {
+  } catch {
     // If list failed for other reasons, try creating
     const { error: createErr } = await supabase.storage.createBucket(bucketName, {
       public: true,
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       .getPublicUrl(data.path);
 
     return NextResponse.json({ url: publicData.publicUrl });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Upload exception:", error);
     return NextResponse.json(
       { error: "上传失败" },

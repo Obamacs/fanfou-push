@@ -40,8 +40,9 @@ export function MatchmakingTrigger({ poolEventId, count }: MatchmakingTriggerPro
 
       alert(`✅ 分桌成功！共生成了 ${data.tablesCreated} 张餐桌。`);
       router.refresh();
-    } catch (err: any) {
-      alert(`❌ 错误: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "运行失败";
+      alert(`❌ 错误: ${message}`);
     } finally {
       setLoading(false);
     }
