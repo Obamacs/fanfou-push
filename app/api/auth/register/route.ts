@@ -161,18 +161,45 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const supabase = await getSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: getCallbackUrl(req) },
-    });
+    // Try custom email flow first (works in China). Fall back to Supabase.
+    let emailSent = false;
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const { getSupabaseServiceClient } = await import("@/lib/supabase");
+        const { sendMagicLinkEmail } = await import("@/lib/email");
+        const callbackUrl = getCallbackUrl(req);
+        const serviceClient = getSupabaseServiceClient();
+        const { data: linkData, error: linkErr } =
+          await serviceClient.auth.admin.generateLink({
+            type: "magiclink",
+            email,
+            options: { redirectTo: callbackUrl },
+          });
 
-    if (error) {
-      console.error("Supabase magic link error:", error);
-      return NextResponse.json(
-        { error: "注册成功，但邮件发送失败。请前往登录页重新发送验证链接。" },
-        { status: 500 }
-      );
+        if (!linkErr && linkData?.properties?.hashed_token) {
+          const magicLink = `${callbackUrl}?token_hash=${encodeURIComponent(linkData.properties.hashed_token)}&type=magiclink`;
+          await sendMagicLinkEmail(email, magicLink);
+          emailSent = true;
+        }
+      } catch (err) {
+        console.error("Custom register magic link error:", err);
+      }
+    }
+
+    if (!emailSent) {
+      const supabase = await getSupabaseServerClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: getCallbackUrl(req) },
+      });
+
+      if (error) {
+        console.error("Supabase magic link error:", error);
+        return NextResponse.json(
+          { error: "注册成功，但邮件发送失败。请前往登录页重新发送验证链接。" },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({

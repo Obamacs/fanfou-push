@@ -103,7 +103,13 @@ export async function POST(req: NextRequest) {
       .from(bucketName)
       .getPublicUrl(data.path);
 
-    return NextResponse.json({ url: publicData.publicUrl });
+    // Rewrite to proxy URL so images load from China
+    const proxyUrl = publicData.publicUrl.replace(
+      "https://lwercdnrvxrsnjjvojfx.supabase.co",
+      `${process.env.NEXTAUTH_URL || "https://meal-meet.com"}/api/supabase`
+    );
+
+    return NextResponse.json({ url: proxyUrl });
   } catch (error: unknown) {
     console.error("Upload exception:", error);
     return NextResponse.json(

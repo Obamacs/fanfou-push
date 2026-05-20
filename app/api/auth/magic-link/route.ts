@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendMagicLinkEmail } from "@/lib/email";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Ensure user exists
     let user = await db.user.findUnique({ where: { email } });
     if (!user) {
       user = await db.user.create({
@@ -59,6 +61,39 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // If Resend is configured, use Supabase's generateLink to get a valid
+    // token_hash, then send our own email with a link directly to
+    // meal-meet.com (bypassing supabase.co which is blocked in China).
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const callbackUrl = getCallbackUrl(req);
+        const serviceClient = getSupabaseServiceClient();
+        const { data: linkData, error: linkErr } =
+          await serviceClient.auth.admin.generateLink({
+            type: "magiclink",
+            email,
+            options: { redirectTo: callbackUrl },
+          });
+
+        if (linkErr || !linkData?.properties?.hashed_token) {
+          throw linkErr || new Error("No hashed_token in generateLink response");
+        }
+
+        const magicLink = `${callbackUrl}?token_hash=${encodeURIComponent(linkData.properties.hashed_token)}&type=magiclink`;
+
+        await sendMagicLinkEmail(email, magicLink);
+
+        return NextResponse.json({
+          message: "验证链接已发送到你的邮箱，请检查邮件",
+          email,
+        });
+      } catch (err) {
+        console.error("Custom magic link error:", err);
+        // Fall through to Supabase fallback
+      }
+    }
+
+    // Fallback: Supabase's built-in email (link goes to supabase.co — blocked in China)
     const supabase = await getSupabaseServerClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,

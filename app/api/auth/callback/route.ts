@@ -26,9 +26,6 @@ export async function GET(req: NextRequest) {
     url.searchParams.get("error_description") ||
     url.searchParams.get("error_code");
 
-  // Supabase sometimes puts errors in the query (PKCE flow rejections). The
-  // hash-fragment form (#error=...) is client-side only — bridge page forwards
-  // those here by re-reading location.hash. See app/auth/bridge/page.tsx.
   if (errorParam) {
     console.error("❌ Supabase auth error:", errorParam, errorDescription);
     return NextResponse.redirect(
@@ -48,12 +45,13 @@ export async function GET(req: NextRequest) {
     let authData, exchangeError;
 
     if (token_hash && type) {
-      // Token Hash flow (Cross-device compatible)
+      // OTP verification (token from generateLink or cross-device flow).
+      // Server-side — Vercel can reach Supabase even when the client can't.
       const { data, error } = await supabase.auth.verifyOtp({ token_hash, type });
       authData = data;
       exchangeError = error;
     } else if (code) {
-      // PKCE flow
+      // PKCE flow (code from Supabase's email redirect)
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       authData = data;
       exchangeError = error;
