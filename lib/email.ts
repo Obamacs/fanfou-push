@@ -8,7 +8,7 @@ function getResend() {
   return new Resend(key);
 }
 
-const FROM = process.env.EMAIL_FROM || "饭否 <noreply@meal-meet.com>";
+const FROM = process.env.EMAIL_FROM || "饭否 <noreply@mail.meal-meet.com>";
 
 export async function sendMagicLinkEmail(email: string, link: string) {
   const resend = getResend();
