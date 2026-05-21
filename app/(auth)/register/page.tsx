@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [emailSent, setEmailSent] = useState(false);
+  const [devLoginUrl, setDevLoginUrl] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,6 +74,9 @@ export default function RegisterPage() {
           ? "注册成功！你已获得一张免费券，请检查邮箱验证"
           : "注册成功！验证链接已发送到你的邮箱"
       );
+      if (data.devLoginUrl) {
+        setDevLoginUrl(data.devLoginUrl);
+      }
       setEmailSent(true);
     } catch (err) {
       console.error("Register error:", err);
@@ -133,11 +137,23 @@ export default function RegisterPage() {
                 <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-left text-sm leading-6 text-amber-800">
                   链接 5 分钟内有效。若未收到，请检查收件箱和垃圾邮件。
                 </div>
+                {devLoginUrl && (
+                  <div className="mt-5 p-4 rounded-lg border border-red-200 bg-red-50 text-left">
+                    <p className="text-xs font-bold text-red-800 uppercase tracking-wider mb-2">⚙️ 开发环境快捷通道</p>
+                    <a
+                      href={devLoginUrl}
+                      className="block text-center w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm transition-colors"
+                    >
+                      一键登录并进入 onboarding (免邮箱)
+                    </a>
+                  </div>
+                )}
                 <Button
                   onClick={() => {
                     setEmailSent(false);
                     setSuccess("");
                     setFormData({ name: "", email: "", inviteCode: "" });
+                    setDevLoginUrl("");
                   }}
                   variant="outline"
                   className="mt-5 w-full rounded-lg border-[#eadbd6] bg-white"

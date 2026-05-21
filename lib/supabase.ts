@@ -5,6 +5,11 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // Supabase auth endpoint must be the real project URL, not the Cloudflare
 // proxy — PKCE code exchange posts directly to /auth/v1/token on this host.
 function authUrl(): string {
+  // In development, automatically route all backend requests through the deployed proxy
+  // to bypass GFW block on *.supabase.co from the local machine in China.
+  if (process.env.NODE_ENV === "development") {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL || "https://meal-meet.com/api/supabase";
+  }
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) throw new Error("Missing SUPABASE_URL");
   return url;

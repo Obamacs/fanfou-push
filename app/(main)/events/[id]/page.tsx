@@ -35,6 +35,17 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
 
   if (!event) notFound();
 
+  const pendingOrder = session?.user?.id ? await db.reservationOrder.findFirst({
+    where: {
+      eventId: id,
+      userId: session.user.id,
+      status: "PENDING",
+    },
+    select: {
+      orderCode: true,
+    },
+  }) : null;
+
   const isCreator = session?.user?.id === event.creatorId;
   const isAttending = event.attendances.some(
     (a) => a.userId === session?.user?.id && a.status !== "CANCELLED"
@@ -308,6 +319,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
                 }
                 isFull={isFull}
                 priceAmount={event.priceAmount}
+                initialOrderCode={pendingOrder?.orderCode}
               />
             )
           )}

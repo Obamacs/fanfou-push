@@ -3,8 +3,14 @@ import { db } from "@/lib/db";
 import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendMagicLinkEmail } from "@/lib/email";
+import { createHash } from "crypto";
+import { nanoid } from "nanoid";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 function getCallbackUrl(req: NextRequest): string {
   const base = process.env.NEXTAUTH_URL || new URL(req.url).origin;
@@ -61,25 +67,55 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // If Resend is configured, use Supabase's generateLink to get a valid
-    // token_hash, then send our own email with a link directly to
-    // meal-meet.com (bypassing supabase.co which is blocked in China).
+    // Dev direct login bypass (works locally in China with no email server required)
+    if (process.env.NODE_ENV === "development") {
+      const devToken = nanoid(32);
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+      await db.verificationToken.create({
+        data: {
+          identifier: email,
+          token: hashToken(devToken),
+          expires: expiresAt,
+        },
+      });
+
+      const nextPath = user.isOnboarded ? "/dashboard" : "/onboarding";
+      const localBase = new URL(req.url).origin;
+      const devLoginUrl = `${localBase}/auth/bridge?token=${devToken}&email=${encodeURIComponent(email)}&next=${nextPath}`;
+
+      console.log("\n🔑 [Dev Mode Magic Link Generated] ----------------");
+      console.log(`📧 User: ${email}`);
+      console.log(`🔗 Direct Login Link: \x1b[36m${devLoginUrl}\x1b[0m`);
+      console.log("---------------------------------------------------\n");
+
+      return NextResponse.json({
+        message: "【开发环境】免密登录链接已生成，请在终端控制台或下方查看并复制",
+        email,
+        devLoginUrl,
+      });
+    }
+
+    // If Resend is configured, generate a local token and send email directly via Resend.
+    // This is 100% GFW-proof as it bypasses Supabase Auth entirely for magic link generation.
     if (process.env.RESEND_API_KEY) {
       try {
-        const callbackUrl = getCallbackUrl(req);
-        const serviceClient = getSupabaseServiceClient();
-        const { data: linkData, error: linkErr } =
-          await serviceClient.auth.admin.generateLink({
-            type: "magiclink",
-            email,
-            options: { redirectTo: callbackUrl },
-          });
+        const token = nanoid(32);
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
-        if (linkErr || !linkData?.properties?.hashed_token) {
-          throw linkErr || new Error("No hashed_token in generateLink response");
-        }
+        await db.verificationToken.create({
+          data: {
+            identifier: email,
+            token: hashToken(token),
+            expires: expiresAt,
+          },
+        });
 
-        const magicLink = `${callbackUrl}?token_hash=${encodeURIComponent(linkData.properties.hashed_token)}&type=magiclink`;
+        const nextPath = user.isOnboarded ? "/dashboard" : "/onboarding";
+        const base = process.env.NEXTAUTH_URL || new URL(req.url).origin;
+        const magicLink = `${base.replace(/\/$/, "")}/auth/bridge?token=${token}&email=${encodeURIComponent(email)}&next=${nextPath}`;
 
         await sendMagicLinkEmail(email, magicLink);
 

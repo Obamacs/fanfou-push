@@ -8,6 +8,7 @@ const navItems = [
   { href: "/admin", label: "仪表板", exact: true },
   { href: "/admin/users", label: "用户" },
   { href: "/admin/events", label: "活动" },
+  { href: "/admin/orders", label: "订单核对" },
   { href: "/admin/matchmaking", label: "分桌引擎" },
   { href: "/admin/questionnaire", label: "问卷管理" },
   { href: "/admin/interests", label: "兴趣管理" },

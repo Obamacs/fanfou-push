@@ -161,26 +161,69 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Dev direct login bypass (works locally in China with no email server required)
+    if (process.env.NODE_ENV === "development") {
+      const { createHash } = await import("crypto");
+      const { nanoid } = await import("nanoid");
+      const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
+
+      const devToken = nanoid(32);
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+      await db.verificationToken.create({
+        data: {
+          identifier: email,
+          token: hashToken(devToken),
+          expires: expiresAt,
+        },
+      });
+
+      const nextPath = "/onboarding"; // New registration always starts at onboarding
+      const localBase = new URL(req.url).origin;
+      const devLoginUrl = `${localBase}/auth/bridge?token=${devToken}&email=${encodeURIComponent(email)}&next=${nextPath}`;
+
+      console.log("\n🔑 [Dev Mode Register Direct Link Generated] -------");
+      console.log(`📧 User: ${email}`);
+      console.log(`🔗 Direct Login Link: \x1b[36m${devLoginUrl}\x1b[0m`);
+      console.log("---------------------------------------------------\n");
+
+      return NextResponse.json({
+        message: "【开发环境】注册成功！免密登录链接已生成，请在终端控制台或下方查看并复制",
+        couponIssued,
+        inviteCodeValid,
+        email,
+        devLoginUrl,
+      });
+    }
+
     // Try custom email flow first (works in China). Fall back to Supabase.
     let emailSent = false;
     if (process.env.RESEND_API_KEY) {
       try {
-        const { getSupabaseServiceClient } = await import("@/lib/supabase");
         const { sendMagicLinkEmail } = await import("@/lib/email");
-        const callbackUrl = getCallbackUrl(req);
-        const serviceClient = getSupabaseServiceClient();
-        const { data: linkData, error: linkErr } =
-          await serviceClient.auth.admin.generateLink({
-            type: "magiclink",
-            email,
-            options: { redirectTo: callbackUrl },
-          });
+        const { createHash } = await import("crypto");
+        const { nanoid } = await import("nanoid");
+        const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
 
-        if (!linkErr && linkData?.properties?.hashed_token) {
-          const magicLink = `${callbackUrl}?token_hash=${encodeURIComponent(linkData.properties.hashed_token)}&type=magiclink`;
-          await sendMagicLinkEmail(email, magicLink);
-          emailSent = true;
-        }
+        const token = nanoid(32);
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+        await db.verificationToken.create({
+          data: {
+            identifier: email,
+            token: hashToken(token),
+            expires: expiresAt,
+          },
+        });
+
+        const nextPath = "/onboarding"; // New registration always starts at onboarding
+        const base = process.env.NEXTAUTH_URL || new URL(req.url).origin;
+        const magicLink = `${base.replace(/\/$/, "")}/auth/bridge?token=${token}&email=${encodeURIComponent(email)}&next=${nextPath}`;
+
+        await sendMagicLinkEmail(email, magicLink);
+        emailSent = true;
       } catch (err) {
         console.error("Custom register magic link error:", err);
       }

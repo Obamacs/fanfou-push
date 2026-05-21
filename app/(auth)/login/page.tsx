@@ -38,6 +38,7 @@ function LoginContent() {
   const [success, setSuccess] = useState(successParam ? "邮件已发送，请检查你的邮箱" : "");
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
+  const [devLoginUrl, setDevLoginUrl] = useState("");
 
   const handleMagicLinkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +75,9 @@ function LoginContent() {
 
       setSentEmail(email);
       setEmailSent(true);
+      if (data.devLoginUrl) {
+        setDevLoginUrl(data.devLoginUrl);
+      }
       setSuccess("验证链接已发送到你的邮箱，请检查邮件");
     } catch (err) {
       console.error("Magic link error:", err);
@@ -139,12 +143,24 @@ function LoginContent() {
               <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-left text-sm leading-6 text-amber-800">
                 链接 5 分钟内有效。若未收到，请检查收件箱和垃圾邮件。
               </div>
+              {devLoginUrl && (
+                <div className="mt-5 p-4 rounded-lg border border-red-200 bg-red-50 text-left">
+                  <p className="text-xs font-bold text-red-800 uppercase tracking-wider mb-2">⚙️ 开发环境快捷通道</p>
+                  <a
+                    href={devLoginUrl}
+                    className="block text-center w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm transition-colors"
+                  >
+                    一键登录测试账号 (免邮箱)
+                  </a>
+                </div>
+              )}
               <Button
                 onClick={() => {
                   setEmailSent(false);
                   setSentEmail("");
                   setEmail("");
                   setSuccess("");
+                  setDevLoginUrl("");
                 }}
                 variant="outline"
                 className="mt-5 w-full rounded-lg border-[#eadbd6] bg-white"

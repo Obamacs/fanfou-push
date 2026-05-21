@@ -6,7 +6,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -94,6 +93,8 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   lastLocationUpdate DateTime?
+  isPro             Boolean   @default(false)
+  proExpireAt       DateTime?
 
   interests         UserInterest[]
   answers           QuestionnaireAnswer[]
@@ -114,6 +115,7 @@ model User {
   inviteCodesOwned  InviteCode[]     @relation("InviteCodeOwner")
   inviteCodeUsed    InviteCodeUsage? @relation("InviteCodeUsed")
   coupons           FreeCoupon[]     @relation("UserCoupons")
+  reservationOrders ReservationOrder[]
 
   @@index([email])
   @@index([city])
@@ -262,6 +264,7 @@ model Event {
   ratings      Rating[]
   reports      Report[]
   couponsUsed  FreeCoupon[]      @relation("EventCouponsUsed")
+  reservationOrders ReservationOrder[]
 
   @@index([status])
   @@index([city])
@@ -426,4 +429,22 @@ model FreeCoupon {
   @@index([isUsed])
   @@index([expiresAt])
   @@index([code])
+}
+
+model ReservationOrder {
+  id          String   @id @default(cuid())
+  userId      String
+  eventId     String
+  orderCode   String   @unique // e.g. "MM8472"
+  amount      Int      // 支付金额（元）
+  status      String   @default("PENDING") // "PENDING" | "CONFIRMED" | "CANCELLED"
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([status])
+  @@index([orderCode])
 }
