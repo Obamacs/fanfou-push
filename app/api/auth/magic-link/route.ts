@@ -125,29 +125,19 @@ export async function POST(req: NextRequest) {
         });
       } catch (err) {
         console.error("Custom magic link error:", err);
-        // Fall through to Supabase fallback
+        return NextResponse.json(
+          { error: "发送邮件失败，请稍后重试" },
+          { status: 500 }
+        );
       }
     }
 
-    // Fallback: Supabase's built-in email (link goes to supabase.co — blocked in China)
-    const supabase = await getSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: getCallbackUrl(req) },
-    });
-
-    if (error) {
-      console.error("Supabase magic link error:", error);
-      return NextResponse.json(
-        { error: "发送邮件失败，请稍后重试" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      message: "验证链接已发送到你的邮箱，请检查邮件",
-      email,
-    });
+    // If Resend is not configured, return an error. Do not fall back to Supabase.
+    console.error("RESEND_API_KEY is not configured in production environment.");
+    return NextResponse.json(
+      { error: "系统未配置邮件发送服务，请联系管理员" },
+      { status: 500 }
+    );
   } catch (error) {
     console.error("Magic link error:", error);
     return NextResponse.json(

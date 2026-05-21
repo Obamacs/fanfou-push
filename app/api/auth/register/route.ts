@@ -197,8 +197,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Try custom email flow first (works in China). Fall back to Supabase.
-    let emailSent = false;
+    // Try custom email flow (works in China). Do not fall back to Supabase.
     if (process.env.RESEND_API_KEY) {
       try {
         const { sendMagicLinkEmail } = await import("@/lib/email");
@@ -223,34 +222,28 @@ export async function POST(req: NextRequest) {
         const magicLink = `${base.replace(/\/$/, "")}/auth/bridge?token=${token}&email=${encodeURIComponent(email)}&next=${nextPath}`;
 
         await sendMagicLinkEmail(email, magicLink);
-        emailSent = true;
+
+        return NextResponse.json({
+          message: "注册成功！验证链接已发送到你的邮箱，请检查邮件",
+          couponIssued,
+          inviteCodeValid,
+          email,
+        });
       } catch (err) {
         console.error("Custom register magic link error:", err);
-      }
-    }
-
-    if (!emailSent) {
-      const supabase = await getSupabaseServerClient();
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: getCallbackUrl(req) },
-      });
-
-      if (error) {
-        console.error("Supabase magic link error:", error);
         return NextResponse.json(
-          { error: "注册成功，但邮件发送失败。请前往登录页重新发送验证链接。" },
+          { error: "注册成功，但发送验证邮件失败，请稍后前往登录页重试。" },
           { status: 500 }
         );
       }
     }
 
-    return NextResponse.json({
-      message: "注册成功！验证链接已发送到你的邮箱",
-      couponIssued,
-      inviteCodeValid,
-      email,
-    });
+    // If Resend is not configured, return an error. Do not fall back to Supabase.
+    console.error("RESEND_API_KEY is not configured in production environment during registration.");
+    return NextResponse.json(
+      { error: "注册成功，但系统未配置邮件发送服务，请联系管理员" },
+      { status: 500 }
+    );
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(
