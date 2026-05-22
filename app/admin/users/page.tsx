@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface User {
   id: string;
@@ -24,6 +34,15 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBanned, setFilterBanned] = useState(false);
+
+  // 一键赠券相关状态
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
+  const [giftWelcomeText, setGiftWelcomeText] = useState("");
+  const [giftDaysValid, setGiftDaysValid] = useState("90");
+  const [isGifting, setIsGifting] = useState(false);
+  const [giftSuccessMsg, setGiftSuccessMsg] = useState("");
+  const [giftErrorMsg, setGiftErrorMsg] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -88,6 +107,52 @@ export default function UsersPage() {
       }
     } catch (err) {
       console.error("Failed to toggle event creation:", err);
+    }
+  };
+
+  const handleOpenGiftModal = (user: User) => {
+    setSelectedUser(user);
+    setGiftWelcomeText(`亲爱的 ${user.name}，感谢您成为饭否的尊贵会员！特此赠送您一张专属晚餐券，祝您用餐且社交愉快！`);
+    setGiftDaysValid("90");
+    setGiftSuccessMsg("");
+    setGiftErrorMsg("");
+    setIsGiftModalOpen(true);
+  };
+
+  const handleSendGift = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    setIsGifting(true);
+    setGiftSuccessMsg("");
+    setGiftErrorMsg("");
+
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          welcomeText: giftWelcomeText,
+          daysValid: parseInt(giftDaysValid) || 90,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setGiftSuccessMsg(`餐券发放成功！券码: ${data.coupon.code}`);
+        setTimeout(() => {
+          setIsGiftModalOpen(false);
+          setSelectedUser(null);
+        }, 1800);
+      } else {
+        setGiftErrorMsg(data.error || "发放失败，请重试");
+      }
+    } catch (err) {
+      console.error("Gifting coupon failed:", err);
+      setGiftErrorMsg("网络请求失败，请检查连接");
+    } finally {
+      setIsGifting(false);
     }
   };
 
@@ -205,6 +270,14 @@ export default function UsersPage() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => handleOpenGiftModal(user)}
+                        className="text-[#FF4D94] hover:text-[#FF75B5] hover:bg-[#FF4D94]/10 transition-colors"
+                      >
+                        赠送餐券
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleBanUser(user.id, user.isBanned)}
                         className={
                           user.isBanned
@@ -222,6 +295,128 @@ export default function UsersPage() {
           </table>
         </div>
       </Card>
+
+      {/* 赠送餐券对话框 */}
+      <Dialog open={isGiftModalOpen} onOpenChange={setIsGiftModalOpen}>
+        <DialogContent className="bg-[#241918] border-[#2D1E1A] text-white max-w-md sm:max-w-lg overflow-hidden p-6 rounded-2xl shadow-2xl">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+              <span className="inline-block p-1.5 rounded-lg bg-[#FF4D94]/15 text-[#FF4D94] text-base">
+                🎫
+              </span>
+              赠送免费餐券
+            </DialogTitle>
+            <DialogDescription className="text-[#B8A099] text-sm">
+              为指定用户手动发放一张特定免费晚餐券。
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <form onSubmit={handleSendGift} className="space-y-5 mt-4">
+              {/* 用户基础信息卡片 */}
+              <div className="bg-[#1A1311]/70 rounded-xl p-3.5 border border-[#2D1E1A] flex items-center justify-between">
+                <div>
+                  <p className="text-white font-semibold text-sm">{selectedUser.name}</p>
+                  <p className="text-[#B8A099] text-xs mt-0.5">{selectedUser.email}</p>
+                </div>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#241918] border border-[#2D1E1A] text-[#B8A099]">
+                  {selectedUser.city || "未知城市"}
+                </span>
+              </div>
+
+              {/* 有效天数 */}
+              <div className="space-y-2.5">
+                <Label htmlFor="daysValid" className="text-sm font-semibold text-[#B8A099]">
+                  有效期限
+                </Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[30, 90, 180, 365].map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => setGiftDaysValid(days.toString())}
+                      className={`py-2 px-1 text-xs font-semibold rounded-lg border transition-all duration-200 ${
+                        giftDaysValid === days.toString()
+                          ? "bg-[#FF2442] text-white border-transparent shadow-[0_0_12px_rgba(255,36,66,0.3)]"
+                          : "bg-[#1A1311] text-[#B8A099] border-[#2D1E1A] hover:bg-[#1A1311]/80 hover:text-white"
+                      }`}
+                    >
+                      {days} 天
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2.5">
+                  <Input
+                    id="daysValid"
+                    type="number"
+                    min="1"
+                    max="999"
+                    required
+                    value={giftDaysValid}
+                    onChange={(e) => setGiftDaysValid(e.target.value)}
+                    placeholder="自定义有效天数"
+                    className="bg-[#1A1311] border-[#2D1E1A] text-white placeholder-[#5A4540] text-sm focus-visible:border-[#FF2442] focus-visible:ring-[#FF2442]/30"
+                  />
+                </div>
+              </div>
+
+              {/* 欢迎留言 */}
+              <div className="space-y-2">
+                <Label htmlFor="welcomeText" className="text-sm font-semibold text-[#B8A099]">
+                  专属欢迎留言
+                </Label>
+                <Textarea
+                  id="welcomeText"
+                  required
+                  rows={3}
+                  value={giftWelcomeText}
+                  onChange={(e) => setGiftWelcomeText(e.target.value)}
+                  placeholder="请输入赠券的欢迎留言..."
+                  className="bg-[#1A1311] border-[#2D1E1A] text-white placeholder-[#5A4540] text-sm focus-visible:border-[#FF2442] focus-visible:ring-[#FF2442]/30 min-h-[90px]"
+                />
+                <p className="text-[11px] text-[#8C7671] leading-relaxed">
+                  💡 欢迎词中会自动加上 <code className="text-[#FF4D94] font-semibold bg-[#FF4D94]/10 px-1 py-0.5 rounded">[专属赠券]</code> 前缀，前端页面会对该类型餐券渲染优雅高贵的奢华紫色视觉，使其与众不同。
+                </p>
+              </div>
+
+              {/* 反馈状态提示 */}
+              {giftSuccessMsg && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+                  <span>✨</span> {giftSuccessMsg}
+                </div>
+              )}
+              {giftErrorMsg && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-[#FF2442] text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+                  <span>⚠️</span> {giftErrorMsg}
+                </div>
+              )}
+
+              {/* 操作按钮 */}
+              <DialogFooter className="border-t border-[#2D1E1A] pt-4.5 -mx-6 -mb-6 px-6 bg-[#1C1211] gap-2 flex flex-col-reverse sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsGiftModalOpen(false);
+                    setSelectedUser(null);
+                  }}
+                  disabled={isGifting}
+                  className="text-[#B8A099] hover:text-white hover:bg-white/5 font-medium border border-transparent hover:border-white/10"
+                >
+                  取消
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isGifting || !giftWelcomeText || !giftDaysValid}
+                  className="bg-gradient-to-r from-[#FF2442] to-[#FF7A59] hover:from-[#E61F3B] hover:to-[#EB6F4F] text-white font-semibold transition-all duration-200 shadow-[0_4px_16px_rgba(255,36,66,0.25)] hover:shadow-[0_4px_20px_rgba(255,36,66,0.35)] disabled:opacity-50"
+                >
+                  {isGifting ? "发放中..." : "确认发放餐券"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

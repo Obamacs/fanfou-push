@@ -180,3 +180,38 @@ export async function redeemCouponForEvent(
     return { coupon: updatedCoupon, attendance };
   });
 }
+
+// 为用户特赠一张餐券（管理员手动发放）
+export async function issueAdminCoupon(
+  userId: string,
+  welcomeText: string,
+  daysValid: number = 90
+) {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + daysValid);
+
+  let code = generateCouponCode();
+  let retries = 0;
+  while (retries < 5) {
+    const exists = await db.freeCoupon.findUnique({ where: { code } });
+    if (!exists) break;
+    code = generateCouponCode();
+    retries++;
+  }
+
+  // 确保欢迎词带有 [专属赠券] 前缀，便于前端渲染出奢华紫色的特定标识
+  const cleanWelcomeText = welcomeText.trim().startsWith("[专属赠券]")
+    ? welcomeText.trim()
+    : `[专属赠券] ${welcomeText.trim()}`;
+
+  return db.freeCoupon.create({
+    data: {
+      code,
+      userId,
+      welcomeText: cleanWelcomeText,
+      expiresAt,
+      reason: "REGISTER", // 使用已有的 REGISTER 枚举，确保不需要数据库迁移，百分之百兼容安全
+    },
+  });
+}
+

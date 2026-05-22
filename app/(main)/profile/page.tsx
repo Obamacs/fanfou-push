@@ -498,6 +498,7 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 {couponsData.coupons.map((coupon) => {
                   const isUnused = !coupon.isUsed && !coupon.isExpired;
+                  const isAdminGift = coupon.welcomeText?.includes("专属赠券");
                   const formattedDate = new Date(coupon.expiresAt).toLocaleDateString("zh-CN", {
                     year: "numeric",
                     month: "long",
@@ -510,7 +511,9 @@ export default function ProfilePage() {
                       key={coupon.id}
                       className={`relative overflow-hidden rounded-xl border transition-all duration-300 ${
                         isUnused
-                          ? "border-[#ff2442]/20 bg-white shadow-sm hover:shadow-md"
+                          ? isAdminGift
+                            ? "border-purple-200 bg-gradient-to-br from-white via-white to-purple-50/15 shadow-sm hover:shadow-md hover:border-purple-300"
+                            : "border-[#ff2442]/20 bg-white shadow-sm hover:shadow-md"
                           : "border-[#eadbd6]/50 bg-[#fffcfc]/40 opacity-75"
                       }`}
                     >
@@ -523,12 +526,14 @@ export default function ProfilePage() {
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span
                               className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide uppercase ${
-                                coupon.reason === "REGISTER"
+                                isAdminGift
+                                  ? "bg-purple-50 text-purple-600 border border-purple-100/60"
+                                  : coupon.reason === "REGISTER"
                                   ? "bg-red-50 text-red-600 border border-red-100/60"
                                   : "bg-orange-50 text-orange-600 border border-orange-100/60"
                               }`}
                             >
-                              {coupon.reason === "REGISTER" ? "新人礼券" : "裂变奖励"}
+                              {isAdminGift ? "特赠礼券" : coupon.reason === "REGISTER" ? "新人礼券" : "裂变奖励"}
                             </span>
                             <span
                               className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
@@ -544,7 +549,7 @@ export default function ProfilePage() {
                           </div>
 
                           <p className="mt-2.5 text-xs sm:text-sm font-semibold leading-relaxed text-[#271f1d]">
-                            {coupon.welcomeText}
+                            {coupon.welcomeText?.replace(/^\[专属赠券\]\s*/, "")}
                           </p>
 
                           <div className="mt-3 flex items-center gap-1.5 text-[11px] text-[#9d8580]">
