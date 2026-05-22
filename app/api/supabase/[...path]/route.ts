@@ -56,7 +56,8 @@ async function proxy(req: NextRequest) {
 
     const respHeaders = new Headers(resp.headers);
     // Debug: prove this version is running
-    respHeaders.set("X-Proxy-Version", "url-apikey-v4");
+    respHeaders.set("X-Proxy-Version", "url-apikey-v5-nocache");
+    respHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
     respHeaders.set("Access-Control-Allow-Origin", "*");
     respHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
     respHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey");

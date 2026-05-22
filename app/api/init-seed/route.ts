@@ -168,6 +168,19 @@ export async function POST(req: NextRequest) {
         weight: 1.0,
         order: 8,
       },
+      {
+        id: "q-budget-1",
+        text: "关于聚餐的餐费开销，您期望的人均价格范围（餐标）是？",
+        type: "single",
+        options: JSON.stringify([
+          "经济实惠 (￥50-100/人)",
+          "中端品质 (￥100-200/人)",
+          "轻奢小资 (￥200-350/人)",
+          "高端奢华 (￥350+/人)",
+        ]),
+        weight: 1.0,
+        order: 9,
+      },
     ];
 
     let createdQuestions = 0;

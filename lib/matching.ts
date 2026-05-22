@@ -132,6 +132,36 @@ function calculateDietScore(
   return 2;
 }
 
+function calculateBudgetScore(
+  candidate: Candidate,
+  userAnswerMap: Map<string, string>
+): number {
+  const userBudget = userAnswerMap.get("q-budget-1");
+  const candidateBudget = candidate.answers.find(
+    (a) => a.questionId === "q-budget-1"
+  )?.answer;
+
+  if (!userBudget || !candidateBudget) return 0;
+  if (userBudget === candidateBudget) return 10; // 预算高度契合，体验极佳
+
+  const budgetOrder = [
+    "经济实惠 (￥50-100/人)",
+    "中端品质 (￥100-200/人)",
+    "轻奢小资 (￥200-350/人)",
+    "高端奢华 (￥350+/人)",
+  ];
+
+  const userIdx = budgetOrder.indexOf(userBudget);
+  const candidateIdx = budgetOrder.indexOf(candidateBudget);
+
+  if (userIdx !== -1 && candidateIdx !== -1) {
+    const diff = Math.abs(userIdx - candidateIdx);
+    if (diff === 1) return 6; // 差距一档，基本能够包容
+    return 1; // 差距两档以上（如经济型 vs 奢华型），体验极差，极不推荐同桌
+  }
+  return 2;
+}
+
 export function calculateActivityScore(
   user: Candidate,
   candidate: Candidate,
@@ -150,7 +180,7 @@ export function calculateActivityScore(
   const genderBonus =
     user.gender && candidate.gender && user.gender !== candidate.gender ? 10 : 0;
 
-  // 精准饮食匹配 (火锅、湘菜、西餐、日料、海鲜、辣度口味、素食与民族风俗忌口等)
+  // 精准饮食与餐标匹配 (价格范围、湘菜/西餐/火锅/日料分类、吃辣口味、素食与风俗禁忌)
   const userAnswerMap = new Map<string, string>();
   if (user.answers && Array.isArray(user.answers)) {
     user.answers.forEach((a) => {
@@ -160,11 +190,12 @@ export function calculateActivityScore(
   const cuisineScore = calculateCuisineScore(candidate, userAnswerMap);
   const tasteScore = calculateTasteScore(candidate, userAnswerMap);
   const dietScore = calculateDietScore(candidate, userAnswerMap);
-  const foodScore = cuisineScore + tasteScore + dietScore; // 最高 37 分
+  const budgetScore = calculateBudgetScore(candidate, userAnswerMap);
+  const foodScore = cuisineScore + tasteScore + dietScore + budgetScore; // 最高 47 分
 
-  // 总分 = 活动兴趣匹配(权重 50%) + 精准饮食兼容度(权重 30%) + 婚恋交友意向(权重 15%) + 性别平衡(权重 5%)
+  // 总分 = 活动兴趣匹配(权重 50%) + 精准饮食与价格兼容度(权重 30%) + 婚恋交友意向(权重 15%) + 性别平衡(权重 5%)
   const weightedActivity = activityInterestScore * 0.5;
-  const weightedFood = (foodScore / 37) * 30;
+  const weightedFood = (foodScore / 47) * 30;
   const weightedGoal = (goalScore / 35) * 15;
   const weightedGender = genderBonus * 0.5; // 最高 5 分 (10 * 0.5)
 
