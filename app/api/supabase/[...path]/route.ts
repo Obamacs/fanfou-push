@@ -22,7 +22,16 @@ const SAFE_HEADERS = new Set([
 async function proxy(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/supabase/, "") + url.search;
-  const target = SUPABASE_URL + path;
+
+  const anonKey =
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "sb_publishable_ouuTeuoTh05cseDyjEhqkw_Yu6v40Ej";
+
+  // Inject anon key as URL parameter — Vercel's runtime may strip custom
+  // headers from outbound fetch calls.
+  const sep = path.includes("?") ? "&" : "?";
+  const target = `${SUPABASE_URL}${path}${sep}apikey=${encodeURIComponent(anonKey)}`;
 
   const headers = new Headers();
 
@@ -32,16 +41,6 @@ async function proxy(req: NextRequest) {
       headers.set(key, value);
     }
   });
-
-  // Inject anon key so Supabase always sees an authenticated request.
-  // Hardcoded fallback — env vars sometimes are not available at runtime
-  // in Vercel's edge environment.
-  const anonKey =
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "sb_publishable_ouuTeuoTh05cseDyjEhqkw_Yu6v40Ej";
-  headers.set("apikey", anonKey);
-  headers.set("Authorization", `Bearer ${anonKey}`);
 
   let body: BodyInit | null = null;
   if (req.method !== "GET" && req.method !== "HEAD") {
