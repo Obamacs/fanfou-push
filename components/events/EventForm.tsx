@@ -24,6 +24,10 @@ interface EventFormProps {
     priceAmount: number;
     description?: string | null;
     imageUrl?: string | null;
+    estimatedSpend?: string | null;
+    estimatedSpicy?: string | null;
+    estimatedCuisine?: string | null;
+    alcoholPolicy?: string | null;
   };
   matchId?: string;
   matchMembers?: string[];
@@ -45,6 +49,12 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
   const [priceAmount, setPriceAmount] = useState(initialData?.priceAmount?.toString() || "0");
   const [description, setDescription] = useState(initialData?.description || "");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
+
+  // 湖南长沙本地化特色饮食选项
+  const [estimatedSpend, setEstimatedSpend] = useState(initialData?.estimatedSpend || "中端品质 (￥100-200/人)");
+  const [estimatedSpicy, setEstimatedSpicy] = useState(initialData?.estimatedSpicy || "中辣");
+  const [estimatedCuisine, setEstimatedCuisine] = useState(initialData?.estimatedCuisine || "香辣湘菜/川菜");
+  const [alcoholPolicy, setAlcoholPolicy] = useState(initialData?.alcoholPolicy || "自由饮酒");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -88,6 +98,10 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
         imageUrl: imageUrl.trim() || null,
         matchId: matchId || null,
         autoInviteMembers: matchMembers.length > 0 ? matchMembers : null,
+        estimatedSpend,
+        estimatedSpicy,
+        estimatedCuisine,
+        alcoholPolicy,
       };
 
       const method = mode === "create" ? "POST" : "PATCH";
@@ -218,7 +232,7 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="priceAmount" className={labelClass}>活动费用（元）</Label>
+          <Label htmlFor="priceAmount" className={labelClass}>活动保证金 (元)</Label>
           <Input
             id="priceAmount"
             type="number"
@@ -228,6 +242,82 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
             disabled={loading}
             className={inputClass}
           />
+        </div>
+      </div>
+
+      {/* Localized Dining Options (Changsha & Timeleft style) */}
+      <div className="bg-[#FFF5F3]/40 border border-[#F0E4E0]/60 rounded-2xl p-5 space-y-4">
+        <h3 className="text-sm font-bold text-[#FF2442] flex items-center gap-1.5">
+          🍴 长沙同城聚餐匹配要素 (价格/菜系/辣度/饮酒)
+        </h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Estimated Cuisine */}
+          <div className="space-y-1.5">
+            <Label className={labelClass}>餐厅分类 / 菜系倾向 *</Label>
+            <Select value={estimatedCuisine} onValueChange={(v) => setEstimatedCuisine(v || "")} disabled={loading}>
+              <SelectTrigger className={inputClass}>
+                <SelectValue placeholder="选择菜系" />
+              </SelectTrigger>
+              <SelectContent>
+                {["香辣湘菜/川菜", "热气火锅", "日韩料理", "经典西餐", "海鲜大餐", "精致粤菜"].map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Estimated Spicy */}
+          <div className="space-y-1.5">
+            <Label className={labelClass}>辣度参考 (长沙特色) *</Label>
+            <Select value={estimatedSpicy} onValueChange={(v) => setEstimatedSpicy(v || "")} disabled={loading}>
+              <SelectTrigger className={inputClass}>
+                <SelectValue placeholder="选择辣度" />
+              </SelectTrigger>
+              <SelectContent>
+                {["清淡", "微辣", "中辣", "重口味", "无辣不欢"].map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Estimated Spend */}
+          <div className="space-y-1.5">
+            <Label className={labelClass}>人均用餐预算 (餐费价格范围) *</Label>
+            <Select value={estimatedSpend} onValueChange={(v) => setEstimatedSpend(v || "")} disabled={loading}>
+              <SelectTrigger className={inputClass}>
+                <SelectValue placeholder="选择价格档次" />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  "经济实惠 (￥50-100/人)",
+                  "中端品质 (￥100-200/人)",
+                  "轻奢小资 (￥200-350/人)",
+                  "高端奢华 (￥350+/人)"
+                ].map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Alcohol Policy */}
+          <div className="space-y-1.5">
+            <Label className={labelClass}>饮酒规则 *</Label>
+            <Select value={alcoholPolicy} onValueChange={(v) => setAlcoholPolicy(v || "")} disabled={loading}>
+              <SelectTrigger className={inputClass}>
+                <SelectValue placeholder="选择规则" />
+              </SelectTrigger>
+              <SelectContent>
+                {["自由饮酒", "无酒精聚会", "微醺社交"].map((a) => (
+                  <SelectItem key={a} value={a}>{a}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

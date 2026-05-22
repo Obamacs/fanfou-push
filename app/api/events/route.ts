@@ -84,6 +84,10 @@ export async function POST(req: NextRequest) {
       imageUrl,
       matchId,
       autoInviteMembers,
+      estimatedSpend,
+      estimatedSpicy,
+      estimatedCuisine,
+      alcoholPolicy,
     } = await req.json();
 
     // Validation
@@ -139,6 +143,10 @@ export async function POST(req: NextRequest) {
         creatorId: userId,
         status: "UPCOMING",
         matchId: matchId || null,
+        estimatedSpend: estimatedSpend || null,
+        estimatedSpicy: estimatedSpicy || null,
+        estimatedCuisine: estimatedCuisine || null,
+        alcoholPolicy: alcoholPolicy || null,
       },
       include: {
         creator: {

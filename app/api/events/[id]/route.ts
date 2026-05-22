@@ -87,6 +87,10 @@ export async function PATCH(
       priceAmount,
       description,
       imageUrl,
+      estimatedSpend,
+      estimatedSpicy,
+      estimatedCuisine,
+      alcoholPolicy,
     } = await req.json();
 
     // Validate date if provided
@@ -112,6 +116,10 @@ export async function PATCH(
       updateData.priceAmount = Math.max(0, priceAmount);
     if (description !== undefined) updateData.description = description;
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (estimatedSpend !== undefined) updateData.estimatedSpend = estimatedSpend;
+    if (estimatedSpicy !== undefined) updateData.estimatedSpicy = estimatedSpicy;
+    if (estimatedCuisine !== undefined) updateData.estimatedCuisine = estimatedCuisine;
+    if (alcoholPolicy !== undefined) updateData.alcoholPolicy = alcoholPolicy;
 
     const updated = await db.event.update({
       where: { id },

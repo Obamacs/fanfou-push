@@ -210,6 +210,64 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
           </div>
         )}
 
+        {/* Localized Dining Expectations (Changsha & Timeleft style) */}
+        {(event.estimatedSpend || event.estimatedSpicy || event.estimatedCuisine || event.alcoholPolicy) && (
+          <div className="bg-[#FFF5F3]/50 border border-[#F0E4E0]/60 rounded-3xl p-6 mb-8 space-y-4 shadow-[0_1px_3px_rgba(240,228,224,0.2)]">
+            <h2 className="text-[17px] font-bold text-[#FF2442] flex items-center gap-1.5 mb-2">
+              🍴 长沙聚餐特色与消费参考
+            </h2>
+            <div className="grid grid-cols-2 gap-5">
+              {event.estimatedCuisine && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-white border border-[#F0E4E0]/45 flex items-center justify-center flex-shrink-0 text-xl shadow-xs">
+                    🍽️
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#B8A099]">推荐菜系</div>
+                    <div className="text-[13.5px] font-bold text-[#2D2420]">{event.estimatedCuisine}</div>
+                  </div>
+                </div>
+              )}
+
+              {event.estimatedSpicy && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-white border border-[#F0E4E0]/45 flex items-center justify-center flex-shrink-0 text-xl shadow-xs">
+                    🌶️
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#B8A099]">长沙辣度参考</div>
+                    <div className="text-[13.5px] font-bold text-[#2D2420]">{event.estimatedSpicy}</div>
+                  </div>
+                </div>
+              )}
+
+              {event.estimatedSpend && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-white border border-[#F0E4E0]/45 flex items-center justify-center flex-shrink-0 text-xl shadow-xs">
+                    💰
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#B8A099]">餐费人均估算</div>
+                    <div className="text-[13.5px] font-bold text-[#2D2420]">{event.estimatedSpend}</div>
+                  </div>
+                </div>
+              )}
+
+              {event.alcoholPolicy && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-white border border-[#F0E4E0]/45 flex items-center justify-center flex-shrink-0 text-xl shadow-xs">
+                    🍺
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-[#B8A099]">饮酒社交规则</div>
+                    <div className="text-[13.5px] font-bold text-[#2D2420]">{event.alcoholPolicy}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Map */}
         {event.type !== "POOL" ? (
           <div className="mb-8">

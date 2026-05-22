@@ -17,21 +17,35 @@ const SAFE_HEADERS = new Set([
   "range",
   "referer",
   "user-agent",
+  "authorization",
+  "apikey",
 ]);
 
 async function proxy(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/supabase/, "") + url.search;
 
-  const anonKey =
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "sb_publishable_ouuTeuoTh05cseDyjEhqkw_Yu6v40Ej";
+  // 动态读取传入请求的 apikey 或 authorization 字段，如果是后台 service-role 操作，则转发对应的高级密钥，确保上传文件或创建 Bucket 成功
+  let apikey = url.searchParams.get("apikey") || req.headers.get("apikey");
+  
+  if (!apikey) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.trim().startsWith("Bearer ")) {
+      apikey = authHeader.trim().substring(7);
+    }
+  }
 
-  // Inject anon key as URL parameter — Vercel's runtime may strip custom
+  if (!apikey) {
+    apikey =
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      "sb_publishable_ouuTeuoTh05cseDyjEhqkw_Yu6v40Ej";
+  }
+
+  // Inject apikey as URL parameter — Vercel's runtime may strip custom
   // headers from outbound fetch calls.
   const sep = path.includes("?") ? "&" : "?";
-  const target = `${SUPABASE_URL}${path}${sep}apikey=${encodeURIComponent(anonKey)}`;
+  const target = `${SUPABASE_URL}${path}${sep}apikey=${encodeURIComponent(apikey)}`;
 
   const headers = new Headers();
 

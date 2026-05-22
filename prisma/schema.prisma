@@ -251,6 +251,10 @@ model Event {
   maxAttendees Int         @default(6)
   priceAmount  Int         @default(0)
   priceCurrency String     @default("usd")
+  estimatedSpend   String?     // 人均价格区间，例如 "￥80-120"
+  estimatedSpicy   String?     // 吃辣要求，例如 "微辣" | "清淡"
+  estimatedCuisine String?     // 餐厅分类，例如 "湘菜" | "日料"
+  alcoholPolicy    String?     // 饮酒规则，例如 "自由饮酒" | "无酒精"
   status       EventStatus @default(UPCOMING)
   creatorId    String
   matchId      String?     @unique
