@@ -18,6 +18,15 @@ async function proxy(req: NextRequest) {
     headers.set(key, value);
   });
 
+  // Vercel's outbound IPs are sometimes treated as untrusted by Supabase, even
+  // for public storage objects. Always inject the anon key so requests are
+  // authenticated at the anon level.
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  if (anonKey) {
+    headers.set("apikey", anonKey);
+    headers.set("Authorization", `Bearer ${anonKey}`);
+  }
+
   let body: BodyInit | null = null;
   if (req.method !== "GET" && req.method !== "HEAD") {
     body = await req.arrayBuffer();
