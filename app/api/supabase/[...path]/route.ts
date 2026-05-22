@@ -33,14 +33,15 @@ async function proxy(req: NextRequest) {
     }
   });
 
-  // Inject anon key so Supabase always sees an authenticated request
+  // Inject anon key so Supabase always sees an authenticated request.
+  // Hardcoded fallback — env vars sometimes are not available at runtime
+  // in Vercel's edge environment.
   const anonKey =
     process.env.SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (anonKey) {
-    headers.set("apikey", anonKey);
-    headers.set("Authorization", `Bearer ${anonKey}`);
-  }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "sb_publishable_ouuTeuoTh05cseDyjEhqkw_Yu6v40Ej";
+  headers.set("apikey", anonKey);
+  headers.set("Authorization", `Bearer ${anonKey}`);
 
   let body: BodyInit | null = null;
   if (req.method !== "GET" && req.method !== "HEAD") {
