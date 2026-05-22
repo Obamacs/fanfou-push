@@ -329,25 +329,32 @@ export default function OnboardingWizard({
                   (a) => a.questionId === question.id
                 )?.answer;
 
+                // 判断选项字数，如果是短文本则自动渲染成高精度的网格布局，长文本则为纵向卡片
+                const isShortOptions = options.every((o) => o.length <= 12);
+
                 return (
-                  <div key={question.id}>
-                    <Label className="block text-sm font-medium text-[#2D2420] mb-3">
+                  <div key={question.id} className="bg-[#fffcfc]/50 border border-[#F0E4E0]/60 rounded-2xl p-5 space-y-4 shadow-[0_1px_3px_rgba(240,228,224,0.3)] hover:shadow-md transition-all duration-300">
+                    <Label className="block text-base font-bold text-[#2D2420]">
                       {question.text}
                     </Label>
-                    <div className="space-y-2">
-                      {options.map((option: string) => (
-                        <button
-                          key={option}
-                          onClick={() => handleQuestionAnswer(question.id, option)}
-                          className={`w-full p-3 rounded-lg border-2 transition text-sm text-left ${
-                            currentAnswer === option
-                              ? "border-[#FF2442] bg-[#FFF0F3] text-[#FF2442]"
-                              : "border-[#F0E4E0] bg-white text-[#2D2420] hover:border-[#FF6B35]/30"
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
+                    <div className={isShortOptions ? "grid grid-cols-2 sm:grid-cols-3 gap-2.5" : "space-y-2.5"}>
+                      {options.map((option: string) => {
+                        const isSelected = currentAnswer === option;
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => handleQuestionAnswer(question.id, option)}
+                            className={`p-3 rounded-xl border-2 text-sm text-left transition-all duration-200 active:scale-[0.98] ${
+                              isSelected
+                                ? "border-[#FF2442] bg-[#FFF0F3] text-[#FF2442] font-semibold shadow-sm"
+                                : "border-[#F0E4E0] bg-white text-[#4A3D39] hover:border-[#FF6B35]/30 hover:bg-[#FFF5F3]/30"
+                            } ${isShortOptions ? "text-center justify-center flex items-center min-h-[46px] font-medium" : ""}`}
+                          >
+                            {option}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );

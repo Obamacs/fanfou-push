@@ -150,8 +150,25 @@ export function calculateActivityScore(
   const genderBonus =
     user.gender && candidate.gender && user.gender !== candidate.gender ? 10 : 0;
 
-  // 总分 = 活动兴趣(权重70%) + 婚恋意向(权重20%) + 性别平衡(权重10%)
-  return activityInterestScore * 0.7 + (goalScore / 35) * 20 + genderBonus;
+  // 精准饮食匹配 (火锅、湘菜、西餐、日料、海鲜、辣度口味、素食与民族风俗忌口等)
+  const userAnswerMap = new Map<string, string>();
+  if (user.answers && Array.isArray(user.answers)) {
+    user.answers.forEach((a) => {
+      userAnswerMap.set(a.questionId, a.answer);
+    });
+  }
+  const cuisineScore = calculateCuisineScore(candidate, userAnswerMap);
+  const tasteScore = calculateTasteScore(candidate, userAnswerMap);
+  const dietScore = calculateDietScore(candidate, userAnswerMap);
+  const foodScore = cuisineScore + tasteScore + dietScore; // 最高 37 分
+
+  // 总分 = 活动兴趣匹配(权重 50%) + 精准饮食兼容度(权重 30%) + 婚恋交友意向(权重 15%) + 性别平衡(权重 5%)
+  const weightedActivity = activityInterestScore * 0.5;
+  const weightedFood = (foodScore / 37) * 30;
+  const weightedGoal = (goalScore / 35) * 15;
+  const weightedGender = genderBonus * 0.5; // 最高 5 分 (10 * 0.5)
+
+  return weightedActivity + weightedFood + weightedGoal + weightedGender;
 }
 
 export function selectBalancedGroup(

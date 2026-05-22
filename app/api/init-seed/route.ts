@@ -125,6 +125,49 @@ export async function POST(req: NextRequest) {
         weight: 1.0,
         order: 5,
       },
+      {
+        id: "q-diet-1",
+        text: "您的特定饮食禁忌与忌口（如素食、信仰限制等）是？",
+        type: "single",
+        options: JSON.stringify([
+          "无禁忌",
+          "素食（不吃肉）",
+          "纯素食（不吃蛋奶肉）",
+          "海鲜素食（仅海鲜鱼虾）",
+          "民族风俗信仰限制（如不吃猪肉、清真等）",
+        ]),
+        weight: 1.0,
+        order: 6,
+      },
+      {
+        id: "q-cuisine-1",
+        text: "饭否周四晚餐聚会，您最中意的餐厅分类是？",
+        type: "single",
+        options: JSON.stringify([
+          "海鲜大餐",
+          "日韩料理",
+          "热气火锅",
+          "香辣湘菜/川菜",
+          "经典西餐",
+          "精致粤菜",
+        ]),
+        weight: 1.0,
+        order: 7,
+      },
+      {
+        id: "q-taste-1",
+        text: "关于平时吃辣的程度，您的接受度是？",
+        type: "single",
+        options: JSON.stringify([
+          "清淡",
+          "微辣",
+          "中辣",
+          "重口味",
+          "无辣不欢",
+        ]),
+        weight: 1.0,
+        order: 8,
+      },
     ];
 
     let createdQuestions = 0;
