@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -9,7 +10,10 @@ import { ArrowRight, MailCheck, Sparkles } from "lucide-react";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function RegisterPage() {
+function RegisterContent() {
+  const searchParams = useSearchParams();
+  const inviteParam = searchParams.get("invite") || searchParams.get("code") || "";
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -20,6 +24,13 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [devLoginUrl, setDevLoginUrl] = useState("");
+
+  // Auto-fill invite code if present in URL
+  useEffect(() => {
+    if (inviteParam) {
+      setFormData((prev) => ({ ...prev, inviteCode: inviteParam.toUpperCase() }));
+    }
+  }, [inviteParam]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -224,8 +235,14 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="填写邀请码领取免费券"
                       disabled={loading}
-                      className="h-12 rounded-lg border-[#eadbd6] bg-white/90 px-4 uppercase"
+                      className="h-12 rounded-lg border-[#eadbd6] bg-white/90 px-4 uppercase font-mono tracking-wider"
                     />
+                    {formData.inviteCode && (
+                      <p className="mt-1.5 flex items-center gap-1 text-[11px] text-[#ff2442] font-semibold tracking-wide">
+                        <Sparkles className="h-3 w-3 animate-pulse" />
+                        已填入邀请码，注册成功即可自动获赠免费餐券！
+                      </p>
+                    )}
                   </div>
 
                   <Button
@@ -252,3 +269,12 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white">加载中...</div>}>
+      <RegisterContent />
+    </Suspense>
+  );
+}
+
