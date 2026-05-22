@@ -2,26 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SUPABASE_URL = "https://lwercdnrvxrsnjjvojfx.supabase.co";
 
-/**
- * Proxies Supabase API requests through the app's own domain so they work from
- * China (supabase.co is blocked there). Replaces the standalone Cloudflare
- * Worker that was used when the site was hosted on Cloudflare.
- */
+// Headers that are safe to forward to Supabase. Cloudflare/Vercel-specific
+// headers (cf-*, x-forwarded-*, etc.) can cause Supabase to require
+// authentication even for public storage objects.
+const SAFE_HEADERS = new Set([
+  "accept",
+  "accept-encoding",
+  "accept-language",
+  "cache-control",
+  "content-length",
+  "content-type",
+  "origin",
+  "pragma",
+  "range",
+  "referer",
+  "user-agent",
+]);
+
 async function proxy(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/supabase/, "") + url.search;
   const target = SUPABASE_URL + path;
 
   const headers = new Headers();
+
+  // Only forward safe headers — Vercel/Cloudflare headers trigger auth
   req.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "host") return;
-    headers.set(key, value);
+    if (SAFE_HEADERS.has(key.toLowerCase())) {
+      headers.set(key, value);
+    }
   });
 
-  // Vercel's outbound IPs are sometimes treated as untrusted by Supabase, even
-  // for public storage objects. Always inject the anon key so requests are
-  // authenticated at the anon level.
-  const anonKey = process.env.SUPABASE_ANON_KEY;
+  // Inject anon key so Supabase always sees an authenticated request
+  const anonKey =
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (anonKey) {
     headers.set("apikey", anonKey);
     headers.set("Authorization", `Bearer ${anonKey}`);
@@ -44,6 +59,8 @@ async function proxy(req: NextRequest) {
     respHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
     respHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey");
     respHeaders.set("Access-Control-Expose-Headers", "Content-Length, X-JSON-response-length");
+    // Strip Supabase's Cloudflare cookies to avoid leaking to our domain
+    respHeaders.delete("set-cookie");
 
     return new NextResponse(resp.body, {
       status: resp.status,
@@ -79,7 +96,7 @@ export async function PATCH(req: NextRequest) {
   return proxy(req);
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS(_req: NextRequest) {
   return new NextResponse(null, {
     status: 204,
     headers: {
