@@ -25,12 +25,13 @@ async function proxy(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/supabase/, "") + url.search;
 
-  // 动态读取传入请求的 apikey 或 authorization 字段，如果是后台 service-role 操作，则转发对应的高级密钥，确保上传文件或创建 Bucket 成功
-  let apikey = url.searchParams.get("apikey") || req.headers.get("apikey");
-  
+  // 动态读取传入请求的 apikey 或 authorization 字段
+  let apikey: string | null =
+    url.searchParams.get("apikey") || req.headers.get("apikey");
+
   if (!apikey) {
     const authHeader = req.headers.get("authorization");
-    if (authHeader && authHeader.trim().startsWith("Bearer ")) {
+    if (authHeader?.trim().startsWith("Bearer ")) {
       apikey = authHeader.trim().substring(7);
     }
   }
@@ -39,7 +40,14 @@ async function proxy(req: NextRequest) {
     apikey =
       process.env.SUPABASE_ANON_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      "sb_publishable_ouuTeuoTh05cseDyjEhqkw_Yu6v40Ej";
+      null;
+  }
+  if (!apikey) {
+    console.error("Supabase proxy: no anon key configured");
+    return NextResponse.json(
+      { error: "代理服务未配置" },
+      { status: 500 }
+    );
   }
 
   // Inject apikey as URL parameter — Vercel's runtime may strip custom

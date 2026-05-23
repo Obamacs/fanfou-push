@@ -84,16 +84,10 @@ export default async function MatchPage() {
           <form
             action={async () => {
               "use server";
-              const res = await fetch(
-                `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/match/find`,
-                {
-                  method: "POST",
-                }
-              );
-
-              if (res.ok) {
-                const data = await res.json();
-                redirect(`/match/${data.matchId}`);
+              const { findMatch } = await import("@/lib/match-actions");
+              const result = await findMatch();
+              if (result.matchId) {
+                redirect(`/match/${result.matchId}`);
               }
             }}
           >

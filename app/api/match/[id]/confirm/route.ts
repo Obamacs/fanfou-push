@@ -37,53 +37,44 @@ export async function POST(
       );
     }
 
-    // Update member confirmation
-    await db.matchMember.update({
-      where: {
-        matchId_userId: {
-          matchId: id,
-          userId: session.user.id,
-        },
-      },
-      data: { confirmed: true },
-    });
-
-    // Check if all members are confirmed
-    const updatedMatch = await db.match.findUnique({
-      where: { id },
-      include: { members: true },
-    });
-
-    const allConfirmed = updatedMatch!.members.every((m) => m.confirmed);
-
-    if (allConfirmed) {
-      await db.match.update({
-        where: { id },
-        data: { status: "CONFIRMED" },
+    // Update confirmation and check all-confirmed atomically
+    const finalMatch = await db.$transaction(async (tx) => {
+      await tx.matchMember.update({
+        where: { matchId_userId: { matchId: id, userId: session.user!.id! } },
+        data: { confirmed: true },
       });
-    }
 
-    const finalMatch = await db.match.findUnique({
-      where: { id },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                ageGroup: true,
-                city: true,
-                interests: {
-                  include: {
-                    interest: true,
-                  },
+      // Count within the transaction for snapshot consistency
+      const [confirmedCount, totalCount] = await Promise.all([
+        tx.matchMember.count({ where: { matchId: id, confirmed: true } }),
+        tx.matchMember.count({ where: { matchId: id } }),
+      ]);
+
+      if (confirmedCount === totalCount && confirmedCount > 0) {
+        await tx.match.update({
+          where: { id },
+          data: { status: "CONFIRMED" },
+        });
+      }
+
+      return tx.match.findUnique({
+        where: { id },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  ageGroup: true,
+                  city: true,
+                  interests: { include: { interest: true } },
                 },
               },
             },
           },
         },
-      },
+      });
     });
 
     return NextResponse.json(finalMatch);

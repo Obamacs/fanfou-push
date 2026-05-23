@@ -435,6 +435,22 @@ model FreeCoupon {
   @@index([code])
 }
 
+model AppSettings {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(1)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([resetAt])
+}
+
 model ReservationOrder {
   id          String   @id @default(cuid())
   userId      String

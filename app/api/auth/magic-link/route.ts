@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limit: 3 requests per email per 5 minutes
-    const emailLimit = checkRateLimit(`magiclink:email:${email.toLowerCase()}`, {
+    const emailLimit = await checkRateLimit(`magiclink:email:${email.toLowerCase()}`, {
       maxRequests: 3,
       windowMs: 5 * 60 * 1000,
     });
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
       "unknown";
-    const ipLimit = checkRateLimit(`magiclink:ip:${ip}`, {
+    const ipLimit = await checkRateLimit(`magiclink:ip:${ip}`, {
       maxRequests: 10,
       windowMs: 15 * 60 * 1000,
     });
