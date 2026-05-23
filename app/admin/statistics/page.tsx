@@ -2,11 +2,99 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 
 interface DistributionItem {
   city?: string;
   type?: string;
   _count: number;
+}
+
+async function getStatisticsData() {
+  try {
+    const [
+      totalUsers,
+      activeUsers,
+      bannedUsers,
+      totalEvents,
+      completedEvents,
+      totalMatches,
+      confirmedMatches,
+      openReports,
+      resolvedReports,
+      cities,
+      events,
+      newUsersWeek,
+      newEventsWeek,
+    ] = await db.$transaction([
+      db.user.count(),
+      db.user.count({ where: { isActive: true, isBanned: false } }),
+      db.user.count({ where: { isBanned: true } }),
+      db.event.count(),
+      db.event.count({ where: { status: "COMPLETED" } }),
+      db.match.count(),
+      db.match.count({ where: { status: "CONFIRMED" } }),
+      db.report.count({ where: { status: "OPEN" } }),
+      db.report.count({ where: { status: "RESOLVED" } }),
+      db.user.findMany({
+        where: { city: { not: null } },
+        select: { city: true },
+        take: 100,
+      }),
+      db.event.findMany({
+        select: { type: true },
+      }),
+      db.user.count({
+        where: {
+          createdAt: {
+            gte: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      }),
+      db.event.count({
+        where: {
+          createdAt: {
+            gte: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      }),
+    ]);
+
+    return {
+      totalUsers,
+      activeUsers,
+      bannedUsers,
+      totalEvents,
+      completedEvents,
+      totalMatches,
+      confirmedMatches,
+      openReports,
+      resolvedReports,
+      cities,
+      events,
+      newUsersWeek,
+      newEventsWeek,
+      unavailable: false,
+    };
+  } catch (error) {
+    console.error("Statistics data unavailable:", error);
+    return {
+      totalUsers: 0,
+      activeUsers: 0,
+      bannedUsers: 0,
+      totalEvents: 0,
+      completedEvents: 0,
+      totalMatches: 0,
+      confirmedMatches: 0,
+      openReports: 0,
+      resolvedReports: 0,
+      cities: [],
+      events: [],
+      newUsersWeek: 0,
+      newEventsWeek: 0,
+      unavailable: true,
+    };
+  }
 }
 
 export default async function StatisticsPage() {
@@ -16,8 +104,7 @@ export default async function StatisticsPage() {
     redirect("/admin-login");
   }
 
-  // 获取详细统计数据
-  const [
+  const {
     totalUsers,
     activeUsers,
     bannedUsers,
@@ -27,24 +114,12 @@ export default async function StatisticsPage() {
     confirmedMatches,
     openReports,
     resolvedReports,
-  ] = await Promise.all([
-    db.user.count(),
-    db.user.count({ where: { isActive: true, isBanned: false } }),
-    db.user.count({ where: { isBanned: true } }),
-    db.event.count(),
-    db.event.count({ where: { status: "COMPLETED" } }),
-    db.match.count(),
-    db.match.count({ where: { status: "CONFIRMED" } }),
-    db.report.count({ where: { status: "OPEN" } }),
-    db.report.count({ where: { status: "RESOLVED" } }),
-  ]);
-
-  // 获取城市分布（简化版）
-  const cities = await db.user.findMany({
-    where: { city: { not: null } },
-    select: { city: true },
-    take: 100,
-  });
+    cities,
+    events,
+    newUsersWeek,
+    newEventsWeek,
+    unavailable,
+  } = await getStatisticsData();
 
   const cityDistribution = cities.reduce<DistributionItem[]>((acc, user) => {
     const city = user.city || "未设置";
@@ -59,11 +134,6 @@ export default async function StatisticsPage() {
     .sort((a, b) => b._count - a._count)
     .slice(0, 10);
 
-  // 获取活动类型分布（简化版）
-  const events = await db.event.findMany({
-    select: { type: true },
-  });
-
   const eventTypeDistribution = events.reduce<DistributionItem[]>((acc, event) => {
     const type = event.type || "未分类";
     const existing = acc.find((item) => item.type === type);
@@ -76,27 +146,20 @@ export default async function StatisticsPage() {
   }, [])
     .sort((a, b) => b._count - a._count);
 
-  // 获取用户增长趋势（最近7天）
-  const sevenDaysAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
-  const newUsersWeek = await db.user.count({
-    where: {
-      createdAt: {
-        gte: sevenDaysAgo,
-      },
-    },
-  });
-
-  const newEventsWeek = await db.event.count({
-    where: {
-      createdAt: {
-        gte: sevenDaysAgo,
-      },
-    },
-  });
-
   return (
     <div>
       <h1 className="text-3xl font-bold text-white mb-8">统计分析</h1>
+
+      {unavailable && (
+        <Card className="mb-8 rounded-lg border-amber-500/20 bg-amber-500/10 p-4 text-amber-100">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-none" />
+            <p className="text-sm leading-6">
+              统计数据暂时不可用，当前展示为空状态。稍后刷新即可恢复真实数据，页面不会整页崩溃。
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* 关键指标 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -192,7 +255,7 @@ export default async function StatisticsPage() {
             <div key={item.city} className="flex items-center justify-between">
               <span className="text-[#B8A099]">{item.city || "未设置"}</span>
               <div className="flex items-center gap-3">
-                <div className="h-2 bg-[#FF2442] rounded" style={{ width: `${(item._count / totalUsers) * 200}px` }} />
+                <div className="h-2 bg-[#FF2442] rounded" style={{ width: `${totalUsers > 0 ? (item._count / totalUsers) * 200 : 0}px` }} />
                 <span className="text-[#B8A099]">{item._count}</span>
               </div>
             </div>
@@ -208,7 +271,7 @@ export default async function StatisticsPage() {
             <div key={item.type} className="flex items-center justify-between">
               <span className="text-[#B8A099]">{item.type}</span>
               <div className="flex items-center gap-3">
-                <div className="h-2 bg-[#FF4D94] rounded" style={{ width: `${(item._count / totalEvents) * 200}px` }} />
+                <div className="h-2 bg-[#FF4D94] rounded" style={{ width: `${totalEvents > 0 ? (item._count / totalEvents) * 200 : 0}px` }} />
                 <span className="text-[#B8A099]">{item._count}</span>
               </div>
             </div>
