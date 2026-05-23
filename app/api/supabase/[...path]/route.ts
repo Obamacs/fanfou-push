@@ -55,6 +55,10 @@ async function proxy(req: NextRequest) {
       headers.set(key, value);
     }
   });
+  headers.set("apikey", apikey);
+  if (!headers.has("authorization")) {
+    headers.set("authorization", `Bearer ${apikey}`);
+  }
 
   let body: BodyInit | null = null;
   if (req.method !== "GET" && req.method !== "HEAD") {
