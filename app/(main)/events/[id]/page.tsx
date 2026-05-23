@@ -43,6 +43,10 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
     },
     select: {
       orderCode: true,
+      amount: true,
+      platformFee: true,
+      depositFee: true,
+      couponCode: true,
     },
   }) : null;
 
@@ -378,6 +382,10 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
                 isFull={isFull}
                 priceAmount={event.priceAmount}
                 initialOrderCode={pendingOrder?.orderCode}
+                initialOrderAmount={pendingOrder?.amount}
+                initialPlatformFee={pendingOrder?.platformFee}
+                initialDepositFee={pendingOrder?.depositFee}
+                initialCouponCode={pendingOrder?.couponCode}
               />
             )
           )}

@@ -39,13 +39,24 @@ export async function POST(
     }
 
     if (action === "confirm") {
+      // Find the coupon first if applicable
+      let couponToUse = null;
+      if (order.couponCode) {
+        couponToUse = await db.freeCoupon.findUnique({
+          where: { code: order.couponCode },
+        });
+      }
+
       // Confirm reservation order and update corresponding EventAttendance in a transaction
-      await db.$transaction([
-        db.reservationOrder.update({
+      await db.$transaction(async (tx) => {
+        // 1. Confirm the order
+        await tx.reservationOrder.update({
           where: { id: orderId },
           data: { status: "CONFIRMED" },
-        }),
-        db.eventAttendance.update({
+        });
+
+        // 2. Confirm the attendance
+        await tx.eventAttendance.update({
           where: {
             eventId_userId: {
               eventId: order.eventId,
@@ -57,8 +68,20 @@ export async function POST(
             paidAt: new Date(),
             paymentId: order.orderCode,
           },
-        }),
-      ]);
+        });
+
+        // 3. Mark the coupon as used (if one was applied)
+        if (couponToUse) {
+          await tx.freeCoupon.update({
+            where: { id: couponToUse.id },
+            data: {
+              isUsed: true,
+              usedAt: new Date(),
+              usedForEventId: order.eventId,
+            },
+          });
+        }
+      });
 
       revalidatePath(`/events/${order.eventId}`);
       revalidatePath("/events");

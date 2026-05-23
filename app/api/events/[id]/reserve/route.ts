@@ -32,6 +32,16 @@ export async function POST(
 
     const userId = session.user.id as string;
 
+    let couponCode: string | null = null;
+    try {
+      const body = await req.json();
+      if (body?.couponCode) {
+        couponCode = (body.couponCode as string).trim().toUpperCase();
+      }
+    } catch {
+      // Body might be empty, ignore
+    }
+
     // Fetch event
     const event = await db.event.findUnique({
       where: { id: eventId },
@@ -98,7 +108,43 @@ export async function POST(
       );
     }
 
-    // Find if there is an existing pending order
+    // Check if user is Pro subscriber
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { isPro: true, subscriptionStatus: true },
+    });
+    const isPro = user?.isPro || user?.subscriptionStatus === "ACTIVE";
+
+    let platformFee = 29; // 默认活动组织服务费：29元
+
+    if (isPro) {
+      platformFee = 0; // 月度订阅（99元/月）用户免收活动组织费
+    } else if (couponCode) {
+      // 验证免费券
+      const coupon = await db.freeCoupon.findUnique({
+        where: { code: couponCode },
+      });
+
+      if (!coupon) {
+        return NextResponse.json({ error: "优惠券码不存在" }, { status: 400 });
+      }
+      if (coupon.userId !== userId) {
+        return NextResponse.json({ error: "此优惠券不属于您" }, { status: 400 });
+      }
+      if (coupon.isUsed) {
+        return NextResponse.json({ error: "此优惠券已被使用" }, { status: 400 });
+      }
+      if (coupon.expiresAt < now) {
+        return NextResponse.json({ error: "此优惠券已过期" }, { status: 400 });
+      }
+
+      platformFee = 0; // 优惠券免收活动组织费
+    }
+
+    const depositFee = event.priceAmount; // 第二笔费用：出席押金/预付餐费
+    const totalAmount = platformFee + depositFee;
+
+    // Find if there is an existing pending order, if so, delete it so we can issue a fresh one
     const existingOrder = await db.reservationOrder.findFirst({
       where: {
         userId,
@@ -108,9 +154,8 @@ export async function POST(
     });
 
     if (existingOrder) {
-      return NextResponse.json({
-        message: "订单已存在",
-        order: existingOrder,
+      await db.reservationOrder.delete({
+        where: { id: existingOrder.id },
       });
     }
 
@@ -124,7 +169,10 @@ export async function POST(
           userId,
           eventId,
           orderCode,
-          amount: event.priceAmount,
+          amount: totalAmount,
+          platformFee,
+          depositFee,
+          couponCode: platformFee === 0 && couponCode ? couponCode : null,
           status: "PENDING",
         },
       }),
