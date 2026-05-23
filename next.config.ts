@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "meal-meet.com",
+        pathname: "/api/supabase/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lwercdnrvxrsnjjvojfx.supabase.co",
+      },
+    ],
+  },
   async headers() {
     return [
       {

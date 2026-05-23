@@ -1,9 +1,8 @@
-"use client";
-
 import { Card } from "@/components/ui/card";
 import { EVENT_TYPE_COLORS } from "@/lib/constants";
 import { Calendar, MapPin, Users } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface EventCardProps {
   event: {
@@ -41,10 +40,13 @@ export function EventCard({ event }: EventCardProps) {
       <Card className="surface-card overflow-hidden rounded-lg p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_70px_rgba(80,35,30,0.14)]">
         <div className="relative aspect-[4/3] overflow-hidden bg-[#fff0ef]">
           {event.imageUrl ? (
-            <img
+            <Image
               src={event.imageUrl}
               alt={event.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              unoptimized
             />
           ) : (
             <div className={`w-full h-full flex items-center justify-center ${colors.bg}`}>

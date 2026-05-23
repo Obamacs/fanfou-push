@@ -15,27 +15,10 @@ export async function DELETE(
 
     const { eventId } = await params;
 
-    // Delete related records first
-    await db.eventAttendance.deleteMany({
-      where: { eventId },
-    });
-
-    await db.message.deleteMany({
-      where: { eventId },
-    });
-
-    await db.rating.deleteMany({
-      where: { eventId },
-    });
-
-    await db.report.deleteMany({
-      where: { reportedEventId: eventId },
-    });
-
-    // Delete the event
-    await db.event.delete({
-      where: { id: eventId },
-    });
+    // Prisma onDelete: Cascade handles EventAttendance, Message, Rating.
+    // Report and FreeCoupon use onDelete: SetNull (safe — they persist
+    // without the event reference).
+    await db.event.delete({ where: { id: eventId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
