@@ -128,7 +128,7 @@ export async function redeemCouponForEvent(
   }
 
   if (event.priceAmount <= 0) {
-    throw new Error("免费活动无需使用券");
+    throw new Error("免费活动无需使用预约金代付券");
   }
 
   // 检查是否已报名

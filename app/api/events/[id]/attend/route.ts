@@ -110,6 +110,26 @@ export async function POST(
         },
       });
 
+      // Track invite conversion: if this is the user's first CONFIRMED attendance
+      // and they were invited, mark the conversion on the InviteCodeUsage.
+      if (status === "CONFIRMED") {
+        const confirmedCount = await db.eventAttendance.count({
+          where: { userId, status: "CONFIRMED" },
+        });
+        if (confirmedCount === 1) {
+          // First confirmed attendance — check if this user was invited
+          const usage = await db.inviteCodeUsage.findUnique({
+            where: { newUserId: userId },
+          });
+          if (usage && !usage.invitedUserFirstEventAt) {
+            await db.inviteCodeUsage.update({
+              where: { id: usage.id },
+              data: { invitedUserFirstEventAt: new Date() },
+            });
+          }
+        }
+      }
+
       revalidatePath(`/events/${id}`);
       revalidatePath("/events");
 

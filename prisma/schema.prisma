@@ -403,15 +403,18 @@ model InviteCode {
 }
 
 model InviteCodeUsage {
-  id           String   @id @default(cuid())
-  inviteCodeId String
-  newUserId    String   @unique
-  usedAt       DateTime @default(now())
+  id                      String    @id @default(cuid())
+  inviteCodeId            String
+  newUserId               String    @unique
+  usedAt                  DateTime  @default(now())
+  invitedUserFirstEventAt DateTime? // 被邀者首次参加活动时间（追踪转化）
+  inviterRewardClaimedAt  DateTime? // 邀请者奖励是否已领取
 
   inviteCode InviteCode @relation(fields: [inviteCodeId], references: [id], onDelete: Cascade)
   newUser    User       @relation("InviteCodeUsed", fields: [newUserId], references: [id], onDelete: Cascade)
 
   @@index([inviteCodeId])
+  @@index([inviterRewardClaimedAt])
 }
 
 model FreeCoupon {
