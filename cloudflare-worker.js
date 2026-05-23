@@ -28,13 +28,36 @@ export default {
         path = '/' + path;
       }
 
+      let apikey = url.searchParams.get('apikey') || request.headers.get('apikey');
+      if (!apikey) {
+        const authHeader = request.headers.get('authorization');
+        if (authHeader && authHeader.trim().startsWith('Bearer ')) {
+          apikey = authHeader.trim().substring(7);
+        }
+      }
+      if (!apikey) {
+        apikey = env.SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      }
+      if (apikey && !url.searchParams.has('apikey')) {
+        path += path.includes('?') ? '&' : '?';
+        path += `apikey=${encodeURIComponent(apikey)}`;
+      }
+
       // 构建目标URL
       const targetUrl = SUPABASE_URL + path;
 
       // 创建新请求，保留原始请求的所有头部
+      const headers = new Headers(request.headers);
+      if (apikey) {
+        headers.set('apikey', apikey);
+        if (!headers.has('authorization')) {
+          headers.set('authorization', `Bearer ${apikey}`);
+        }
+      }
+
       const newRequest = new Request(targetUrl, {
         method: request.method,
-        headers: request.headers,
+        headers,
         body: request.body,
       });
 
