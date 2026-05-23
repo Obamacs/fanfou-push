@@ -9,8 +9,9 @@ import { redirect, notFound } from "next/navigation";
 export default async function MatchDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -18,7 +19,7 @@ export default async function MatchDetailPage({
   }
 
   const match = await db.match.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       members: {
         include: {

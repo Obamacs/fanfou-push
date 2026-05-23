@@ -7,12 +7,13 @@ import { EventForm } from "@/components/events/EventForm";
 export default async function AdminEditEventPage({
   params,
 }: {
-  params: { eventId: string };
+  params: Promise<{ eventId: string }>;
 }) {
+  const { eventId } = await params;
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect("/login");
+    redirect("/admin-login");
   }
 
   // 检查是否为管理员
@@ -27,7 +28,7 @@ export default async function AdminEditEventPage({
 
   // 获取活动信息
   const event = await db.event.findUnique({
-    where: { id: params.eventId },
+    where: { id: eventId },
     include: {
       creator: {
         select: { id: true, name: true, email: true },

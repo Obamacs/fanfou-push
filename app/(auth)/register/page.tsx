@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -17,20 +17,13 @@ function RegisterContent() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    inviteCode: "",
+    inviteCode: inviteParam.toUpperCase(),
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [devLoginUrl, setDevLoginUrl] = useState("");
-
-  // Auto-fill invite code if present in URL
-  useEffect(() => {
-    if (inviteParam) {
-      setFormData((prev) => ({ ...prev, inviteCode: inviteParam.toUpperCase() }));
-    }
-  }, [inviteParam]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -277,4 +270,3 @@ export default function RegisterPage() {
     </Suspense>
   );
 }
-

@@ -1,3 +1,9 @@
+if (process.env.NODE_ENV === "development") {
+  // 在本地开发环境下，强制覆盖 NEXTAUTH_URL 为 localhost:3000，
+  // 避免使用生产域名导致的 Cookie 域和安全传输（__Secure- 限制）失效，从而解决登录重定向死循环。
+  process.env.NEXTAUTH_URL = "http://localhost:3000";
+}
+
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -12,15 +18,20 @@ function hashToken(token: string): string {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
+  trustHost: true,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       id: "credentials",
       name: "邮箱登录",
@@ -30,15 +41,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("邮箱和密码为必填项");
+          return null;
         }
 
+        const emailClean = (credentials.email as string).toLowerCase().trim();
+
         const user = await db.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email: emailClean },
         });
 
         if (!user || !user.passwordHash) {
-          throw new Error("邮箱或密码错误");
+          return null;
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -47,7 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!isPasswordValid) {
-          throw new Error("邮箱或密码错误");
+          return null;
         }
 
         return {

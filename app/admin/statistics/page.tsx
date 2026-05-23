@@ -13,7 +13,7 @@ export default async function StatisticsPage() {
   const session = await auth();
 
   if (!session?.user?.id || session.user.role !== "ADMIN") {
-    redirect("/login");
+    redirect("/admin-login");
   }
 
   // 获取详细统计数据

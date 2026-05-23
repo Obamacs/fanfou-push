@@ -3,14 +3,17 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Link from "next/link";
 
 interface PaymentSuccessPageProps {
-  params: { id: string };
-  searchParams: { session_id?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ session_id?: string }>;
 }
 
 export default async function PaymentSuccessPage({
   params,
   searchParams,
 }: PaymentSuccessPageProps) {
+  const { id } = await params;
+  const { session_id } = await searchParams;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center px-4">
       <Card className="w-full max-w-md shadow-lg">
@@ -23,15 +26,15 @@ export default async function PaymentSuccessPage({
             感谢您的报名，我们期待与您相见！
           </p>
 
-          {searchParams.session_id && (
+          {session_id && (
             <div className="bg-[#FFF5F3] rounded p-3 text-xs text-[#B8A099] break-all">
               <div className="font-semibold mb-1">订单号：</div>
-              {searchParams.session_id}
+              {session_id}
             </div>
           )}
 
           <div className="space-y-2 pt-4">
-            <Link href={`/events/${params.id}`} className="block">
+            <Link href={`/events/${id}`} className="block">
               <Button className="w-full">返回活动详情</Button>
             </Link>
             <Link href="/events" className="block">
@@ -48,7 +51,7 @@ export default async function PaymentSuccessPage({
       </Card>
 
       {/* Auto-redirect after 3 seconds */}
-      <meta httpEquiv="refresh" content={`3;url=/events/${params.id}`} />
+      <meta httpEquiv="refresh" content={`3;url=/events/${id}`} />
     </div>
   );
 }

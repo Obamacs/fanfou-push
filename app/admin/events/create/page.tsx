@@ -8,7 +8,7 @@ export default async function AdminCreateEventPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect("/login");
+    redirect("/admin-login");
   }
 
   // 检查是否为管理员

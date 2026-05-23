@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const navItems = [
@@ -18,12 +17,7 @@ const navItems = [
 ];
 
 export function AdminNavLinks() {
-  const nextPathname = usePathname();
-  const [pathname, setPathname] = useState("");
-
-  useEffect(() => {
-    setPathname(nextPathname || window.location.pathname);
-  }, [nextPathname]);
+  const pathname = usePathname();
 
   return (
     <>

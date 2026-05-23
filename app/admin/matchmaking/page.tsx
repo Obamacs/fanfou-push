@@ -9,7 +9,7 @@ export default async function MatchmakingAdminPage() {
   const session = await auth();
 
   if (!session?.user?.id || session.user.role !== "ADMIN") {
-    redirect("/login");
+    redirect("/admin-login");
   }
 
   // Fetch all active POOL events

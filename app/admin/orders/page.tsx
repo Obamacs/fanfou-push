@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -29,7 +29,7 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("PENDING");
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -49,17 +49,16 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, statusFilter]);
 
   useEffect(() => {
-    let isMounted = true;
-    if (isMounted) {
+    const timer = window.setTimeout(() => {
       void fetchOrders();
-    }
+    }, 0);
     return () => {
-      isMounted = false;
+      window.clearTimeout(timer);
     };
-  }, [statusFilter, searchQuery]);
+  }, [fetchOrders]);
 
   const handleProcessOrder = async (orderId: string, action: "confirm" | "cancel") => {
     if (!confirm(`确定要${action === "confirm" ? "确认收款" : "取消这笔预约"}吗？`)) {
