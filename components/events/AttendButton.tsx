@@ -27,40 +27,63 @@ interface AttendButtonProps {
   initialCouponCode?: string | null;
 }
 
-function MockQRCode({ type }: { type: "wechat" | "alipay" }) {
+function QRCodeRenderer({ type, customUrl }: { type: "wechat" | "alipay"; customUrl?: string }) {
+  const [imageError, setImageError] = useState(false);
   const isWeChat = type === "wechat";
   const color = isWeChat ? "#07C160" : "#1677FF";
 
+  // Reset error when URL changes
+  useEffect(() => {
+    setImageError(false);
+  }, [customUrl]);
+
+  const showCustomImage = customUrl && !imageError;
+
   return (
     <div className="relative flex flex-col items-center p-5 bg-white border border-[#F0E4E0] rounded-3xl shadow-xs transition-transform duration-300 hover:scale-[1.02]">
-      <svg className="w-40 h-40" viewBox="0 0 100 100">
-        <rect x="5" y="5" width="20" height="20" fill="none" stroke={color} strokeWidth="3" />
-        <rect x="10" y="10" width="10" height="10" fill={color} />
+      {showCustomImage ? (
+        <div className="relative w-40 h-40 bg-white border border-[#F0E4E0]/45 rounded-2xl overflow-hidden flex items-center justify-center p-1">
+          {/* Use standard img with onError fallback for maximum domain compatibility */}
+          <img
+            src={customUrl}
+            alt={`${isWeChat ? "微信" : "支付宝"}收款码`}
+            className="w-full h-full object-contain"
+            onError={() => setImageError(true)}
+          />
+        </div>
+      ) : (
+        <>
+          <svg className="w-40 h-40" viewBox="0 0 100 100">
+            <rect x="5" y="5" width="20" height="20" fill="none" stroke={color} strokeWidth="3" />
+            <rect x="10" y="10" width="10" height="10" fill={color} />
 
-        <rect x="75" y="5" width="20" height="20" fill="none" stroke={color} strokeWidth="3" />
-        <rect x="80" y="10" width="10" height="10" fill={color} />
+            <rect x="75" y="5" width="20" height="20" fill="none" stroke={color} strokeWidth="3" />
+            <rect x="80" y="10" width="10" height="10" fill={color} />
 
-        <rect x="5" y="75" width="20" height="20" fill="none" stroke={color} strokeWidth="3" />
-        <rect x="10" y="80" width="10" height="10" fill={color} />
+            <rect x="5" y="75" width="20" height="20" fill="none" stroke={color} strokeWidth="3" />
+            <rect x="10" y="80" width="10" height="10" fill={color} />
 
-        <path d="M 35,10 H 45 V 20 H 35 Z M 50,15 H 60 V 25 H 50 Z M 65,10 H 70 V 30 H 65 Z" fill={color} />
-        <path d="M 10,35 H 25 V 45 H 10 Z M 30,30 H 40 V 50 H 30 Z M 45,35 H 55 V 40 H 45 Z" fill={color} />
-        <path d="M 15,55 H 20 V 65 H 15 Z M 35,55 H 45 V 60 H 35 Z M 50,45 H 65 V 50 H 50 Z" fill={color} />
-        <path d="M 55,55 H 70 V 65 H 55 Z M 75,35 H 85 V 45 H 75 Z M 80,50 H 90 V 60 H 80 Z" fill={color} />
-        <path d="M 30,65 H 40 V 75 H 30 Z M 45,65 H 50 V 90 H 45 Z M 55,75 H 65 V 85 H 55 Z" fill={color} />
-        <path d="M 65,70 H 70 V 75 H 65 Z M 75,65 H 80 V 70 H 75 Z M 80,75 H 90 V 90 H 80 Z" fill={color} />
+            <path d="M 35,10 H 45 V 20 H 35 Z M 50,15 H 60 V 25 H 50 Z M 65,10 H 70 V 30 H 65 Z" fill={color} />
+            <path d="M 10,35 H 25 V 45 H 10 Z M 30,30 H 40 V 50 H 30 Z M 45,35 H 55 V 40 H 45 Z" fill={color} />
+            <path d="M 15,55 H 20 V 65 H 15 Z M 35,55 H 45 V 60 H 35 Z M 50,45 H 65 V 50 H 50 Z" fill={color} />
+            <path d="M 55,55 H 70 V 65 H 55 Z M 75,35 H 85 V 45 H 75 Z M 80,50 H 90 V 60 H 80 Z" fill={color} />
+            <path d="M 30,65 H 40 V 75 H 30 Z M 45,65 H 50 V 90 H 45 Z M 55,75 H 65 V 85 H 55 Z" fill={color} />
+            <path d="M 65,70 H 70 V 75 H 65 Z M 75,65 H 80 V 70 H 75 Z M 80,75 H 90 V 90 H 80 Z" fill={color} />
 
-        <circle cx="50" cy="50" r="14" fill="white" stroke={color} strokeWidth="1.5" />
-      </svg>
-      <span className="absolute top-[43%] text-[9px] font-bold tracking-tight" style={{ color }}>
-        {isWeChat ? "微信支付" : "支付宝"}
-      </span>
+            <circle cx="50" cy="50" r="14" fill="white" stroke={color} strokeWidth="1.5" />
+          </svg>
+          <span className="absolute top-[43%] text-[9px] font-bold tracking-tight" style={{ color }}>
+            {isWeChat ? "微信支付" : "支付宝"}
+          </span>
+        </>
+      )}
       <span className="mt-3 text-xs font-semibold text-[#2D2420] opacity-80">
-        扫一扫转账保证金
+        扫一扫转账预付款
       </span>
     </div>
   );
 }
+
 
 export function AttendButton({
   eventId,
@@ -88,11 +111,27 @@ export function AttendButton({
   const [orderDepositFee, setOrderDepositFee] = useState<number | null>(initialDepositFee);
   const [orderCouponCode, setOrderCouponCode] = useState<string | null>(initialCouponCode);
 
+  const [wechatQRCodeUrl, setWechatQRCodeUrl] = useState("");
+  const [alipayQRCodeUrl, setAlipayQRCodeUrl] = useState("");
+
   const [coupons, setCoupons] = useState<any[]>([]);
   const [hasPro, setHasPro] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<string>("");
   const [useCoupon, setUseCoupon] = useState(true);
   const [isPayDetailsDialogOpen, setIsPayDetailsDialogOpen] = useState(false);
+
+  // 拉取公共收款码配置
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) {
+          setWechatQRCodeUrl(data.wechatQRCodeUrl || "");
+          setAlipayQRCodeUrl(data.alipayQRCodeUrl || "");
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   // 初始化拉取优惠券与Pro订阅状态
   useEffect(() => {
@@ -521,7 +560,10 @@ export function AttendButton({
 
             {/* 二维码展示 */}
             <div className="flex justify-center w-full min-h-[220px]">
-              <MockQRCode type={activeQR} />
+              <QRCodeRenderer
+                type={activeQR}
+                customUrl={activeQR === "wechat" ? wechatQRCodeUrl : alipayQRCodeUrl}
+              />
             </div>
 
             {/* 唯一对账备注码 */}

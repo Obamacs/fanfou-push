@@ -9,6 +9,8 @@ type Settings = {
   maxMatchGroupSize: number;
   matchExpirationHours: number;
   eventCreationBanDuration: number;
+  wechatQRCodeUrl?: string;
+  alipayQRCodeUrl?: string;
 };
 
 const DEFAULT_SETTINGS: Settings = {
@@ -16,9 +18,11 @@ const DEFAULT_SETTINGS: Settings = {
   maxMatchGroupSize: 6,
   matchExpirationHours: 24,
   eventCreationBanDuration: 30,
+  wechatQRCodeUrl: "",
+  alipayQRCodeUrl: "",
 };
 
-const RANGES: Record<keyof Settings, { min: number; max: number }> = {
+const RANGES: Record<keyof Omit<Settings, "wechatQRCodeUrl" | "alipayQRCodeUrl">, { min: number; max: number }> = {
   minUsersForMatch: { min: 2, max: 20 },
   maxMatchGroupSize: { min: 3, max: 20 },
   matchExpirationHours: { min: 1, max: 168 },
@@ -30,7 +34,13 @@ async function getSettings(): Promise<Settings> {
     const row = await db.appSettings.findUnique({
       where: { key: SETTINGS_KEY },
     });
-    if (row) return JSON.parse(row.value) as Settings;
+    if (row) {
+      const parsed = JSON.parse(row.value);
+      return {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+      } as Settings;
+    }
   } catch {
     // fall through to defaults
   }
@@ -53,7 +63,7 @@ export async function POST(req: NextRequest) {
     const settings = await getSettings();
     const next: Partial<Settings> = {};
 
-    for (const key of Object.keys(RANGES) as (keyof Settings)[]) {
+    for (const key of Object.keys(RANGES) as (keyof typeof RANGES)[]) {
       const raw = body[key];
       if (raw === undefined) continue;
       const value = Number(raw);
@@ -65,6 +75,13 @@ export async function POST(req: NextRequest) {
         );
       }
       next[key] = value;
+    }
+
+    if (body.wechatQRCodeUrl !== undefined) {
+      next.wechatQRCodeUrl = String(body.wechatQRCodeUrl || "");
+    }
+    if (body.alipayQRCodeUrl !== undefined) {
+      next.alipayQRCodeUrl = String(body.alipayQRCodeUrl || "");
     }
 
     Object.assign(settings, next);
@@ -80,3 +97,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "设置保存失败" }, { status: 500 });
   }
 }
+

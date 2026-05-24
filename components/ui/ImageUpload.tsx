@@ -10,9 +10,10 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   label?: string;
   type?: "avatar" | "event";
+  aspect?: "video" | "square";
 }
 
-export function ImageUpload({ value, onChange, label = "上传图片", type = "avatar" }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, label = "上传图片", type = "avatar", aspect = "video" }: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
@@ -74,6 +75,23 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
     onChange("");
   };
 
+  const isSquare = aspect === "square";
+  const containerClass = isSquare
+    ? "relative w-48 h-48 mx-auto bg-[#FFF5F3] rounded-2xl overflow-hidden group shadow-sm border border-[#F0E4E0]/40"
+    : "relative w-full aspect-video bg-[#FFF5F3] rounded-2xl overflow-hidden group";
+
+  const buttonClass = isSquare
+    ? `w-48 h-48 mx-auto rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
+        dragOver
+          ? "border-[#FF2442] bg-[#FFF0F3]"
+          : "border-[#F0E4E0] hover:border-[#F0E4E0] bg-[#FFF5F3]/50"
+      }`
+    : `w-full aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
+        dragOver
+          ? "border-[#FF2442] bg-[#FFF0F3]"
+          : "border-[#F0E4E0] hover:border-[#F0E4E0] bg-[#FFF5F3]/50"
+      }`;
+
   return (
     <div className="space-y-3">
       <input
@@ -85,24 +103,25 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
       />
 
       {value ? (
-        <div className="relative w-full aspect-video bg-[#FFF5F3] rounded-2xl overflow-hidden group">
+        <div className={containerClass}>
           <Image
             src={value}
             alt="Preview"
             fill
-            className="object-cover"
+            className={isSquare ? "object-contain p-2 bg-white" : "object-cover"}
             unoptimized={value.includes("supabase")}
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading}
+                className="shadow-md"
               >
-                <Upload className="w-4 h-4 mr-1" />
+                <Upload className="w-3.5 h-3.5 mr-1" />
                 更换
               </Button>
               <Button
@@ -110,9 +129,9 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
                 variant="secondary"
                 size="sm"
                 onClick={handleRemove}
-                className="text-red-600"
+                className="text-red-600 shadow-md"
               >
-                <X className="w-4 h-4 mr-1" />
+                <X className="w-3.5 h-3.5 mr-1" />
                 删除
               </Button>
             </div>
@@ -126,11 +145,7 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           disabled={loading}
-          className={`w-full aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
-            dragOver
-              ? "border-[#FF2442] bg-[#FFF0F3]"
-              : "border-[#F0E4E0] hover:border-[#F0E4E0] bg-[#FFF5F3]/50"
-          }`}
+          className={buttonClass}
         >
           {loading ? (
             <>
@@ -141,7 +156,7 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
             <>
               <ImageIcon className="w-8 h-8 text-[#B8A099]" />
               <span className="text-sm text-[#B8A099]">{label}</span>
-              <span className="text-xs text-[#B8A099]">支持 JPG、PNG、WebP，最大 10MB</span>
+              {!isSquare && <span className="text-xs text-[#B8A099]">支持 JPG、PNG、WebP，最大 10MB</span>}
             </>
           )}
         </button>
@@ -155,3 +170,4 @@ export function ImageUpload({ value, onChange, label = "上传图片", type = "a
     </div>
   );
 }
+
