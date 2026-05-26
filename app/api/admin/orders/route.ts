@@ -13,11 +13,13 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status") || undefined;
+    const refundStatus = searchParams.get("refundStatus") || undefined;
     const query = searchParams.get("q") || "";
 
     const orders = await db.reservationOrder.findMany({
       where: {
         ...(status ? { status } : {}),
+        ...(refundStatus ? { refundStatus } : {}),
         OR: [
           { orderCode: { contains: query, mode: "insensitive" } },
           { user: { name: { contains: query, mode: "insensitive" } } },
@@ -30,6 +32,9 @@ export async function GET(req: NextRequest) {
           select: {
             name: true,
             email: true,
+            refundMethod: true,
+            refundAccount: true,
+            refundRealName: true,
           },
         },
         event: {

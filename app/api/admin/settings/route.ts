@@ -9,6 +9,7 @@ type Settings = {
   maxMatchGroupSize: number;
   matchExpirationHours: number;
   eventCreationBanDuration: number;
+  serviceFeeRate: number;
   wechatQRCodeUrl?: string;
   alipayQRCodeUrl?: string;
 };
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: Settings = {
   maxMatchGroupSize: 6,
   matchExpirationHours: 24,
   eventCreationBanDuration: 30,
+  serviceFeeRate: 20,
   wechatQRCodeUrl: "",
   alipayQRCodeUrl: "",
 };
@@ -27,6 +29,7 @@ const RANGES: Record<keyof Omit<Settings, "wechatQRCodeUrl" | "alipayQRCodeUrl">
   maxMatchGroupSize: { min: 3, max: 20 },
   matchExpirationHours: { min: 1, max: 168 },
   eventCreationBanDuration: { min: 1, max: 365 },
+  serviceFeeRate: { min: 0, max: 100 },
 };
 
 async function getSettings(): Promise<Settings> {

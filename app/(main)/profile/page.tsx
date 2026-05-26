@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { signOutAction } from "@/app/actions/auth";
 import Link from "next/link";
-import { LogOut, Pencil, Sparkles, Check, Copy, Share2, Users, Ticket, Calendar, Gift } from "lucide-react";
+import { LogOut, Pencil, Sparkles, Check, Copy, Share2, Users, Ticket, Calendar, Gift, Wallet } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -19,6 +19,9 @@ interface UserProfile {
   age?: number;
   gender?: string;
   city?: string;
+  refundMethod?: string | null;
+  refundAccount?: string | null;
+  refundRealName?: string | null;
 }
 
 interface Coupon {
@@ -326,13 +329,86 @@ export default function ProfilePage() {
                 onChange={handleChange}
                 placeholder="介绍一下你自己"
                 rows={4}
-                className="w-full rounded-lg border border-[#eadbd6] bg-white/90 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[#eadbd6] bg-white/90 px-3 py-2 text-sm focus:border-[#ff2442] focus:ring-1 focus:ring-[#ff2442]"
               />
             ) : (
               <div className="whitespace-pre-wrap rounded-lg bg-[#fff4f1] p-3 text-[#271f1d]">
                 {profile.bio || "-"}
               </div>
             )}
+          </div>
+
+          {/* 保证金退款绑定卡片 */}
+          <div className="border-t border-[#f0dfda] pt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4.5 w-4.5 text-[#ff2442]" />
+              <h3 className="text-md font-bold text-[#271f1d]">活动出席保证金退款账号</h3>
+            </div>
+            <p className="text-xs text-[#8f7772] leading-relaxed">
+              晚餐聚会圆满结束后，我们将通过线下人工转账的方式，将您付过的保证金极速、精准退还至您绑定的以下账号中。请确保实名信息完全匹配！
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-[#8f7772]">退款渠道</label>
+                {editing ? (
+                  <select
+                    name="refundMethod"
+                    value={formData.refundMethod || ""}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, refundMethod: e.target.value }))}
+                    className="w-full h-10 rounded-lg border border-[#eadbd6] bg-white px-3 text-sm focus:border-[#ff2442] focus:ring-1 focus:ring-[#ff2442]"
+                  >
+                    <option value="">未绑定</option>
+                    <option value="WECHAT">微信支付</option>
+                    <option value="ALIPAY">支付宝</option>
+                  </select>
+                ) : (
+                  <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d] font-semibold text-sm">
+                    {profile.refundMethod === "WECHAT" ? (
+                      <span className="text-[#07C160]">微信支付</span>
+                    ) : profile.refundMethod === "ALIPAY" ? (
+                      <span className="text-[#1677FF]">支付宝</span>
+                    ) : (
+                      <span className="text-gray-400">未绑定</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-[#8f7772]">退款账号</label>
+                {editing ? (
+                  <Input
+                    name="refundAccount"
+                    value={formData.refundAccount || ""}
+                    onChange={handleChange}
+                    placeholder="如微信号或支付宝邮箱"
+                    className="rounded-lg border-[#eadbd6] bg-white text-sm"
+                  />
+                ) : (
+                  <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d] font-mono text-sm break-all">
+                    {profile.refundAccount || "-"}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-[#8f7772]">实名认证姓名</label>
+                {editing ? (
+                  <Input
+                    name="refundRealName"
+                    value={formData.refundRealName || ""}
+                    onChange={handleChange}
+                    placeholder="退款账户的实名"
+                    className="rounded-lg border-[#eadbd6] bg-white text-sm"
+                  />
+                ) : (
+                  <div className="rounded-lg bg-[#fff4f1] p-3 text-[#271f1d] text-sm font-semibold">
+                    {profile.refundRealName || "-"}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {editing && (

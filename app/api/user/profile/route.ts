@@ -20,6 +20,9 @@ export async function GET() {
         age: true,
         gender: true,
         city: true,
+        refundMethod: true,
+        refundAccount: true,
+        refundRealName: true,
       },
     });
 
@@ -39,7 +42,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, bio, age, gender, city, avatarUrl } = body;
+    const { name, bio, age, gender, city, avatarUrl, refundMethod, refundAccount, refundRealName } = body;
 
     if (name !== undefined && (typeof name !== "string" || name.length > 50)) {
       return NextResponse.json({ error: "名字过长" }, { status: 400 });
@@ -57,6 +60,9 @@ export async function PATCH(req: NextRequest) {
         ...(gender !== undefined && { gender }),
         ...(city !== undefined && { city }),
         ...(avatarUrl !== undefined && { avatarUrl }),
+        ...(refundMethod !== undefined && { refundMethod }),
+        ...(refundAccount !== undefined && { refundAccount }),
+        ...(refundRealName !== undefined && { refundRealName }),
       },
       select: {
         id: true,
@@ -69,6 +75,9 @@ export async function PATCH(req: NextRequest) {
         age: true,
         gender: true,
         city: true,
+        refundMethod: true,
+        refundAccount: true,
+        refundRealName: true,
       },
     });
 

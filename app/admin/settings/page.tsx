@@ -13,6 +13,7 @@ export default function SettingsPage() {
     maxMatchGroupSize: 6,
     matchExpirationHours: 24,
     eventCreationBanDuration: 30,
+    serviceFeeRate: 20,
     wechatQRCodeUrl: "",
     alipayQRCodeUrl: "",
   });
@@ -32,6 +33,7 @@ export default function SettingsPage() {
               maxMatchGroupSize: data.settings.maxMatchGroupSize ?? 6,
               matchExpirationHours: data.settings.matchExpirationHours ?? 24,
               eventCreationBanDuration: data.settings.eventCreationBanDuration ?? 30,
+              serviceFeeRate: data.settings.serviceFeeRate ?? 20,
               wechatQRCodeUrl: data.settings.wechatQRCodeUrl ?? "",
               alipayQRCodeUrl: data.settings.alipayQRCodeUrl ?? "",
             });
@@ -180,6 +182,28 @@ export default function SettingsPage() {
                 />
                 <p className="text-xs text-[#6B5A55] mt-1.5">
                   对于确认就餐后无故缺席（放鸽子）的用户，自动禁止报名的天数。
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#B8A099] mb-2">
+                  平台组织服务费比例 (%)
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={settings.serviceFeeRate}
+                  onChange={(e) =>
+                    handleChange(
+                      "serviceFeeRate",
+                      parseInt(e.target.value) ?? 0
+                    )
+                  }
+                  className="bg-[#1A1311] border-[#2D1E1A] text-white rounded-xl focus:border-[#FF2442] focus:ring-1 focus:ring-[#FF2442]"
+                />
+                <p className="text-xs text-[#6B5A55] mt-1.5">
+                  正常运营后收取的报名服务费占预计餐费中位数（50-100元为75, 100-200为150...）的百分比。
                 </p>
               </div>
             </div>

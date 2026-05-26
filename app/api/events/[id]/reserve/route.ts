@@ -108,6 +108,20 @@ export async function POST(
       );
     }
 
+    // Load dynamic settings
+    const settingsRow = await db.appSettings.findUnique({
+      where: { key: "runtime_settings" },
+    });
+    let serviceFeeRate = 20; // 默认 20%
+    if (settingsRow) {
+      try {
+        const parsed = JSON.parse(settingsRow.value);
+        if (typeof parsed.serviceFeeRate === "number") {
+          serviceFeeRate = parsed.serviceFeeRate;
+        }
+      } catch {}
+    }
+
     // Check if user is Pro subscriber
     const user = await db.user.findUnique({
       where: { id: userId },
@@ -115,7 +129,17 @@ export async function POST(
     });
     const isPro = user?.isPro || user?.subscriptionStatus === "ACTIVE";
 
-    let platformFee = 29; // 默认活动组织服务费：29元
+    // Dynamic fee mapping
+    const BUDGET_REFERENCE_PRICES: Record<string, number> = {
+      "经济实惠 (￥50-100/人)": 75,
+      "中端品质 (￥100-200/人)": 150,
+      "轻奢小资 (￥200-350/人)": 275,
+      "高端奢华 (￥350+/人)": 400,
+    };
+    const refSpend = event.estimatedSpend || "中端品质 (￥100-200/人)";
+    const refPrice = BUDGET_REFERENCE_PRICES[refSpend] || 150;
+
+    let platformFee = Math.round(refPrice * (serviceFeeRate / 100)); // 按比例动态计算服务费
 
     if (isPro) {
       platformFee = 0; // 月度订阅（99元/月）用户免收活动组织费

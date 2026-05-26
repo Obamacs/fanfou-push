@@ -95,6 +95,10 @@ model User {
   lastLocationUpdate DateTime?
   isPro             Boolean   @default(false)
   proExpireAt       DateTime?
+  refundMethod      String?   // "WECHAT" | "ALIPAY"
+  refundAccount     String?   // WeChat/Alipay identifier
+  refundRealName    String?   // Real name matching payment account
+
 
   interests         UserInterest[]
   answers           QuestionnaireAnswer[]
@@ -464,6 +468,9 @@ model ReservationOrder {
   depositFee  Int      @default(0) // 出席押金（元）
   couponCode  String?  // 使用的免费抵扣优惠券码
   status      String   @default("PENDING") // "PENDING" | "CONFIRMED" | "CANCELLED"
+  refundStatus String  @default("NOT_ELIGIBLE") // "NOT_ELIGIBLE" | "ELIGIBLE" | "REFUNDED" | "FORFEITED"
+  refundedAt  DateTime?
+  refundOperator String?
   createdAt   DateTime @default(now())
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
