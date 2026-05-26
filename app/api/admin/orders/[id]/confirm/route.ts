@@ -92,12 +92,15 @@ export async function POST(
       });
     } else {
       // Cancel reservation order and event attendance in a transaction
-      await db.$transaction([
-        db.reservationOrder.update({
+      await db.$transaction(async (tx) => {
+        // 1. Cancel the order
+        await tx.reservationOrder.update({
           where: { id: orderId },
           data: { status: "CANCELLED" },
-        }),
-        db.eventAttendance.update({
+        });
+
+        // 2. Cancel the attendance
+        await tx.eventAttendance.update({
           where: {
             eventId_userId: {
               eventId: order.eventId,
@@ -107,14 +110,26 @@ export async function POST(
           data: {
             status: "CANCELLED",
           },
-        }),
-      ]);
+        });
+
+        // 3. Release the coupon if one was used
+        if (order.couponCode) {
+          await tx.freeCoupon.update({
+            where: { code: order.couponCode },
+            data: {
+              isUsed: false,
+              usedAt: null,
+              usedForEventId: null,
+            },
+          });
+        }
+      });
 
       revalidatePath(`/events/${order.eventId}`);
       revalidatePath("/events");
 
       return NextResponse.json({
-        message: "订单取消成功，用户预订名额已释放",
+        message: "订单取消成功，用户预订名额与优惠券已释放",
         status: "CANCELLED",
       });
     }

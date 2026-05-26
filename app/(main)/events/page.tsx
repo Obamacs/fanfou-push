@@ -18,10 +18,9 @@ export default async function EventsPage() {
 
   const userCity = user?.city || "Shanghai"; // Default fallback
 
-  // 1. 获取用户即将参加的盲盒晚餐 (Matchmaking 已经跑完，分配到具体桌)
-  const upcomingDinners = await db.event.findMany({
+  // 1. 获取用户已经报名参加的活动 (无论类型和城市，只要报名了)
+  const myJoinedEvents = await db.event.findMany({
     where: {
-      type: "DINNER",
       status: "UPCOMING",
       attendances: {
         some: { userId: session.user.id, status: { in: ["PENDING", "CONFIRMED"] } },
@@ -34,23 +33,21 @@ export default async function EventsPage() {
     orderBy: { date: "asc" },
   });
 
-  // 2. 获取当前城市本周的等候池 (POOL)
-  // 如果用户已经在这个池子里了，EventCard 会显示“已报名”
-  const poolEvents = await db.event.findMany({
+  // 2. 获取当前城市本周开放的所有公开报名活动 (POOL 或公开的 DINNER 等)
+  const publicCityEvents = await db.event.findMany({
     where: {
-      type: "POOL",
       status: "UPCOMING",
       city: { contains: userCity, mode: "insensitive" },
+      id: { notIn: myJoinedEvents.map(e => e.id) }, // 避免重复显示用户已加入的活动
     },
     include: {
       creator: { select: { id: true, name: true, avatarUrl: true } },
       _count: { select: { attendances: { where: { status: "CONFIRMED" } } } },
     },
     orderBy: { date: "asc" },
-    take: 1, // 只显示最近的一个周四等候池
   });
 
-  const eventsToShow = [...upcomingDinners, ...poolEvents];
+  const eventsToShow = [...myJoinedEvents, ...publicCityEvents];
 
   return (
     <div className="page-shell">

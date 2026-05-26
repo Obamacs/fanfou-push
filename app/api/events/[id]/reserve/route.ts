@@ -177,18 +177,42 @@ export async function POST(
       },
     });
 
-    if (existingOrder) {
-      await db.reservationOrder.delete({
-        where: { id: existingOrder.id },
-      });
-    }
-
     // Generate unique order code
     const orderCode = await generateUniqueOrderCode();
 
     // Create reservation order and set event attendance to PENDING in a transaction
-    const [order, attendance] = await db.$transaction([
-      db.reservationOrder.create({
+    const [order, attendance] = await db.$transaction(async (tx) => {
+      // 1. If there is an existing pending order, delete it and restore its coupon
+      if (existingOrder) {
+        if (existingOrder.couponCode) {
+          await tx.freeCoupon.update({
+            where: { code: existingOrder.couponCode },
+            data: {
+              isUsed: false,
+              usedAt: null,
+              usedForEventId: null,
+            },
+          });
+        }
+        await tx.reservationOrder.delete({
+          where: { id: existingOrder.id },
+        });
+      }
+
+      // 2. Lock the new coupon immediately if one is selected
+      if (platformFee === 0 && couponCode) {
+        await tx.freeCoupon.update({
+          where: { code: couponCode },
+          data: {
+            isUsed: true,
+            usedAt: new Date(),
+            usedForEventId: eventId,
+          },
+        });
+      }
+
+      // 3. Create the reservation order
+      const newOrder = await tx.reservationOrder.create({
         data: {
           userId,
           eventId,
@@ -199,8 +223,10 @@ export async function POST(
           couponCode: platformFee === 0 && couponCode ? couponCode : null,
           status: "PENDING",
         },
-      }),
-      db.eventAttendance.upsert({
+      });
+
+      // 4. Upsert the event attendance
+      const newAttendance = await tx.eventAttendance.upsert({
         where: {
           eventId_userId: {
             eventId,
@@ -215,8 +241,10 @@ export async function POST(
         update: {
           status: "PENDING",
         },
-      }),
-    ]);
+      });
+
+      return [newOrder, newAttendance];
+    });
 
     revalidatePath(`/events/${eventId}`);
     revalidatePath("/events");
