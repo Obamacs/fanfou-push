@@ -36,6 +36,7 @@ function RegisterContent() {
     setLoading(true);
     setError("");
     setSuccess("");
+    setDevLoginUrl("");
 
     if (!formData.name.trim() || !formData.email.trim()) {
       setError("请填写所有字段");
@@ -90,6 +91,38 @@ function RegisterContent() {
     }
   };
 
+  const handleResendEmail = async () => {
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    setDevLoginUrl("");
+
+    try {
+      const response = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email.trim().toLowerCase() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "重新发送失败，请稍后重试");
+        return;
+      }
+
+      setSuccess("新的验证链接已发送，请查收邮箱");
+      if (data.devLoginUrl) {
+        setDevLoginUrl(data.devLoginUrl);
+      }
+    } catch (err) {
+      console.error("Resend register magic link error:", err);
+      setError("重新发送失败，请稍后重试");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#fff9f7] lg:grid lg:grid-cols-[1.02fr_0.98fr]">
       <div
@@ -139,8 +172,18 @@ function RegisterContent() {
                 <p className="mt-3 text-sm leading-6 text-[#9d8580]">验证链接已发送到</p>
                 <p className="mt-1 break-all font-semibold text-[#271f1d]">{formData.email}</p>
                 <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-left text-sm leading-6 text-amber-800">
-                  链接 5 分钟内有效。若未收到，请检查收件箱和垃圾邮件。
+                  链接 15 分钟内有效。邮件可能需要 1-3 分钟送达，若未收到，请检查收件箱和垃圾邮件后再重新发送。
                 </div>
+                {success && (
+                  <div className="mt-5 rounded-lg border border-green-200 bg-green-50 p-4 text-left text-sm text-green-700">
+                    {success}
+                  </div>
+                )}
+                {error && (
+                  <div className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-left text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
                 {devLoginUrl && (
                   <div className="mt-5 p-4 rounded-lg border border-red-200 bg-red-50 text-left">
                     <p className="text-xs font-bold text-red-800 uppercase tracking-wider mb-2">⚙️ 开发环境快捷通道</p>
@@ -152,6 +195,13 @@ function RegisterContent() {
                     </a>
                   </div>
                 )}
+                <Button
+                  onClick={handleResendEmail}
+                  disabled={loading}
+                  className="gradient-btn mt-5 h-12 w-full text-white"
+                >
+                  {loading ? "发送中..." : "重新发送验证链接"}
+                </Button>
                 <Button
                   onClick={() => {
                     setEmailSent(false);

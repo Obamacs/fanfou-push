@@ -40,11 +40,11 @@ function LoginContent() {
   const [sentEmail, setSentEmail] = useState("");
   const [devLoginUrl, setDevLoginUrl] = useState("");
 
-  const handleMagicLinkSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendMagicLink = async () => {
     setLoading(true);
     setError("");
     setSuccess("");
+    setDevLoginUrl("");
 
     if (!email) {
       setError("请输入邮箱");
@@ -85,6 +85,11 @@ function LoginContent() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMagicLinkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendMagicLink();
   };
 
   return (
@@ -141,8 +146,18 @@ function LoginContent() {
               <p className="mt-3 text-sm leading-6 text-[#9d8580]">验证链接已发送到</p>
               <p className="mt-1 break-all font-semibold text-[#271f1d]">{sentEmail}</p>
               <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-left text-sm leading-6 text-amber-800">
-                链接 5 分钟内有效。若未收到，请检查收件箱和垃圾邮件。
+                链接 15 分钟内有效。邮件可能需要 1-3 分钟送达，若未收到，请检查收件箱和垃圾邮件后再重新发送。
               </div>
+              {success && (
+                <div className="mt-5 rounded-lg border border-green-200 bg-green-50 p-4 text-left text-sm text-green-700">
+                  {success}
+                </div>
+              )}
+              {error && (
+                <div className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-left text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               {devLoginUrl && (
                 <div className="mt-5 p-4 rounded-lg border border-red-200 bg-red-50 text-left">
                   <p className="text-xs font-bold text-red-800 uppercase tracking-wider mb-2">⚙️ 开发环境快捷通道</p>
@@ -154,6 +169,13 @@ function LoginContent() {
                   </a>
                 </div>
               )}
+              <Button
+                onClick={sendMagicLink}
+                disabled={loading}
+                className="gradient-btn mt-5 h-12 w-full text-white"
+              >
+                {loading ? "发送中..." : "重新发送验证链接"}
+              </Button>
               <Button
                 onClick={() => {
                   setEmailSent(false);
