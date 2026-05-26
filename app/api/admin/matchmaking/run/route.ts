@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { selectBalancedGroup } from "@/lib/matching";
+import { selectBalancedGroup, calculateActivityScore } from "@/lib/matching";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       // Re-score others based on seed (using a default activity type for Dinner)
       const scoredOthers = others.map(candidate => ({
         ...candidate,
-        score: calculateBaseScore(seed, candidate), 
+        score: calculateActivityScore(seed, candidate, "吃饭"), 
       }));
 
       // Select group members
@@ -167,19 +167,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Simplified generic scoring for the chunking seed
-interface ScoreUser {
-  gender?: string | null;
-  relationshipGoal?: string | null;
-}
-
-function calculateBaseScore(user: ScoreUser, candidate: ScoreUser): number {
-  let score = 50;
-  // Relationship
-  if (user.relationshipGoal && candidate.relationshipGoal && user.relationshipGoal === candidate.relationshipGoal) score += 15;
-  // Gender balance bonus
-  if (user.gender && candidate.gender && user.gender !== candidate.gender) score += 10;
-  return score;
 }

@@ -136,30 +136,9 @@ function calculateBudgetScore(
   candidate: Candidate,
   userAnswerMap: Map<string, string>
 ): number {
-  const userBudget = userAnswerMap.get("q-budget-1");
-  const candidateBudget = candidate.answers.find(
-    (a) => a.questionId === "q-budget-1"
-  )?.answer;
-
-  if (!userBudget || !candidateBudget) return 0;
-  if (userBudget === candidateBudget) return 10; // 预算高度契合，体验极佳
-
-  const budgetOrder = [
-    "经济实惠 (￥50-100/人)",
-    "中端品质 (￥100-200/人)",
-    "轻奢小资 (￥200-350/人)",
-    "高端奢华 (￥350+/人)",
-  ];
-
-  const userIdx = budgetOrder.indexOf(userBudget);
-  const candidateIdx = budgetOrder.indexOf(candidateBudget);
-
-  if (userIdx !== -1 && candidateIdx !== -1) {
-    const diff = Math.abs(userIdx - candidateIdx);
-    if (diff === 1) return 6; // 差距一档，基本能够包容
-    return 1; // 差距两档以上（如经济型 vs 奢华型），体验极差，极不推荐同桌
-  }
-  return 2;
+  // 由于前期运营阶段用户较少，为了让所有价格档次的用户都能顺利配对并参与活动，
+  // 用户的用餐预算选择不应对匹配产生任何阻碍或降权惩罚，统一默认给以满分契合度（10分）
+  return 10;
 }
 
 export function calculateActivityScore(
