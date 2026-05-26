@@ -20,6 +20,8 @@ interface AttendButtonProps {
   initialStatus: AttendanceStatus;
   isFull: boolean;
   priceAmount: number;
+  estimatedSpend?: string | null;
+  serviceFeeRate?: number;
   initialOrderCode?: string | null;
   initialOrderAmount?: number | null;
   initialPlatformFee?: number | null;
@@ -91,6 +93,8 @@ export function AttendButton({
   initialStatus,
   isFull,
   priceAmount,
+  estimatedSpend = "中端品质 (￥100-200/人)",
+  serviceFeeRate = 20,
   initialOrderCode = null,
   initialOrderAmount = null,
   initialPlatformFee = null,
@@ -272,7 +276,19 @@ export function AttendButton({
     }
   };
 
-  const calculatedPlatformFee = hasPro ? 0 : (coupons.length > 0 && useCoupon ? 0 : 29);
+  // Dynamic platform fee calculation to align perfectly with the backend
+  const BUDGET_REFERENCE_PRICES: Record<string, number> = {
+    "经济实惠 (￥50-100/人)": 75,
+    "中端品质 (￥100-200/人)": 150,
+    "轻奢小资 (￥200-350/人)": 275,
+    "高端奢华 (￥350+/人)": 400,
+  };
+  const refSpend = estimatedSpend || "中端品质 (￥100-200/人)";
+  const refPrice = BUDGET_REFERENCE_PRICES[refSpend] || 150;
+  
+  const basePlatformFee = Math.round(refPrice * (serviceFeeRate / 100));
+
+  const calculatedPlatformFee = hasPro ? 0 : (coupons.length > 0 && useCoupon ? 0 : basePlatformFee);
   const calculatedTotalAmount = calculatedPlatformFee + priceAmount;
 
   return (
@@ -373,7 +389,7 @@ export function AttendButton({
 
       {/* 弹窗一：确认付费明细弹窗 */}
       <Dialog open={isPayDetailsDialogOpen} onOpenChange={setIsPayDetailsDialogOpen}>
-        <DialogContent className="sm:max-w-md max-w-sm rounded-3xl bg-[#FFFAF8] border-0 p-6 shadow-2xl ring-0">
+        <DialogContent className="sm:max-w-md max-w-sm rounded-3xl bg-[#FFFAF8] border-0 p-6 shadow-2xl ring-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center">
             <DialogTitle className="text-xl font-bold text-[#2D2420] flex items-center justify-center gap-2">
               <ClipboardList className="w-5 h-5 text-[#FF2442]" />
@@ -408,10 +424,10 @@ export function AttendButton({
                 ) : coupons.length > 0 && useCoupon ? (
                   <span className="text-lg font-extrabold text-[#07C160] flex flex-col items-end">
                     <span>￥0</span>
-                    <span className="text-[10px] text-[#B8A099] font-normal line-through">￥29</span>
+                    <span className="text-[10px] text-[#B8A099] font-normal line-through">￥{basePlatformFee}</span>
                   </span>
                 ) : (
-                  <span className="text-lg font-extrabold text-[#2D2420]">￥29</span>
+                  <span className="text-lg font-extrabold text-[#2D2420]">￥{basePlatformFee}</span>
                 )}
               </div>
             </div>
@@ -473,7 +489,7 @@ export function AttendButton({
                 {calculatedPlatformFee === 0 ? (
                   <span>✨ 平台服务费已全额免除，仅需支付可退的出席保证金</span>
                 ) : (
-                  <span>合并计费：29元平台服务费 + {priceAmount}元出席保证金（保证金可退）</span>
+                  <span>合并计费：{basePlatformFee}元平台服务费 + {priceAmount}元出席保证金（保证金可退）</span>
                 )}
               </div>
             </div>
@@ -500,7 +516,7 @@ export function AttendButton({
 
       {/* 弹窗二：扫码转账支付弹窗 */}
       <Dialog open={isPayDialogOpen} onOpenChange={setIsPayDialogOpen}>
-        <DialogContent className="sm:max-w-md max-w-sm rounded-3xl bg-[#FFFAF8] border-0 p-6 shadow-2xl ring-0">
+        <DialogContent className="sm:max-w-md max-w-sm rounded-3xl bg-[#FFFAF8] border-0 p-6 shadow-2xl ring-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center">
             <DialogTitle className="text-xl font-bold text-[#2D2420] flex items-center justify-center gap-2">
               <Wallet className="w-5 h-5 text-[#FF2442]" />

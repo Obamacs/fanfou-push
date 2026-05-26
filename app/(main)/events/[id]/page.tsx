@@ -35,6 +35,20 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
 
   if (!event) notFound();
 
+  // Load dynamic settings from database
+  const settingsRow = await db.appSettings.findUnique({
+    where: { key: "runtime_settings" },
+  });
+  let serviceFeeRate = 20; // Default 20%
+  if (settingsRow) {
+    try {
+      const parsed = JSON.parse(settingsRow.value);
+      if (typeof parsed.serviceFeeRate === "number") {
+        serviceFeeRate = parsed.serviceFeeRate;
+      }
+    } catch {}
+  }
+
   const pendingOrder = session?.user?.id ? await db.reservationOrder.findFirst({
     where: {
       eventId: id,
@@ -381,6 +395,8 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
                 }
                 isFull={isFull}
                 priceAmount={event.priceAmount}
+                estimatedSpend={event.estimatedSpend}
+                serviceFeeRate={serviceFeeRate}
                 initialOrderCode={pendingOrder?.orderCode}
                 initialOrderAmount={pendingOrder?.amount}
                 initialPlatformFee={pendingOrder?.platformFee}
