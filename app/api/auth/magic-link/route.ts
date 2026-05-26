@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendMagicLinkEmail } from "@/lib/email";
 import { createHash } from "crypto";

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureInviteCode } from "@/lib/coupon";
 import { customAlphabet } from "nanoid";
-import { getSupabaseServerClient } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

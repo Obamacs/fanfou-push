@@ -5,6 +5,9 @@ interface RateLimitOptions {
   windowMs: number;
 }
 
+// Local in-memory cache fallback for serverless container instances when database is unreachable
+const memoryFallback = new Map<string, { count: number; resetAt: Date }>();
+
 /**
  * Database-backed rate limiter. Works across Vercel serverless instances.
  * Uses the RateLimit table with atomic upsert + conditional increment.
@@ -43,9 +46,31 @@ export async function checkRateLimit(
       data: { count: { increment: 1 } },
     });
     return { allowed: true };
-  } catch {
-    // DB error — fail open to avoid locking users out
-    return { allowed: true };
+  } catch (error) {
+    console.error("Rate limiter database fallback triggered:", error);
+    try {
+      const fallbackNow = new Date();
+      const fallbackResetAt = new Date(fallbackNow.getTime() + options.windowMs);
+      const entry = memoryFallback.get(key);
+
+      if (!entry || entry.resetAt <= fallbackNow) {
+        memoryFallback.set(key, { count: 1, resetAt: fallbackResetAt });
+        return { allowed: true };
+      }
+
+      if (entry.count >= options.maxRequests) {
+        const retryAfter = Math.ceil(
+          (entry.resetAt.getTime() - fallbackNow.getTime()) / 1000
+        );
+        return { allowed: false, retryAfter };
+      }
+
+      entry.count += 1;
+      return { allowed: true };
+    } catch {
+      // Ultimate absolute fallback if memory operations fail (highly unlikely)
+      return { allowed: true };
+    }
   }
 }
 

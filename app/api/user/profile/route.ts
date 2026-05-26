@@ -51,6 +51,23 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "个人简介过长" }, { status: 400 });
     }
 
+    // 强规则安全过滤与输入验证：退款字段
+    if (refundMethod !== undefined && refundMethod !== null) {
+      if (refundMethod !== "WECHAT" && refundMethod !== "ALIPAY") {
+        return NextResponse.json({ error: "退款方式无效（仅支持 WECHAT 或 ALIPAY）" }, { status: 400 });
+      }
+    }
+    if (refundAccount !== undefined && refundAccount !== null) {
+      if (typeof refundAccount !== "string" || refundAccount.trim().length === 0 || refundAccount.length > 100) {
+        return NextResponse.json({ error: "退款账号格式不合法" }, { status: 400 });
+      }
+    }
+    if (refundRealName !== undefined && refundRealName !== null) {
+      if (typeof refundRealName !== "string" || refundRealName.trim().length === 0 || refundRealName.length > 50) {
+        return NextResponse.json({ error: "退款实名格式不合法" }, { status: 400 });
+      }
+    }
+
     const user = await db.user.update({
       where: { id: auth.userId },
       data: {
@@ -61,8 +78,8 @@ export async function PATCH(req: NextRequest) {
         ...(city !== undefined && { city }),
         ...(avatarUrl !== undefined && { avatarUrl }),
         ...(refundMethod !== undefined && { refundMethod }),
-        ...(refundAccount !== undefined && { refundAccount }),
-        ...(refundRealName !== undefined && { refundRealName }),
+        ...(refundAccount !== undefined && { refundAccount: refundAccount ? refundAccount.trim() : null }),
+        ...(refundRealName !== undefined && { refundRealName: refundRealName ? refundRealName.trim() : null }),
       },
       select: {
         id: true,

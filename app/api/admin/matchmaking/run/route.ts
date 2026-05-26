@@ -1,17 +1,13 @@
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { selectBalancedGroup, calculateActivityScore } from "@/lib/matching";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-
-    // Verify Admin
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "未授权" }, { status: 401 });
-    }
-    const adminUserId = session.user.id;
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+    const adminUserId = auth.userId;
 
     const { poolEventId } = await req.json();
 

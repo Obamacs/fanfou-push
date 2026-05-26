@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EVENT_TYPES, CITIES } from "@/lib/constants";
+import { EVENT_TYPES } from "@/lib/constants";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { Search, X } from "lucide-react";

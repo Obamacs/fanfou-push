@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ensureInviteCode } from "@/lib/coupon";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "ADMIN") {
-    return null;
-  }
-  return session.user.id;
-}
+import { requireAdmin } from "@/lib/api-helpers";
 
 // GET: list all invite codes with usage stats
 export async function GET(req: NextRequest) {
-  const adminId = await requireAdmin();
-  if (!adminId) {
-    return NextResponse.json({ error: "未授权" }, { status: 401 });
-  }
+  const authResult = await requireAdmin();
+  if (authResult.error) return authResult.error;
+  const adminId = authResult.userId;
 
   try {
     const { searchParams } = new URL(req.url);
@@ -80,10 +71,9 @@ export async function GET(req: NextRequest) {
 
 // POST: generate invite code for a user (or toggle status)
 export async function POST(req: NextRequest) {
-  const adminId = await requireAdmin();
-  if (!adminId) {
-    return NextResponse.json({ error: "未授权" }, { status: 401 });
-  }
+  const authResult = await requireAdmin();
+  if (authResult.error) return authResult.error;
+  const adminId = authResult.userId;
 
   try {
     const body = await req.json();

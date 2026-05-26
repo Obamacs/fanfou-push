@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/api-helpers";
 
 export async function POST(
   req: NextRequest,
@@ -9,12 +9,9 @@ export async function POST(
 ) {
   try {
     const { id: orderId } = await params;
-    const session = await auth();
-
-    // Verify Admin permission
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "未授权，仅限管理员访问" }, { status: 401 });
-    }
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+    const adminUserId = auth.userId;
 
     const { action } = await req.json();
 
@@ -45,7 +42,11 @@ export async function POST(
       );
     }
 
-    const operator = session.user.email || session.user.name || "ADMIN";
+    const adminUser = await db.user.findUnique({
+      where: { id: adminUserId },
+      select: { email: true, name: true }
+    });
+    const operator = adminUser?.email || adminUser?.name || "ADMIN";
 
     if (action === "refund") {
       await db.reservationOrder.update({
