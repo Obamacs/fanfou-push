@@ -48,6 +48,7 @@ interface Order {
   event: {
     title: string;
     priceAmount: number;
+    date: string;
   };
 }
 
@@ -207,9 +208,19 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const getRefundStatusBadge = (status: string) => {
+  const getRefundStatusBadge = (order: Order) => {
+    const status = order.refundStatus;
     switch (status) {
       case "NOT_ELIGIBLE":
+        const eventDate = new Date(order.event.date);
+        const now = new Date();
+        if (eventDate < now) {
+          return (
+            <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 text-xs font-semibold rounded-full border border-amber-500/15 animate-pulse">
+              待审核 (活动结束)
+            </span>
+          );
+        }
         return (
           <span className="px-2.5 py-1 bg-zinc-500/10 text-zinc-400 text-xs font-semibold rounded-full border border-zinc-500/15">
             就餐中/未开始
@@ -415,7 +426,7 @@ export default function AdminOrdersPage() {
                     {/* Status Badge */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       {isRefundTab
-                        ? getRefundStatusBadge(order.refundStatus)
+                        ? getRefundStatusBadge(order)
                         : getStatusBadge(order.status)}
                     </td>
 

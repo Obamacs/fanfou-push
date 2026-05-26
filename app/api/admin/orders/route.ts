@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
           select: {
             title: true,
             priceAmount: true,
+            date: true,
           },
         },
       },
