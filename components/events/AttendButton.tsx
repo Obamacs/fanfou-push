@@ -124,6 +124,15 @@ export function AttendButton({
   const [useCoupon, setUseCoupon] = useState(true);
   const [isPayDetailsDialogOpen, setIsPayDetailsDialogOpen] = useState(false);
 
+  // 退款信息收集状态
+  const [refundMethod, setRefundMethod] = useState<"WECHAT" | "ALIPAY">("WECHAT");
+  const [refundAccount, setRefundAccount] = useState("");
+  const [refundRealName, setRefundRealName] = useState("");
+  const [isRefundInfoMissing, setIsRefundInfoMissing] = useState(false);
+
+  // 自定义优惠券/邀请码状态
+  const [customDiscountCode, setCustomDiscountCode] = useState("");
+
   // 拉取公共收款码配置
   useEffect(() => {
     fetch("/api/settings")
@@ -137,10 +146,10 @@ export function AttendButton({
       .catch(console.error);
   }, []);
 
-  // 初始化拉取优惠券与Pro订阅状态
+  // 初始化拉取优惠券与Pro订阅状态与退款信息
   useEffect(() => {
     if (priceAmount > 0) {
-      // 1. 获取用户属性，判断是否是Pro会员
+      // 1. 获取用户属性，判断是否是Pro会员以及退款信息是否完整
       fetch("/api/user/profile")
         .then((res) => res.json())
         .then((data) => {
@@ -150,6 +159,15 @@ export function AttendButton({
               data.user.isPro ||
               data.user.subscriptionStatus === "ACTIVE"
             );
+            const userRefundMethod = data.user.refundMethod;
+            const userRefundAccount = data.user.refundAccount;
+            const userRefundRealName = data.user.refundRealName;
+
+            if (userRefundMethod) setRefundMethod(userRefundMethod as "WECHAT" | "ALIPAY");
+            if (userRefundAccount) setRefundAccount(userRefundAccount);
+            if (userRefundRealName) setRefundRealName(userRefundRealName);
+
+            setIsRefundInfoMissing(!userRefundMethod || !userRefundAccount || !userRefundRealName);
           }
         })
         .catch(console.error);
@@ -179,13 +197,38 @@ export function AttendButton({
 
   // 确认付款生成订单流程
   const handleConfirmReservation = async () => {
+    // 如果有押金且退款信息不完整，做前端强校验
+    if (priceAmount > 0 && isRefundInfoMissing) {
+      if (!refundAccount.trim()) {
+        alert("请输入退款微信号或支付宝账号，以便我们在活动正常履约后为您退还保证金。");
+        return;
+      }
+      if (!refundRealName.trim()) {
+        alert("请输入退款账号对应的真实姓名，以保证资金安全。");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
+      // 确定最终使用的券码/邀请码
+      let finalCouponCode = null;
+      if (!hasPro) {
+        if (customDiscountCode.trim().length > 0) {
+          finalCouponCode = customDiscountCode.trim();
+        } else if (useCoupon && selectedCoupon) {
+          finalCouponCode = selectedCoupon;
+        }
+      }
+
       const res = await fetch(`/api/events/${eventId}/reserve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          couponCode: (useCoupon && selectedCoupon && !hasPro) ? selectedCoupon : null,
+          couponCode: finalCouponCode,
+          refundMethod: priceAmount > 0 && isRefundInfoMissing ? refundMethod : undefined,
+          refundAccount: priceAmount > 0 && isRefundInfoMissing ? refundAccount.trim() : undefined,
+          refundRealName: priceAmount > 0 && isRefundInfoMissing ? refundRealName.trim() : undefined,
         }),
       });
 
@@ -202,6 +245,11 @@ export function AttendButton({
         setOrderPlatformFee(data.order.platformFee);
         setOrderDepositFee(data.order.depositFee);
         setOrderCouponCode(data.order.couponCode);
+
+        // 如果用户更新了退款信息，同步更新本地状态
+        if (priceAmount > 0 && isRefundInfoMissing) {
+          setIsRefundInfoMissing(false);
+        }
 
         setIsAttending(true);
         setStatus("PENDING");
@@ -288,7 +336,8 @@ export function AttendButton({
   
   const basePlatformFee = Math.round(refPrice * (serviceFeeRate / 100));
 
-  const calculatedPlatformFee = hasPro ? 0 : (coupons.length > 0 && useCoupon ? 0 : basePlatformFee);
+  const hasAppliedDiscount = hasPro || (coupons.length > 0 && useCoupon) || (customDiscountCode.trim().length > 0);
+  const calculatedPlatformFee = hasAppliedDiscount ? 0 : basePlatformFee;
   const calculatedTotalAmount = calculatedPlatformFee + priceAmount;
 
   return (
@@ -411,17 +460,15 @@ export function AttendButton({
                 <div className="text-xs text-[#B8A099] mt-1">
                   {hasPro ? (
                     <span className="text-[#07C160] font-semibold">✨ Pro 会员专属订阅，本次免费</span>
-                  ) : coupons.length > 0 ? (
-                    "可用注册/特赠的免费券全额抵扣"
+                  ) : hasAppliedDiscount ? (
+                    "已自动抵扣至免费"
                   ) : (
                     "基础平台运营组织费"
                   )}
                 </div>
               </div>
               <div className="text-right">
-                {hasPro ? (
-                  <span className="text-lg font-extrabold text-[#07C160]">￥0</span>
-                ) : coupons.length > 0 && useCoupon ? (
+                {hasAppliedDiscount ? (
                   <span className="text-lg font-extrabold text-[#07C160] flex flex-col items-end">
                     <span>￥0</span>
                     <span className="text-[10px] text-[#B8A099] font-normal line-through">￥{basePlatformFee}</span>
@@ -432,34 +479,135 @@ export function AttendButton({
               </div>
             </div>
 
-            {/* 优惠券选择下拉列表 */}
-            {!hasPro && coupons.length > 0 && (
-              <div className="bg-[#FFF5F3] p-3 rounded-2xl border border-[#F0E4E0] space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-[#8f7772] flex items-center gap-1.5">
-                    <Wallet className="w-3.5 h-3.5 text-[#FF2442]" />
-                    使用可用免费餐券
+            {/* 优惠券与邀请码自定义输入框 */}
+            {!hasPro && (
+              <div className="bg-[#FFF5F3] p-4 rounded-2xl border border-[#F0E4E0] space-y-3.5 shadow-2xs">
+                {coupons.length > 0 && (
+                  <div className="space-y-2 pb-3 border-b border-[#F0E4E0]/60">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold text-[#8f7772] flex items-center gap-1.5">
+                        <Wallet className="w-3.5 h-3.5 text-[#FF2442]" />
+                        使用已有的免费抵扣券
+                      </Label>
+                      <input
+                        type="checkbox"
+                        checked={useCoupon}
+                        onChange={(e) => {
+                          setUseCoupon(e.target.checked);
+                          if (e.target.checked) setCustomDiscountCode(""); // 勾选时清空文本输入
+                        }}
+                        className="h-4 w-4 text-[#FF2442] focus:ring-[#FF2442] border-[#F0E4E0] rounded"
+                      />
+                    </div>
+                    {useCoupon && (
+                      <select
+                        value={selectedCoupon}
+                        onChange={(e) => setSelectedCoupon(e.target.value)}
+                        className="w-full bg-white border border-[#F0E4E0] rounded-xl text-xs p-2.5 text-[#2D2420] focus:ring-[#FF2442] focus:border-[#FF2442] font-mono outline-hidden"
+                      >
+                        {coupons.map((c) => (
+                          <option key={c.id} value={c.code}>
+                            {c.code} ({c.welcomeText.replace("[专属赠券]", "").trim().slice(0, 16)}...)
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-[#8f7772] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#FF2442]" />
+                    使用好友邀请码或其它抵扣码
                   </Label>
                   <input
-                    type="checkbox"
-                    checked={useCoupon}
-                    onChange={(e) => setUseCoupon(e.target.checked)}
-                    className="h-4 w-4 text-[#FF2442] focus:ring-[#FF2442] border-[#F0E4E0] rounded"
+                    type="text"
+                    value={customDiscountCode}
+                    placeholder="输入好友邀请码 (如 HANNY8) 或优惠码"
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase();
+                      setCustomDiscountCode(val);
+                      if (val.trim()) {
+                        setUseCoupon(false); // 正在输入自定义代码时，自动取消已有免费券勾选
+                      }
+                    }}
+                    className="w-full bg-white border border-[#F0E4E0] rounded-xl text-xs p-2.5 text-[#2D2420] focus:ring-[#FF2442] focus:border-[#FF2442] font-mono placeholder:text-[#B8A099]/70 placeholder:font-sans outline-hidden"
                   />
+                  {customDiscountCode.trim().length > 0 && (
+                    <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-1 transition-all duration-300">
+                      <span>✨ 已填入有效抵扣码，组织费将自动降至 ￥0！</span>
+                    </div>
+                  )}
                 </div>
-                {useCoupon && (
-                  <select
-                    value={selectedCoupon}
-                    onChange={(e) => setSelectedCoupon(e.target.value)}
-                    className="w-full bg-white border border-[#F0E4E0] rounded-xl text-xs p-2 text-[#2D2420] focus:ring-[#FF2442] focus:border-[#FF2442] font-mono"
+              </div>
+            )}
+
+            {/* 退款信息补充表单（仅在有押金且缺失退款信息时展示） */}
+            {priceAmount > 0 && isRefundInfoMissing && (
+              <div className="bg-[#FFF8F6] p-4 rounded-3xl border border-[#FF2442]/10 space-y-3.5 shadow-2xs">
+                <div className="space-y-1">
+                  <div className="text-xs font-bold text-[#2D2420] flex items-center gap-1.5">
+                    <ClipboardList className="w-4 h-4 text-[#FF2442]" />
+                    填写退款信息 (用于就餐结束后退还保证金)
+                  </div>
+                  <div className="text-[10px] text-[#B8A099] leading-relaxed">
+                    正常参加活动并履约后，出席押金 ￥{priceAmount} 将通过以下账户为您全额原路退还。
+                  </div>
+                </div>
+
+                {/* 微信/支付宝选择标签卡 */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRefundMethod("WECHAT")}
+                    className={`flex-1 py-1.5 text-[11px] font-semibold rounded-xl border transition-all ${
+                      refundMethod === "WECHAT"
+                        ? "bg-[#07C160]/10 border-[#07C160] text-[#07C160]"
+                        : "bg-white border-[#F0E4E0] text-[#8f7772] hover:bg-[#FFFFAF8]"
+                    }`}
                   >
-                    {coupons.map((c) => (
-                      <option key={c.id} value={c.code}>
-                        {c.code} ({c.welcomeText.replace("[专属赠券]", "").trim().slice(0, 16)}...)
-                      </option>
-                    ))}
-                  </select>
-                )}
+                    微信退款
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRefundMethod("ALIPAY")}
+                    className={`flex-1 py-1.5 text-[11px] font-semibold rounded-xl border transition-all ${
+                      refundMethod === "ALIPAY"
+                        ? "bg-[#1677FF]/10 border-[#1677FF] text-[#1677FF]"
+                        : "bg-white border-[#F0E4E0] text-[#8f7772] hover:bg-[#FFFFAF8]"
+                    }`}
+                  >
+                    支付宝退款
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-[#8f7772]">
+                      退款账号 (微信号 / 支付宝手机号或邮箱)
+                    </label>
+                    <input
+                      type="text"
+                      value={refundAccount}
+                      placeholder={refundMethod === "WECHAT" ? "请输入您的微信号（非微信昵称）" : "请输入您的支付宝账号"}
+                      onChange={(e) => setRefundAccount(e.target.value)}
+                      className="w-full bg-white border border-[#F0E4E0] rounded-xl text-xs p-2.5 text-[#2D2420] placeholder:text-[#B8A099]/70 focus:ring-[#FF2442] focus:border-[#FF2442] outline-hidden"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-[#8f7772]">
+                      真实姓名 (必须与退款账户实名认证一致)
+                    </label>
+                    <input
+                      type="text"
+                      value={refundRealName}
+                      placeholder="请输入真实姓名，防止打款失败"
+                      onChange={(e) => setRefundRealName(e.target.value)}
+                      className="w-full bg-white border border-[#F0E4E0] rounded-xl text-xs p-2.5 text-[#2D2420] placeholder:text-[#B8A099]/70 focus:ring-[#FF2442] focus:border-[#FF2442] outline-hidden"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 

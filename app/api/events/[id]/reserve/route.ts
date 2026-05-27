@@ -33,10 +33,22 @@ export async function POST(
     const userId = session.user.id as string;
 
     let couponCode: string | null = null;
+    let refundMethod: string | null = null;
+    let refundAccount: string | null = null;
+    let refundRealName: string | null = null;
     try {
       const body = await req.json();
       if (body?.couponCode) {
         couponCode = (body.couponCode as string).trim().toUpperCase();
+      }
+      if (body?.refundMethod) {
+        refundMethod = (body.refundMethod as string).trim().toUpperCase();
+      }
+      if (body?.refundAccount) {
+        refundAccount = (body.refundAccount as string).trim();
+      }
+      if (body?.refundRealName) {
+        refundRealName = (body.refundRealName as string).trim();
       }
     } catch {
       // Body might be empty, ignore
@@ -122,12 +134,38 @@ export async function POST(
       } catch {}
     }
 
-    // Check if user is Pro subscriber
+    // Check if user is Pro subscriber and fetch existing refund details
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { isPro: true, subscriptionStatus: true },
+      select: {
+        isPro: true,
+        subscriptionStatus: true,
+        refundMethod: true,
+        refundAccount: true,
+        refundRealName: true,
+      },
     });
     const isPro = user?.isPro || user?.subscriptionStatus === "ACTIVE";
+
+    // Validate refund details if there is an attendance deposit (priceAmount > 0)
+    const currentRefundMethod = refundMethod || user?.refundMethod;
+    const currentRefundAccount = refundAccount || user?.refundAccount;
+    const currentRefundRealName = refundRealName || user?.refundRealName;
+
+    if (event.priceAmount > 0) {
+      if (!currentRefundMethod || !currentRefundAccount || !currentRefundRealName) {
+        return NextResponse.json(
+          { error: "为保障您的履约保证金可原路退回，请提供完整的退款微信/支付宝账户及姓名。" },
+          { status: 400 }
+        );
+      }
+      if (currentRefundMethod !== "WECHAT" && currentRefundMethod !== "ALIPAY") {
+        return NextResponse.json(
+          { error: "无效的退款渠道，仅支持微信（WECHAT）或支付宝（ALIPAY）。" },
+          { status: 400 }
+        );
+      }
+    }
 
     // Dynamic fee mapping
     const BUDGET_REFERENCE_PRICES: Record<string, number> = {
@@ -140,29 +178,55 @@ export async function POST(
     const refPrice = BUDGET_REFERENCE_PRICES[refSpend] || 150;
 
     let platformFee = Math.round(refPrice * (serviceFeeRate / 100)); // 按比例动态计算服务费
+    let isInviteUsed = false;
 
     if (isPro) {
       platformFee = 0; // 月度订阅（99元/月）用户免收活动组织费
     } else if (couponCode) {
-      // 验证免费券
+      // 1. 尝试匹配免费券
       const coupon = await db.freeCoupon.findUnique({
         where: { code: couponCode },
       });
 
-      if (!coupon) {
-        return NextResponse.json({ error: "优惠券码不存在" }, { status: 400 });
-      }
-      if (coupon.userId !== userId) {
-        return NextResponse.json({ error: "此优惠券不属于您" }, { status: 400 });
-      }
-      if (coupon.isUsed) {
-        return NextResponse.json({ error: "此优惠券已被使用" }, { status: 400 });
-      }
-      if (coupon.expiresAt < now) {
-        return NextResponse.json({ error: "此优惠券已过期" }, { status: 400 });
-      }
+      if (coupon) {
+        if (coupon.userId !== userId) {
+          return NextResponse.json({ error: "此优惠券不属于您" }, { status: 400 });
+        }
+        if (coupon.isUsed) {
+          return NextResponse.json({ error: "此优惠券已被使用" }, { status: 400 });
+        }
+        if (coupon.expiresAt < now) {
+          return NextResponse.json({ error: "此优惠券已过期" }, { status: 400 });
+        }
 
-      platformFee = 0; // 优惠券免收活动组织费
+        platformFee = 0; // 优惠券免收活动组织费
+      } else {
+        // 2. 尝试匹配好友邀请码 (6位大写字母数字)
+        const invite = await db.inviteCode.findUnique({
+          where: { code: couponCode },
+        });
+
+        if (!invite) {
+          return NextResponse.json({ error: "优惠券码或邀请码不存在，请检查后重试" }, { status: 400 });
+        }
+        if (!invite.isActive) {
+          return NextResponse.json({ error: "该邀请码已失效" }, { status: 400 });
+        }
+        if (invite.ownerId === userId) {
+          return NextResponse.json({ error: "不能使用自己的邀请码" }, { status: 400 });
+        }
+
+        // 验证用户此前是否已使用过邀请码（每个用户仅能被邀请一次）
+        const existingUsage = await db.inviteCodeUsage.findUnique({
+          where: { newUserId: userId },
+        });
+        if (existingUsage) {
+          return NextResponse.json({ error: "您已使用过邀请码，无法重复使用邀请码" }, { status: 400 });
+        }
+
+        platformFee = 0; // 邀请码免收活动组织费
+        isInviteUsed = true;
+      }
     }
 
     const depositFee = event.priceAmount; // 第二笔费用：出席押金/预付餐费
@@ -185,22 +249,27 @@ export async function POST(
       // 1. If there is an existing pending order, delete it and restore its coupon
       if (existingOrder) {
         if (existingOrder.couponCode) {
-          await tx.freeCoupon.update({
+          const isPrevFreeCoupon = await tx.freeCoupon.findUnique({
             where: { code: existingOrder.couponCode },
-            data: {
-              isUsed: false,
-              usedAt: null,
-              usedForEventId: null,
-            },
           });
+          if (isPrevFreeCoupon) {
+            await tx.freeCoupon.update({
+              where: { code: existingOrder.couponCode },
+              data: {
+                isUsed: false,
+                usedAt: null,
+                usedForEventId: null,
+              },
+            });
+          }
         }
         await tx.reservationOrder.delete({
           where: { id: existingOrder.id },
         });
       }
 
-      // 2. Lock the new coupon immediately if one is selected
-      if (platformFee === 0 && couponCode) {
+      // 2. Lock the new coupon immediately if one is selected (and is not an invite code)
+      if (platformFee === 0 && couponCode && !isInviteUsed) {
         await tx.freeCoupon.update({
           where: { code: couponCode },
           data: {
@@ -211,7 +280,19 @@ export async function POST(
         });
       }
 
-      // 3. Create the reservation order
+      // 3. Update User refund info if provided
+      if (refundMethod || refundAccount || refundRealName) {
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            ...(refundMethod && { refundMethod }),
+            ...(refundAccount && { refundAccount }),
+            ...(refundRealName && { refundRealName }),
+          },
+        });
+      }
+
+      // 4. Create the reservation order
       const newOrder = await tx.reservationOrder.create({
         data: {
           userId,
@@ -225,7 +306,7 @@ export async function POST(
         },
       });
 
-      // 4. Upsert the event attendance
+      // 5. Upsert the event attendance
       const newAttendance = await tx.eventAttendance.upsert({
         where: {
           eventId_userId: {

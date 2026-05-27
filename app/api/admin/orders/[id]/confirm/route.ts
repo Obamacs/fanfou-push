@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/api-helpers";
+import { issueCoupon } from "@/lib/coupon";
 
 export async function POST(
   req: NextRequest,
@@ -37,11 +38,21 @@ export async function POST(
     if (action === "confirm") {
       // Find the coupon first if applicable
       let couponToUse = null;
+      let inviteToUse = null;
       if (order.couponCode) {
         couponToUse = await db.freeCoupon.findUnique({
           where: { code: order.couponCode },
         });
+        if (!couponToUse) {
+          // It could be an invite code!
+          inviteToUse = await db.inviteCode.findUnique({
+            where: { code: order.couponCode.toUpperCase() },
+            include: { owner: true },
+          });
+        }
       }
+
+      let shouldIssueReferralCoupon = false;
 
       // Confirm reservation order and update corresponding EventAttendance in a transaction
       await db.$transaction(async (tx) => {
@@ -77,7 +88,43 @@ export async function POST(
             },
           });
         }
+
+        // 4. If it was an invite code, create InviteCodeUsage
+        if (inviteToUse) {
+          const existingUsage = await tx.inviteCodeUsage.findUnique({
+            where: { newUserId: order.userId },
+          });
+          if (!existingUsage) {
+            await tx.inviteCodeUsage.create({
+              data: {
+                inviteCodeId: inviteToUse.id,
+                newUserId: order.userId,
+                invitedUserFirstEventAt: new Date(),
+              },
+            });
+
+            await tx.inviteCode.update({
+              where: { id: inviteToUse.id },
+              data: { usageCount: { increment: 1 } },
+            });
+
+            shouldIssueReferralCoupon = true;
+          }
+        }
       });
+
+      // 5. Issue referral coupon outside transaction to prevent holding locks during LLM/API call
+      if (shouldIssueReferralCoupon && inviteToUse) {
+        try {
+          await issueCoupon(
+            inviteToUse.ownerId,
+            inviteToUse.owner.name,
+            "INVITED_SOMEONE"
+          );
+        } catch (couponError) {
+          console.error("Failed to issue referral coupon:", couponError);
+        }
+      }
 
       revalidatePath(`/events/${order.eventId}`);
       revalidatePath("/events");
