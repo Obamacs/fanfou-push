@@ -283,7 +283,7 @@ function RegisterContent() {
                     {formData.inviteCode && (
                       <p className="mt-1.5 flex items-center gap-1 text-[11px] text-[#ff2442] font-semibold tracking-wide">
                         <Sparkles className="h-3 w-3 animate-pulse" />
-                        已填入邀请码，注册成功即可自动获赠免费餐券！
+                        已填入邀请码，注册时将自动验证；有效后可获得免费餐券。
                       </p>
                     )}
                   </div>

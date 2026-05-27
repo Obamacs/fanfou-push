@@ -535,7 +535,7 @@ export function AttendButton({
                   />
                   {customDiscountCode.trim().length > 0 && (
                     <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-1 transition-all duration-300">
-                      <span>✨ 已填入有效抵扣码，组织费将自动降至 ￥0！</span>
+                      <span>✨ 已填入抵扣码，确认预订时将自动验证并抵扣组织费。</span>
                     </div>
                   )}
                 </div>

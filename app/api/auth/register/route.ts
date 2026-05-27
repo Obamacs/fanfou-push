@@ -69,15 +69,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const SYSTEM_PROMO_CODES = ["MEAL2026", "WELCOME", "TIMELEFT", "FANFOU"];
     let inviteCodeRecord = null;
     let inviteCodeValid = false;
+    let isSystemPromoCode = false;
     if (inviteCode) {
-      const trimmedCode = inviteCode.toUpperCase();
-      inviteCodeRecord = await db.inviteCode.findUnique({
-        where: { code: trimmedCode },
-      });
-      if (inviteCodeRecord && inviteCodeRecord.isActive) {
+      const trimmedCode = inviteCode.trim().toUpperCase();
+      if (SYSTEM_PROMO_CODES.includes(trimmedCode)) {
         inviteCodeValid = true;
+        isSystemPromoCode = true;
+      } else {
+        inviteCodeRecord = await db.inviteCode.findUnique({
+          where: { code: trimmedCode },
+        });
+        if (inviteCodeRecord && inviteCodeRecord.isActive) {
+          inviteCodeValid = true;
+        }
       }
     }
 
@@ -107,45 +114,59 @@ export async function POST(req: NextRequest) {
       });
       newUserId = newUser.id;
 
-      if (inviteCodeValid && inviteCodeRecord) {
+      if (inviteCodeValid) {
         try {
-          await tx.inviteCodeUsage.create({
-            data: {
-              inviteCodeId: inviteCodeRecord.id,
-              newUserId: newUser.id,
-            },
-          });
-          await tx.inviteCode.update({
-            where: { id: inviteCodeRecord.id },
-            data: { usageCount: { increment: 1 } },
-          });
-
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 90);
 
-          await tx.freeCoupon.create({
-            data: {
-              code: generateCouponCode(),
-              userId: newUser.id,
-              welcomeText:
-                newUserWelcomeText ||
-                `${name}，欢迎加入！这张券是送给你的第一份礼物，用它免费参加一次心仪的活动吧。`,
-              expiresAt,
-              reason: "REGISTER",
-            },
-          });
-          await tx.freeCoupon.create({
-            data: {
-              code: generateCouponCode(),
-              userId: inviteCodeRecord.ownerId,
-              welcomeText:
-                inviterWelcomeText ||
-                `你邀请的朋友${name}已注册成功！这张券是我们的感谢，期待你们在聚会中相遇。`,
-              expiresAt,
-              reason: "INVITED_SOMEONE",
-            },
-          });
-          couponIssued = true;
+          if (isSystemPromoCode) {
+            const trimmedCode = inviteCode.trim().toUpperCase();
+            await tx.freeCoupon.create({
+              data: {
+                code: generateCouponCode(),
+                userId: newUser.id,
+                welcomeText: `${name}，欢迎加入饭否！您已成功激活官方营销特权礼包【${trimmedCode}】，在此为您送上一张全额免费活动组织餐券，开启您的同城盲盒社交聚餐吧。`,
+                expiresAt,
+                reason: "REGISTER",
+              },
+            });
+            couponIssued = true;
+          } else if (inviteCodeRecord) {
+            await tx.inviteCodeUsage.create({
+              data: {
+                inviteCodeId: inviteCodeRecord.id,
+                newUserId: newUser.id,
+              },
+            });
+            await tx.inviteCode.update({
+              where: { id: inviteCodeRecord.id },
+              data: { usageCount: { increment: 1 } },
+            });
+
+            await tx.freeCoupon.create({
+              data: {
+                code: generateCouponCode(),
+                userId: newUser.id,
+                welcomeText:
+                  newUserWelcomeText ||
+                  `${name}，欢迎加入！这张券是送给你的第一份礼物，用它免费参加一次心仪的活动吧。`,
+                expiresAt,
+                reason: "REGISTER",
+              },
+            });
+            await tx.freeCoupon.create({
+              data: {
+                code: generateCouponCode(),
+                userId: inviteCodeRecord.ownerId,
+                welcomeText:
+                  inviterWelcomeText ||
+                  `你邀请的朋友${name}已注册成功！这张券是我们的感谢，期待你们在聚会中相遇。`,
+                expiresAt,
+                reason: "INVITED_SOMEONE",
+              },
+            });
+            couponIssued = true;
+          }
         } catch (err) {
           console.error("Failed to process invite code:", err);
         }

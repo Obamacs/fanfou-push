@@ -183,49 +183,57 @@ export async function POST(
     if (isPro) {
       platformFee = 0; // 月度订阅（99元/月）用户免收活动组织费
     } else if (couponCode) {
-      // 1. 尝试匹配免费券
-      const coupon = await db.freeCoupon.findUnique({
-        where: { code: couponCode },
-      });
+      const SYSTEM_PROMO_CODES = ["MEAL2026", "WELCOME", "TIMELEFT", "FANFOU"];
+      const trimmedCode = couponCode.trim().toUpperCase();
 
-      if (coupon) {
-        if (coupon.userId !== userId) {
-          return NextResponse.json({ error: "此优惠券不属于您" }, { status: 400 });
-        }
-        if (coupon.isUsed) {
-          return NextResponse.json({ error: "此优惠券已被使用" }, { status: 400 });
-        }
-        if (coupon.expiresAt < now) {
-          return NextResponse.json({ error: "此优惠券已过期" }, { status: 400 });
-        }
-
-        platformFee = 0; // 优惠券免收活动组织费
+      if (SYSTEM_PROMO_CODES.includes(trimmedCode)) {
+        platformFee = 0; // 官方营销特权礼包码免收活动组织费
+        isInviteUsed = true; // 标记为 invite 逻辑以绕过 FreeCoupon 占用锁定
       } else {
-        // 2. 尝试匹配好友邀请码 (6位大写字母数字)
-        const invite = await db.inviteCode.findUnique({
+        // 1. 尝试匹配免费券
+        const coupon = await db.freeCoupon.findUnique({
           where: { code: couponCode },
         });
 
-        if (!invite) {
-          return NextResponse.json({ error: "优惠券码或邀请码不存在，请检查后重试" }, { status: 400 });
-        }
-        if (!invite.isActive) {
-          return NextResponse.json({ error: "该邀请码已失效" }, { status: 400 });
-        }
-        if (invite.ownerId === userId) {
-          return NextResponse.json({ error: "不能使用自己的邀请码" }, { status: 400 });
-        }
+        if (coupon) {
+          if (coupon.userId !== userId) {
+            return NextResponse.json({ error: "此优惠券不属于您" }, { status: 400 });
+          }
+          if (coupon.isUsed) {
+            return NextResponse.json({ error: "此优惠券已被使用" }, { status: 400 });
+          }
+          if (coupon.expiresAt < now) {
+            return NextResponse.json({ error: "此优惠券已过期" }, { status: 400 });
+          }
 
-        // 验证用户此前是否已使用过邀请码（每个用户仅能被邀请一次）
-        const existingUsage = await db.inviteCodeUsage.findUnique({
-          where: { newUserId: userId },
-        });
-        if (existingUsage) {
-          return NextResponse.json({ error: "您已使用过邀请码，无法重复使用邀请码" }, { status: 400 });
-        }
+          platformFee = 0; // 优惠券免收活动组织费
+        } else {
+          // 2. 尝试匹配好友邀请码 (6位大写字母数字)
+          const invite = await db.inviteCode.findUnique({
+            where: { code: couponCode },
+          });
 
-        platformFee = 0; // 邀请码免收活动组织费
-        isInviteUsed = true;
+          if (!invite) {
+            return NextResponse.json({ error: "优惠券码或邀请码不存在，请检查后重试" }, { status: 400 });
+          }
+          if (!invite.isActive) {
+            return NextResponse.json({ error: "该邀请码已失效" }, { status: 400 });
+          }
+          if (invite.ownerId === userId) {
+            return NextResponse.json({ error: "不能使用自己的邀请码" }, { status: 400 });
+          }
+
+          // 验证用户此前是否已使用过邀请码（每个用户仅能被邀请一次）
+          const existingUsage = await db.inviteCodeUsage.findUnique({
+            where: { newUserId: userId },
+          });
+          if (existingUsage) {
+            return NextResponse.json({ error: "您已使用过邀请码，无法重复使用邀请码" }, { status: 400 });
+          }
+
+          platformFee = 0; // 邀请码免收活动组织费
+          isInviteUsed = true;
+        }
       }
     }
 
