@@ -155,14 +155,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Auto-add creator as confirmed attendee
-    await db.eventAttendance.create({
-      data: {
-        eventId: event.id,
-        userId,
-        status: "CONFIRMED",
-      },
+    // Fetch creator's role to prevent auto-enrolling admins
+    const creatorUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
     });
+    const isAdmin = creatorUser?.role === "ADMIN";
+
+    // Auto-add creator as confirmed attendee (only if they are NOT an admin)
+    if (!isAdmin) {
+      await db.eventAttendance.create({
+        data: {
+          eventId: event.id,
+          userId,
+          status: "CONFIRMED",
+        },
+      });
+    }
 
     // Auto-invite match members if provided
     if (autoInviteMembers && Array.isArray(autoInviteMembers) && autoInviteMembers.length > 0) {
