@@ -98,3 +98,49 @@ export async function findMatch(activityType?: string) {
 
   return { matchId: match.id };
 }
+
+export async function confirmMatch(matchId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "未授权" };
+  }
+
+  const match = await db.match.findUnique({
+    where: { id: matchId },
+    include: { members: true },
+  });
+
+  if (!match) {
+    return { error: "匹配不存在" };
+  }
+
+  const member = match.members.find((m) => m.userId === session.user?.id);
+  if (!member) {
+    return { error: "你不是此匹配的成员" };
+  }
+
+  if (match.status === "EXPIRED" || match.status === "CANCELLED") {
+    return { error: "此匹配已过期或已取消" };
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.matchMember.update({
+      where: { matchId_userId: { matchId, userId: session.user!.id! } },
+      data: { confirmed: true },
+    });
+
+    const [confirmedCount, totalCount] = await Promise.all([
+      tx.matchMember.count({ where: { matchId, confirmed: true } }),
+      tx.matchMember.count({ where: { matchId } }),
+    ]);
+
+    if (confirmedCount === totalCount && confirmedCount > 0) {
+      await tx.match.update({
+        where: { id: matchId },
+        data: { status: "CONFIRMED" },
+      });
+    }
+  });
+
+  return { success: true };
+}

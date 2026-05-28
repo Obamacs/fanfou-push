@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 import {
   Check,
   X,
@@ -53,6 +54,7 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
+  const { toast, confirm } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -95,7 +97,8 @@ export default function AdminOrdersPage() {
   }, [fetchOrders]);
 
   const handleProcessOrder = async (orderId: string, action: "confirm" | "cancel") => {
-    if (!confirm(`确定要${action === "confirm" ? "确认收款" : "取消这笔预约"}吗？`)) {
+    const isConfirmed = await confirm(`确定要${action === "confirm" ? "确认收款" : "取消这笔预约"}吗？`, "确认操作");
+    if (!isConfirmed) {
       return;
     }
     setActionLoadingId(orderId);
@@ -109,7 +112,7 @@ export default function AdminOrdersPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert(data.message || "操作处理成功！");
+        toast.success(data.message || "操作处理成功！");
         setOrders(
           orders.map((o) =>
             o.id === orderId
@@ -118,11 +121,11 @@ export default function AdminOrdersPage() {
           )
         );
       } else {
-        alert(data.error || "处理失败");
+        toast.error(data.error || "处理失败");
       }
     } catch (err) {
       console.error("Process order failed:", err);
-      alert("网络错误，请重试");
+      toast.error("网络错误，请重试");
     } finally {
       setActionLoadingId(null);
     }
@@ -130,13 +133,13 @@ export default function AdminOrdersPage() {
 
   const handleProcessRefund = async (orderId: string, action: "refund" | "forfeit") => {
     const isRefund = action === "refund";
-    if (
-      !confirm(
-        isRefund
-          ? "确定您已线下完成手动打款，并在此登记已退还保证金吗？"
-          : "确定该用户无故缺席（放鸽子），要没收其出席保证金吗？"
-      )
-    ) {
+    const isConfirmed = await confirm(
+      isRefund
+        ? "确定您已线下完成手动打款，并在此登记已退还保证金吗？"
+        : "确定该用户无故缺席（放鸽子），要没收其出席保证金吗？",
+      "确认处理"
+    );
+    if (!isConfirmed) {
       return;
     }
 
@@ -151,7 +154,7 @@ export default function AdminOrdersPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert(data.message || "对账处理成功！");
+        toast.success(data.message || "对账处理成功！");
         setOrders(
           orders.map((o) =>
             o.id === orderId
@@ -161,11 +164,11 @@ export default function AdminOrdersPage() {
         );
         setIsRefundDialogOpen(false);
       } else {
-        alert(data.error || "处理失败");
+        toast.error(data.error || "处理失败");
       }
     } catch (err) {
       console.error("Process refund failed:", err);
-      alert("网络错误，请重试");
+      toast.error("网络错误，请重试");
     } finally {
       setActionLoadingId(null);
     }

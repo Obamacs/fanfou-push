@@ -96,8 +96,8 @@ export function AMap({
 
     // 动态加载高德地图API
     const script = document.createElement("script");
-    script.src =
-      "https://webapi.amap.com/maps?v=2.0&key=257501275a6867c79f1bb06e03f456a6&plugin=AMap.Geocoder";
+    const amapKey = process.env.NEXT_PUBLIC_AMAP_KEY || "257501275a6867c79f1bb06e03f456a6";
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapKey}&plugin=AMap.Geocoder`;
     script.async = true;
     script.onload = () => {
       initMap();

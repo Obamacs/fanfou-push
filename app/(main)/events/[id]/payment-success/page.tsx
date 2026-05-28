@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Link from "next/link";
+import { RedirectCountdown } from "@/components/events/RedirectCountdown";
 
 interface PaymentSuccessPageProps {
   params: Promise<{ id: string }>;
@@ -44,14 +45,9 @@ export default async function PaymentSuccessPage({
             </Link>
           </div>
 
-          <p className="text-xs text-[#B8A099] text-center">
-            页面将在 3 秒后自动返回...
-          </p>
+          <RedirectCountdown targetUrl={`/events/${id}`} seconds={3} />
         </CardContent>
       </Card>
-
-      {/* Auto-redirect after 3 seconds */}
-      <meta httpEquiv="refresh" content={`3;url=/events/${id}`} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 
 interface Event {
   id: string;
@@ -19,6 +20,7 @@ interface Event {
 }
 
 export default function EventsPage() {
+  const { toast, confirm } = useToast();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,7 +53,8 @@ export default function EventsPage() {
   }, []);
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm("确定要删除这个活动吗？")) return;
+    const isConfirmed = await confirm("确定要删除这个活动吗？", "提示");
+    if (!isConfirmed) return;
 
     try {
       const res = await fetch(`/api/admin/events/${eventId}`, {
@@ -60,15 +63,16 @@ export default function EventsPage() {
 
       if (res.ok) {
         setEvents(events.filter((e) => e.id !== eventId));
-        alert("活动已删除");
+        toast.success("活动已删除");
       } else {
-        alert("删除失败");
+        toast.error("删除失败");
       }
     } catch (err) {
       console.error("Failed to delete event:", err);
-      alert("删除失败");
+      toast.error("删除失败");
     }
   };
+
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title

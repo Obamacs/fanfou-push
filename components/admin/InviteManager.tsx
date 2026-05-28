@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 import { Users, Link2, ToggleLeft, ToggleRight, RefreshCw, Search } from "lucide-react";
 
 interface InviteUsage {
@@ -28,6 +29,7 @@ interface InviteCode {
 }
 
 export function InviteManager() {
+  const { toast } = useToast();
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -78,7 +80,7 @@ export function InviteManager() {
         body: JSON.stringify({ action: "generateAll" }),
       });
       const data = await res.json();
-      if (res.ok) alert(`已为 ${data.generated} 位用户生成邀请码（共 ${data.total} 位缺失）`);
+      if (res.ok) toast.success(`已为 ${data.generated} 位用户生成邀请码（共 ${data.total} 位缺失）`);
       fetchCodes();
     } catch { /* ignore */ }
     finally { setActionLoading(null); }

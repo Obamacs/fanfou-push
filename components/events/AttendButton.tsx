@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Check, Copy, QrCode, ClipboardList, Wallet, Sparkles } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { useRouter } from "next/navigation";
 
 type AttendanceStatus = "CONFIRMED" | "PENDING" | "WAITLISTED" | null;
 
@@ -101,6 +103,8 @@ export function AttendButton({
   initialDepositFee = null,
   initialCouponCode = null,
 }: AttendButtonProps) {
+  const { toast } = useToast();
+  const router = useRouter();
   const [isAttending, setIsAttending] = useState(initialIsAttending);
   const [status, setStatus] = useState<AttendanceStatus>(initialStatus);
   const [loading, setLoading] = useState(false);
@@ -200,11 +204,11 @@ export function AttendButton({
     // 如果有押金且退款信息不完整，做前端强校验
     if (priceAmount > 0 && isRefundInfoMissing) {
       if (!refundAccount.trim()) {
-        alert("请输入退款微信号或支付宝账号，以便我们在活动正常履约后为您退还保证金。");
+        toast.error("请输入退款微信号或支付宝账号，以便我们在活动正常履约后为您退还保证金。");
         return;
       }
       if (!refundRealName.trim()) {
-        alert("请输入退款账号对应的真实姓名，以保证资金安全。");
+        toast.error("请输入退款账号对应的真实姓名，以保证资金安全。");
         return;
       }
     }
@@ -235,7 +239,7 @@ export function AttendButton({
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "生成预订订单失败");
+        toast.error(data.error || "生成预订订单失败");
         return;
       }
 
@@ -255,9 +259,10 @@ export function AttendButton({
         setStatus("PENDING");
         setIsPayDetailsDialogOpen(false);
         setIsPayDialogOpen(true);
+        toast.success("成功生成支付预订订单！");
       }
     } catch (error) {
-      alert("网络错误，请重试");
+      toast.error("网络错误，请重试");
     } finally {
       setLoading(false);
     }
@@ -279,7 +284,7 @@ export function AttendButton({
         const data = await res.json();
 
         if (!res.ok) {
-          alert(data.error || "操作失败");
+          toast.error(data.error || "操作失败");
           return;
         }
 
@@ -290,7 +295,8 @@ export function AttendButton({
         setOrderPlatformFee(null);
         setOrderDepositFee(null);
         setOrderCouponCode(null);
-        window.location.reload();
+        toast.success("已成功退出活动");
+        router.refresh();
       } else {
         // 加入活动
         if (priceAmount > 0) {
@@ -308,17 +314,18 @@ export function AttendButton({
           const data = await res.json();
 
           if (!res.ok) {
-            alert(data.error || "操作失败");
+            toast.error(data.error || "操作失败");
             return;
           }
 
           setIsAttending(true);
           setStatus(data.attendance.status as AttendanceStatus);
-          window.location.reload();
+          toast.success("成功加入活动！");
+          router.refresh();
         }
       }
     } catch (error) {
-      alert("网络错误，请重试");
+      toast.error("网络错误，请重试");
     } finally {
       setLoading(false);
     }

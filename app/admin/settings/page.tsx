@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { useToast } from "@/components/ui/toast";
 import { Loader2, Sparkles, QrCode } from "lucide-react";
 
 export default function SettingsPage() {
+  const { toast } = useToast();
   const [settings, setSettings] = useState({
     minUsersForMatch: 3,
     maxMatchGroupSize: 6,
@@ -62,14 +64,14 @@ export default function SettingsPage() {
       });
 
       if (res.ok) {
-        alert("设置已保存");
+        toast.success("设置已保存");
       } else {
         const errData = await res.json();
-        alert(errData.error || "保存失败");
+        toast.error(errData.error || "保存失败");
       }
     } catch (err) {
       console.error("Failed to save settings:", err);
-      alert("保存失败");
+      toast.error("保存失败");
     } finally {
       setSaving(false);
     }

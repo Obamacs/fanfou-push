@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 
 function AdminLoginContent() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,7 +58,8 @@ function AdminLoginContent() {
       if (result?.ok) {
         setSuccess("登录成功，正在跳转...");
         setTimeout(() => {
-          window.location.href = "/admin";
+          router.push("/admin");
+          router.refresh();
         }, 500);
       }
     } catch (err) {

@@ -54,7 +54,8 @@ function BridgeContent() {
         }
 
         if (result?.ok) {
-          window.location.href = next;
+          router.push(next);
+          router.refresh();
         } else {
           router.replace("/login?error=session_failed");
         }

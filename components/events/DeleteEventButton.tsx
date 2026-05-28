@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/ui/toast";
 
 interface DeleteEventButtonProps {
   eventId: string;
@@ -19,6 +20,7 @@ interface DeleteEventButtonProps {
 
 export function DeleteEventButton({ eventId }: DeleteEventButtonProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -34,10 +36,10 @@ export function DeleteEventButton({ eventId }: DeleteEventButtonProps) {
         router.push("/events");
       } else {
         const data = await res.json();
-        alert(data.error || "删除失败");
+        toast.error(data.error || "删除失败");
       }
     } catch (error) {
-      alert("网络错误，请重试");
+      toast.error("网络错误，请重试");
     } finally {
       setLoading(false);
       setOpen(false);

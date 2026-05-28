@@ -66,37 +66,58 @@ export default function ProfilePage() {
     let isMounted = true;
 
     const loadProfileAndBenefits = async () => {
+      const fetchProfile = async () => {
+        try {
+          const res = await fetch("/api/user/profile");
+          if (!res.ok) {
+            router.push("/login");
+            return;
+          }
+          const data = await res.json();
+          if (isMounted) {
+            setProfile(data.user);
+            setFormData(data.user);
+          }
+        } catch (e) {
+          console.error("Failed to load profile details:", e);
+          if (isMounted) {
+            setError("获取个人资料失败");
+          }
+        }
+      };
+
+      const fetchInvite = async () => {
+        try {
+          const res = await fetch("/api/invite");
+          if (res.ok) {
+            const data = await res.json();
+            if (isMounted) {
+              setInviteData(data.inviteCode);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load invite details:", e);
+        }
+      };
+
+      const fetchCoupons = async () => {
+        try {
+          const res = await fetch("/api/coupons");
+          if (res.ok) {
+            const data = await res.json();
+            if (isMounted) {
+              setCouponsData(data);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load coupons details:", e);
+        }
+      };
+
       try {
-        const [profileRes, inviteRes, couponsRes] = await Promise.all([
-          fetch("/api/user/profile"),
-          fetch("/api/invite"),
-          fetch("/api/coupons")
-        ]);
-
-        if (!profileRes.ok) {
-          router.push("/login");
-          return;
-        }
-        
-        const profileData = await profileRes.json();
-        if (!isMounted) return;
-        setProfile(profileData.user);
-        setFormData(profileData.user);
-
-        if (inviteRes.ok) {
-          const invData = await inviteRes.json();
-          setInviteData(invData.inviteCode);
-        }
-
-        if (couponsRes.ok) {
-          const coupData = await couponsRes.json();
-          setCouponsData(coupData);
-        }
+        await Promise.all([fetchProfile(), fetchInvite(), fetchCoupons()]);
       } catch (err) {
         console.error("获取个人资料或福利失败:", err);
-        if (isMounted) {
-          setError("获取个人资料失败");
-        }
       } finally {
         if (isMounted) {
           setLoading(false);

@@ -55,7 +55,14 @@ export default function ChatPage() {
 
         if (isMounted) {
           setOtherUser(data.otherUser);
-          setMessages(data.messages);
+          setMessages((prev) => {
+            // Only update messages state if the message list actually changed (different length or last message ID)
+            if (prev.length === data.messages.length && 
+                prev[prev.length - 1]?.id === data.messages[data.messages.length - 1]?.id) {
+              return prev;
+            }
+            return data.messages;
+          });
         }
       } catch {
         if (isMounted) {
@@ -110,8 +117,15 @@ export default function ChatPage() {
       }
 
       setMessageInput("");
-      setMessages([...messages, data.message]);
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      setMessages((prev) => {
+        // Prevent duplicate appends if polling caught it first
+        if (prev.some((m) => m.id === data.message.id)) return prev;
+        return [...prev, data.message];
+      });
+      // Force scroll to bottom immediately on self send
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
     } catch {
       setError("网络错误，请重试");
     } finally {

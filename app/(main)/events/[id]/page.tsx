@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { EVENT_TYPE_COLORS } from "@/lib/constants";
 import { Calendar, MapPin, Users, Clock, Ticket, ChevronLeft, User, Lock } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 
 interface EventDetailPageProps {
@@ -116,7 +117,14 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         {/* Hero image */}
         <div className="relative aspect-[2/1] bg-[#FFF5F3] rounded-3xl overflow-hidden mb-8">
           {event.imageUrl ? (
-            <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
+            <Image
+              src={event.imageUrl}
+              alt={event.title}
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
           ) : (
             <div className={`w-full h-full flex items-center justify-center ${colors.bg}`}>
               <span className="text-8xl">{colors.icon}</span>

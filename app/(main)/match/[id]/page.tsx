@@ -164,14 +164,9 @@ export default async function MatchDetailPage({
           <form
             action={async () => {
               "use server";
-              const res = await fetch(
-                `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/match/${match.id}/confirm`,
-                {
-                  method: "POST",
-                }
-              );
-
-              if (res.ok) {
+              const { confirmMatch } = await import("@/lib/match-actions");
+              const res = await confirmMatch(match.id);
+              if (res.success) {
                 redirect(`/match/${match.id}`);
               }
             }}
