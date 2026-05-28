@@ -41,6 +41,7 @@ export async function findMatch(activityType?: string) {
         none: { match: { status: { in: ["PENDING", "CONFIRMED"] } } },
       },
     },
+    take: 200,
     include: {
       interests: { include: { interest: true } },
       answers: true,
@@ -60,6 +61,7 @@ export async function findMatch(activityType?: string) {
           none: { match: { status: { in: ["PENDING", "CONFIRMED"] } } },
         },
       },
+      take: 200,
       include: {
         interests: { include: { interest: true } },
         answers: true,

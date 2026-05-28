@@ -1,36 +1,42 @@
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/api-helpers";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireAdmin();
+    if (authResult.error) return authResult.error;
 
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "未授权" }, { status: 401 });
-    }
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")));
 
-    const reports = await db.report.findMany({
-      select: {
-        id: true,
-        reason: true,
-        description: true,
-        status: true,
-        createdAt: true,
-        reportedBy: {
-          select: { name: true, email: true },
+    const [reports, total] = await Promise.all([
+      db.report.findMany({
+        select: {
+          id: true,
+          reason: true,
+          description: true,
+          status: true,
+          createdAt: true,
+          reportedBy: {
+            select: { name: true, email: true },
+          },
+          reportedUser: {
+            select: { name: true, email: true },
+          },
+          reportedEvent: {
+            select: { title: true },
+          },
         },
-        reportedUser: {
-          select: { name: true, email: true },
-        },
-        reportedEvent: {
-          select: { title: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.report.count(),
+    ]);
 
-    return NextResponse.json({ reports });
+    return NextResponse.json({ reports, total, page, limit });
   } catch (error) {
     console.error("Reports fetch error:", error);
     return NextResponse.json(

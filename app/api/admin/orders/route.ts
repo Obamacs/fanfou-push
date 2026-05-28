@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/api-helpers";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { OrderStatus, RefundStatus } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,8 +9,16 @@ export async function GET(req: NextRequest) {
     if (authResult.error) return authResult.error;
 
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status") || undefined;
-    const refundStatus = searchParams.get("refundStatus") || undefined;
+    const statusParam = searchParams.get("status");
+    const status = (statusParam && Object.values(OrderStatus).includes(statusParam as OrderStatus))
+      ? (statusParam as OrderStatus)
+      : undefined;
+
+    const refundStatusParam = searchParams.get("refundStatus");
+    const refundStatus = (refundStatusParam && Object.values(RefundStatus).includes(refundStatusParam as RefundStatus))
+      ? (refundStatusParam as RefundStatus)
+      : undefined;
+
     const query = searchParams.get("q") || "";
     
     // Pagination parameters with fallback defaults

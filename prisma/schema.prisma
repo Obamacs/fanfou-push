@@ -121,10 +121,10 @@ model User {
   coupons           FreeCoupon[]     @relation("UserCoupons")
   reservationOrders ReservationOrder[]
 
-  @@index([email])
   @@index([city])
   @@index([isActive])
   @@index([isBanned])
+  @@index([city, isOnboarded, isActive, isBanned])
 }
 
 model Account {
@@ -295,6 +295,7 @@ model EventAttendance {
   @@id([eventId, userId])
   @@index([userId])
   @@index([status])
+  @@index([eventId, status])
 }
 
 // ============ Chat & Messaging ============
@@ -329,6 +330,7 @@ model DirectMessage {
   @@index([receiverId])
   @@index([createdAt])
   @@index([isRead])
+  @@index([receiverId, isRead, senderId])
 }
 
 // ============ Ratings ============
@@ -440,6 +442,7 @@ model FreeCoupon {
   @@index([isUsed])
   @@index([expiresAt])
   @@index([code])
+  @@index([userId, isUsed, expiresAt])
 }
 
 model AppSettings {
@@ -467,8 +470,8 @@ model ReservationOrder {
   platformFee Int      @default(0) // 活动组织服务费（元）
   depositFee  Int      @default(0) // 出席押金（元）
   couponCode  String?  // 使用的免费抵扣优惠券码
-  status      String   @default("PENDING") // "PENDING" | "CONFIRMED" | "CANCELLED"
-  refundStatus String  @default("NOT_ELIGIBLE") // "NOT_ELIGIBLE" | "ELIGIBLE" | "REFUNDED" | "FORFEITED"
+  status      OrderStatus @default(PENDING)
+  refundStatus RefundStatus @default(NOT_ELIGIBLE)
   refundedAt  DateTime?
   refundOperator String?
   createdAt   DateTime @default(now())
@@ -480,4 +483,17 @@ model ReservationOrder {
   @@index([eventId])
   @@index([status])
   @@index([orderCode])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum RefundStatus {
+  NOT_ELIGIBLE
+  ELIGIBLE
+  REFUNDED
+  FORFEITED
 }

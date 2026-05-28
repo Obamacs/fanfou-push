@@ -128,65 +128,70 @@ export async function POST(req: NextRequest) {
 
     const userId = session.user.id as string;
 
-    // Create event
-    const event = await db.event.create({
-      data: {
-        title,
-        type,
-        city,
-        address,
-        date: eventDate,
-        maxAttendees: max,
-        priceAmount: price,
-        description,
-        imageUrl,
-        creatorId: userId,
-        status: "UPCOMING",
-        matchId: matchId || null,
-        estimatedSpend: estimatedSpend || null,
-        estimatedSpicy: estimatedSpicy || null,
-        estimatedCuisine: estimatedCuisine || null,
-        alcoholPolicy: alcoholPolicy || null,
-      },
-      include: {
-        creator: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-      },
-    });
-
-    // Fetch creator's role to prevent auto-enrolling admins
-    const creatorUser = await db.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-    const isAdmin = creatorUser?.role === "ADMIN";
-
-    // Auto-add creator as confirmed attendee (only if they are NOT an admin)
-    if (!isAdmin) {
-      await db.eventAttendance.create({
+    // Create event and its attendances inside a single atomic database transaction
+    const event = await db.$transaction(async (tx) => {
+      // 1. Create the event
+      const newEvent = await tx.event.create({
         data: {
-          eventId: event.id,
-          userId,
-          status: "CONFIRMED",
+          title,
+          type,
+          city,
+          address,
+          date: eventDate,
+          maxAttendees: max,
+          priceAmount: price,
+          description,
+          imageUrl,
+          creatorId: userId,
+          status: "UPCOMING",
+          matchId: matchId || null,
+          estimatedSpend: estimatedSpend || null,
+          estimatedSpicy: estimatedSpicy || null,
+          estimatedCuisine: estimatedCuisine || null,
+          alcoholPolicy: alcoholPolicy || null,
+        },
+        include: {
+          creator: {
+            select: { id: true, name: true, avatarUrl: true },
+          },
         },
       });
-    }
 
-    // Auto-invite match members if provided
-    if (autoInviteMembers && Array.isArray(autoInviteMembers) && autoInviteMembers.length > 0) {
-      const memberIds = autoInviteMembers.filter((id: string) => id !== userId);
-      if (memberIds.length > 0) {
-        await db.eventAttendance.createMany({
-          data: memberIds.map((memberId: string) => ({
-            eventId: event.id,
-            userId: memberId,
+      // 2. Fetch creator's role to prevent auto-enrolling admins
+      const creatorUser = await tx.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      const isAdmin = creatorUser?.role === "ADMIN";
+
+      // 3. Auto-add creator as confirmed attendee (only if they are NOT an admin)
+      if (!isAdmin) {
+        await tx.eventAttendance.create({
+          data: {
+            eventId: newEvent.id,
+            userId,
             status: "CONFIRMED",
-          })),
-          skipDuplicates: true,
+          },
         });
       }
-    }
+
+      // 4. Auto-invite match members if provided
+      if (autoInviteMembers && Array.isArray(autoInviteMembers) && autoInviteMembers.length > 0) {
+        const memberIds = autoInviteMembers.filter((id: string) => id !== userId);
+        if (memberIds.length > 0) {
+          await tx.eventAttendance.createMany({
+            data: memberIds.map((memberId: string) => ({
+              eventId: newEvent.id,
+              userId: memberId,
+              status: "CONFIRMED",
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      return newEvent;
+    });
 
     revalidatePath("/events");
 

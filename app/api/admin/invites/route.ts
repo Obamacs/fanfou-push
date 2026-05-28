@@ -115,16 +115,43 @@ export async function POST(req: NextRequest) {
           select: { id: true },
         });
 
-        let count = 0;
+        if (usersWithoutCode.length === 0) {
+          return NextResponse.json({ generated: 0, total: 0 });
+        }
+
+        const { customAlphabet } = await import("nanoid");
+        const generateInviteCodeStr = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 6);
+
+        // Fetch existing codes from DB to prevent collisions in this run
+        const existingCodes = new Set(
+          (await db.inviteCode.findMany({ select: { code: true } })).map((c) => c.code)
+        );
+
+        const inviteCodesToCreate: Array<{ code: string; ownerId: string }> = [];
+        const uniqueBatchCodes = new Set<string>();
+
         for (const user of usersWithoutCode) {
-          try {
-            await ensureInviteCode(user.id);
-            count++;
-          } catch {
-            // skip failures
+          let code = generateInviteCodeStr();
+          let retries = 0;
+          while ((existingCodes.has(code) || uniqueBatchCodes.has(code)) && retries < 10) {
+            code = generateInviteCodeStr();
+            retries++;
+          }
+          if (retries < 10) {
+            uniqueBatchCodes.add(code);
+            inviteCodesToCreate.push({
+              code,
+              ownerId: user.id,
+            });
           }
         }
-        return NextResponse.json({ generated: count, total: usersWithoutCode.length });
+
+        const result = await db.inviteCode.createMany({
+          data: inviteCodesToCreate,
+          skipDuplicates: true,
+        });
+
+        return NextResponse.json({ generated: result.count, total: usersWithoutCode.length });
       }
 
       default:
