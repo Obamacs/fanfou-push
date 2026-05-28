@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { ensureInviteCode } from "@/lib/coupon";
+import { ensureInviteCode, validateInviteCode } from "@/lib/coupon";
 import { customAlphabet } from "nanoid";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -79,11 +79,10 @@ export async function POST(req: NextRequest) {
         inviteCodeValid = true;
         isSystemPromoCode = true;
       } else {
-        inviteCodeRecord = await db.inviteCode.findUnique({
-          where: { code: trimmedCode },
-        });
-        if (inviteCodeRecord && inviteCodeRecord.isActive) {
+        const validation = await validateInviteCode(trimmedCode);
+        if (validation.valid && validation.invite) {
           inviteCodeValid = true;
+          inviteCodeRecord = validation.invite;
         }
       }
     }

@@ -1,14 +1,16 @@
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/api-helpers";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireAdmin();
+    if (authResult.error) return authResult.error;
 
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "未授权" }, { status: 401 });
-    }
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "100", 10), 100);
+    const skip = (page - 1) * limit;
 
     const events = await db.event.findMany({
       select: {
@@ -27,6 +29,8 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
     });
 
     return NextResponse.json({ events });

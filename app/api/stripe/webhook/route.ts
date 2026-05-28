@@ -54,6 +54,21 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Check if already processed (Idempotency protection)
+      const existingAttendance = await db.eventAttendance.findUnique({
+        where: {
+          eventId_userId: {
+            eventId,
+            userId,
+          },
+        },
+      });
+
+      if (existingAttendance && existingAttendance.status === "CONFIRMED" && existingAttendance.paymentId === (session.payment_intent as string)) {
+        console.log(`Webhook already processed for event ${eventId}, user ${userId}`);
+        return NextResponse.json({ received: true });
+      }
+
       // Update attendance to CONFIRMED
       await db.eventAttendance.update({
         where: {

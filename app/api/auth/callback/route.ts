@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { nanoid } from "nanoid";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { createHash } from "crypto";
+import { ensureInviteCode } from "@/lib/coupon";
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -82,6 +83,9 @@ export async function GET(req: NextRequest) {
         emailVerified: new Date(),
       },
     });
+
+    // Ensure user has a sharing invite code
+    await ensureInviteCode(user.id);
 
     const bridgeToken = nanoid(32);
     const expiresAt = new Date();

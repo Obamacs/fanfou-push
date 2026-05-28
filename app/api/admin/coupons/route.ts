@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/api-helpers";
 import { db } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,11 +6,8 @@ import { issueAdminCoupon } from "@/lib/coupon";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "仅管理员可访问" }, { status: 403 });
-    }
+    const authResult = await requireAdmin();
+    if (authResult.error) return authResult.error;
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -69,11 +66,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "仅管理员可访问" }, { status: 403 });
-    }
+    const authResult = await requireAdmin();
+    if (authResult.error) return authResult.error;
 
     const body = await req.json();
     const { userId, welcomeText, daysValid } = body;

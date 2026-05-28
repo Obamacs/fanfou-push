@@ -10,63 +10,66 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
-    // Get all conversations (both sent and received)
-    const conversations = await db.directMessage.findMany({
-      where: {
-        OR: [
-          { senderId: session.user.id },
-          { receiverId: session.user.id },
-        ],
-      },
-      include: {
-        sender: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-        receiver: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const userId = session.user.id;
 
-    // Group by conversation partner and get latest message
-    const conversationMap = new Map<
-      string,
-      {
-        partnerId: string;
-        partnerName: string;
-        partnerAvatar: string | null;
-        lastMessage: string;
-        lastMessageTime: Date;
-        unreadCount: number;
-      }
-    >();
+    // 1. Get unique partners using two lightweight DB groupBy operations
+    const [sentGroups, receivedGroups] = await Promise.all([
+      db.directMessage.groupBy({
+        by: ["receiverId"],
+        where: { senderId: userId },
+      }),
+      db.directMessage.groupBy({
+        by: ["senderId"],
+        where: { receiverId: userId },
+      }),
+    ]);
 
-    for (const msg of conversations) {
-      const partnerId =
-        msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
-      const partner =
-        msg.senderId === session.user.id ? msg.receiver : msg.sender;
+    const partnerIds = Array.from(
+      new Set([
+        ...sentGroups.map((p) => p.receiverId),
+        ...receivedGroups.map((p) => p.senderId),
+      ])
+    );
 
-      if (!conversationMap.has(partnerId)) {
-        conversationMap.set(partnerId, {
+    // 2. Query details for each partner concurrently with O(1) specific queries
+    const result = await Promise.all(
+      partnerIds.map(async (partnerId) => {
+        const [partner, lastMsg, unreadCount] = await Promise.all([
+          db.user.findUnique({
+            where: { id: partnerId },
+            select: { id: true, name: true, avatarUrl: true },
+          }),
+          db.directMessage.findFirst({
+            where: {
+              OR: [
+                { senderId: userId, receiverId: partnerId },
+                { senderId: partnerId, receiverId: userId },
+              ],
+            },
+            orderBy: { createdAt: "desc" },
+          }),
+          db.directMessage.count({
+            where: {
+              senderId: partnerId,
+              receiverId: userId,
+              isRead: false,
+            },
+          }),
+        ]);
+
+        return {
           partnerId,
-          partnerName: partner.name,
-          partnerAvatar: partner.avatarUrl,
-          lastMessage: msg.content,
-          lastMessageTime: msg.createdAt,
-          unreadCount: 0,
-        });
-      }
+          partnerName: partner?.name || "未知用户",
+          partnerAvatar: partner?.avatarUrl || null,
+          lastMessage: lastMsg?.content || "",
+          lastMessageTime: lastMsg?.createdAt || new Date(),
+          unreadCount,
+        };
+      })
+    );
 
-      // Count unread messages from this partner
-      if (msg.receiverId === session.user.id && !msg.isRead) {
-        const conv = conversationMap.get(partnerId)!;
-        conv.unreadCount += 1;
-      }
-    }
-
-    const result = Array.from(conversationMap.values()).sort(
+    // 3. Sort by latest message time
+    result.sort(
       (a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime()
     );
 

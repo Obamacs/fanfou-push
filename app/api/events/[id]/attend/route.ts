@@ -164,39 +164,41 @@ export async function POST(
         );
       }
 
-      // Update to cancelled
-      await db.eventAttendance.update({
-        where: {
-          eventId_userId: {
-            eventId: id,
-            userId,
-          },
-        },
-        data: { status: "CANCELLED" },
-      });
-
-      // If the departing person was CONFIRMED, promote first WAITLISTED
-      if (attendance.status === "CONFIRMED") {
-        const waitlisted = await db.eventAttendance.findFirst({
+      // Update to cancelled and promote first WAITLISTED atomically inside transaction
+      await db.$transaction(async (tx) => {
+        await tx.eventAttendance.update({
           where: {
-            eventId: id,
-            status: "WAITLISTED",
+            eventId_userId: {
+              eventId: id,
+              userId,
+            },
           },
-          orderBy: { joinedAt: "asc" },
+          data: { status: "CANCELLED" },
         });
 
-        if (waitlisted) {
-          await db.eventAttendance.update({
+        // If the departing person was CONFIRMED, promote first WAITLISTED
+        if (attendance.status === "CONFIRMED") {
+          const waitlisted = await tx.eventAttendance.findFirst({
             where: {
-              eventId_userId: {
-                eventId: id,
-                userId: waitlisted.userId,
-              },
+              eventId: id,
+              status: "WAITLISTED",
             },
-            data: { status: "CONFIRMED" },
+            orderBy: { joinedAt: "asc" },
           });
+
+          if (waitlisted) {
+            await tx.eventAttendance.update({
+              where: {
+                eventId_userId: {
+                  eventId: id,
+                  userId: waitlisted.userId,
+                },
+              },
+              data: { status: "CONFIRMED" },
+            });
+          }
         }
-      }
+      });
 
       revalidatePath(`/events/${id}`);
       revalidatePath("/events");

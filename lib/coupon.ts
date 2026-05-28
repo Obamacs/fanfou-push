@@ -217,3 +217,33 @@ export async function issueAdminCoupon(
   });
 }
 
+// 校验邀请码规则 (共享业务逻辑)
+export async function validateInviteCode(code: string, newUserId?: string) {
+  const trimmedCode = code.trim().toUpperCase();
+  const invite = await db.inviteCode.findUnique({
+    where: { code: trimmedCode },
+  });
+
+  if (!invite) {
+    return { valid: false, error: "优惠券码或邀请码不存在，请检查后重试" };
+  }
+  if (!invite.isActive) {
+    return { valid: false, error: "该邀请码已失效" };
+  }
+  if (newUserId && invite.ownerId === newUserId) {
+    return { valid: false, error: "不能使用自己的邀请码" };
+  }
+
+  // 验证用户是否已使用过邀请码（每个用户只能被邀请一次）
+  if (newUserId) {
+    const existingUsage = await db.inviteCodeUsage.findUnique({
+      where: { newUserId },
+    });
+    if (existingUsage) {
+      return { valid: false, error: "您已使用过邀请码，无法重复使用邀请码" };
+    }
+  }
+
+  return { valid: true, invite };
+}
+

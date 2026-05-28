@@ -178,7 +178,8 @@ export function calculateActivityScore(
   const weightedGoal = (goalScore / 35) * 15;
   const weightedGender = genderBonus * 0.5; // 最高 5 分 (10 * 0.5)
 
-  return weightedActivity + weightedFood + weightedGoal + weightedGender;
+  const score = weightedActivity + weightedFood + weightedGoal + weightedGender;
+  return Math.min(100, Math.max(0, score));
 }
 
 export function selectBalancedGroup(

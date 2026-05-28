@@ -157,14 +157,19 @@ export async function POST(
 
         // 3. Release the coupon if one was used
         if (order.couponCode) {
-          await tx.freeCoupon.update({
+          const existingCoupon = await tx.freeCoupon.findUnique({
             where: { code: order.couponCode },
-            data: {
-              isUsed: false,
-              usedAt: null,
-              usedForEventId: null,
-            },
           });
+          if (existingCoupon) {
+            await tx.freeCoupon.update({
+              where: { id: existingCoupon.id },
+              data: {
+                isUsed: false,
+                usedAt: null,
+                usedForEventId: null,
+              },
+            });
+          }
         }
       });
 

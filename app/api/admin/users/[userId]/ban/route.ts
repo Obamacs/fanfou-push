@@ -12,10 +12,11 @@ export async function POST(
   try {
     const { userId } = await params;
     const { isBanned } = await req.json();
+    const strictIsBanned = isBanned === true || isBanned === "true";
 
     const user = await db.user.update({
       where: { id: userId },
-      data: { isBanned },
+      data: { isBanned: strictIsBanned },
     });
 
     return NextResponse.json({ user });

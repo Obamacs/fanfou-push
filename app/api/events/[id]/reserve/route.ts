@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 async function generateUniqueOrderCode(): Promise<string> {
   let attempts = 0;
   while (attempts < 10) {
-    const code = `MM${Math.floor(1000 + Math.random() * 9000)}`;
+    const code = `MM${Math.floor(100000 + Math.random() * 900000)}`;
     const existing = await db.reservationOrder.findUnique({
       where: { orderCode: code },
     });
@@ -15,7 +15,7 @@ async function generateUniqueOrderCode(): Promise<string> {
     }
     attempts++;
   }
-  return `MM${Math.floor(100000 + Math.random() * 900000)}`;
+  return `MM${Math.floor(10000000 + Math.random() * 90000000)}`;
 }
 
 export async function POST(
@@ -209,26 +209,11 @@ export async function POST(
           platformFee = 0; // 优惠券免收活动组织费
         } else {
           // 2. 尝试匹配好友邀请码 (6位大写字母数字)
-          const invite = await db.inviteCode.findUnique({
-            where: { code: couponCode },
-          });
+          const { validateInviteCode } = await import("@/lib/coupon");
+          const validation = await validateInviteCode(couponCode, userId);
 
-          if (!invite) {
-            return NextResponse.json({ error: "优惠券码或邀请码不存在，请检查后重试" }, { status: 400 });
-          }
-          if (!invite.isActive) {
-            return NextResponse.json({ error: "该邀请码已失效" }, { status: 400 });
-          }
-          if (invite.ownerId === userId) {
-            return NextResponse.json({ error: "不能使用自己的邀请码" }, { status: 400 });
-          }
-
-          // 验证用户此前是否已使用过邀请码（每个用户仅能被邀请一次）
-          const existingUsage = await db.inviteCodeUsage.findUnique({
-            where: { newUserId: userId },
-          });
-          if (existingUsage) {
-            return NextResponse.json({ error: "您已使用过邀请码，无法重复使用邀请码" }, { status: 400 });
+          if (!validation.valid) {
+            return NextResponse.json({ error: validation.error }, { status: 400 });
           }
 
           platformFee = 0; // 邀请码免收活动组织费
@@ -254,7 +239,61 @@ export async function POST(
 
     // Create reservation order and set event attendance to PENDING in a transaction
     const [order, attendance] = await db.$transaction(async (tx) => {
-      // 1. If there is an existing pending order, delete it and restore its coupon
+      // 1. Double check coupon/invite validation inside transaction to prevent TOCTOU race conditions
+      if (platformFee === 0 && couponCode && !isInviteUsed) {
+        const coupon = await tx.freeCoupon.findUnique({
+          where: { code: couponCode.trim().toUpperCase() },
+        });
+
+        if (!coupon) {
+          throw new Error("优惠券不存在，请检查后重试");
+        }
+        if (coupon.userId !== userId) {
+          throw new Error("此优惠券不属于您");
+        }
+        if (coupon.isUsed) {
+          throw new Error("此优惠券已被使用");
+        }
+        if (coupon.expiresAt < now) {
+          throw new Error("此优惠券已过期");
+        }
+
+        // Lock the coupon immediately inside the transaction
+        await tx.freeCoupon.update({
+          where: { id: coupon.id },
+          data: {
+            isUsed: true,
+            usedAt: new Date(),
+            usedForEventId: eventId,
+          },
+        });
+      } else if (platformFee === 0 && couponCode && isInviteUsed) {
+        // Double check invite code system limits inside transaction
+        const SYSTEM_PROMO_CODES = ["MEAL2026", "WELCOME", "TIMELEFT", "FANFOU"];
+        const trimmedCode = couponCode.trim().toUpperCase();
+        if (!SYSTEM_PROMO_CODES.includes(trimmedCode)) {
+          const invite = await tx.inviteCode.findUnique({
+            where: { code: trimmedCode },
+          });
+          if (!invite) {
+            throw new Error("邀请码不存在，请检查后重试");
+          }
+          if (!invite.isActive) {
+            throw new Error("该邀请码已失效");
+          }
+          if (invite.ownerId === userId) {
+            throw new Error("不能使用自己的邀请码");
+          }
+          const existingUsage = await tx.inviteCodeUsage.findUnique({
+            where: { newUserId: userId },
+          });
+          if (existingUsage) {
+            throw new Error("您已使用过邀请码，无法重复使用邀请码");
+          }
+        }
+      }
+
+      // 2. If there is an existing pending order, delete it and restore its coupon
       if (existingOrder) {
         if (existingOrder.couponCode) {
           const isPrevFreeCoupon = await tx.freeCoupon.findUnique({
@@ -273,18 +312,6 @@ export async function POST(
         }
         await tx.reservationOrder.delete({
           where: { id: existingOrder.id },
-        });
-      }
-
-      // 2. Lock the new coupon immediately if one is selected (and is not an invite code)
-      if (platformFee === 0 && couponCode && !isInviteUsed) {
-        await tx.freeCoupon.update({
-          where: { code: couponCode },
-          data: {
-            isUsed: true,
-            usedAt: new Date(),
-            usedForEventId: eventId,
-          },
         });
       }
 
@@ -345,9 +372,19 @@ export async function POST(
     });
   } catch (error) {
     console.error("Reserve error:", error);
+    const message = error instanceof Error ? error.message : "创建预订失败";
+    const isValidationError = error instanceof Error && (
+      message.includes("不属于您") ||
+      message.includes("已被使用") ||
+      message.includes("已过期") ||
+      message.includes("不存在") ||
+      message.includes("已失效") ||
+      message.includes("不能使用") ||
+      message.includes("重复使用")
+    );
     return NextResponse.json(
-      { error: "创建预订失败" },
-      { status: 500 }
+      { error: message },
+      { status: isValidationError ? 400 : 500 }
     );
   }
 }
