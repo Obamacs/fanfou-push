@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, handleError } from "@/lib/api-helpers";
+import { logAdminAction } from "@/lib/admin-audit";
 
 export async function POST(
   req: NextRequest,
@@ -26,6 +27,14 @@ export async function POST(
         name: true,
         canCreateEvents: true,
       },
+    });
+
+    await logAdminAction({
+      adminId: auth.userId,
+      action: "USER_PERMISSION_UPDATE",
+      targetType: "User",
+      targetId: userId,
+      payload: { canCreateEvents },
     });
 
     return NextResponse.json({ user });

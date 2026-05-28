@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,15 @@ async function AdminNavbar() {
   const session = await auth();
 
   if (!session?.user?.id || session.user.role !== "ADMIN") {
+    redirect("/admin-login");
+  }
+
+  const admin = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  });
+
+  if (!admin || admin.role !== "ADMIN") {
     redirect("/admin-login");
   }
 

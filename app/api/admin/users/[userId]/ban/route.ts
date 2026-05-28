@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, handleError } from "@/lib/api-helpers";
+import { logAdminAction } from "@/lib/admin-audit";
 
 export async function POST(
   req: NextRequest,
@@ -17,6 +18,14 @@ export async function POST(
     const user = await db.user.update({
       where: { id: userId },
       data: { isBanned: strictIsBanned },
+    });
+
+    await logAdminAction({
+      adminId: auth.userId,
+      action: strictIsBanned ? "USER_BAN" : "USER_UNBAN",
+      targetType: "User",
+      targetId: userId,
+      payload: { isBanned: strictIsBanned },
     });
 
     return NextResponse.json({ user });

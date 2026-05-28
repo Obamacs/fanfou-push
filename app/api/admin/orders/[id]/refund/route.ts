@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/api-helpers";
+import { logAdminAction } from "@/lib/admin-audit";
 
 export async function POST(
   req: NextRequest,
@@ -59,6 +60,18 @@ export async function POST(
       });
 
       revalidatePath(`/events/${order.eventId}`);
+      await logAdminAction({
+        adminId: adminUserId,
+        action: "ORDER_DEPOSIT_REFUND",
+        targetType: "ReservationOrder",
+        targetId: orderId,
+        payload: {
+          eventId: order.eventId,
+          userId: order.userId,
+          depositFee: order.depositFee,
+          operator,
+        },
+      });
       return NextResponse.json({
         message: "保证金退还记录已登记成功！",
         refundStatus: "REFUNDED",
@@ -73,6 +86,18 @@ export async function POST(
       });
 
       revalidatePath(`/events/${order.eventId}`);
+      await logAdminAction({
+        adminId: adminUserId,
+        action: "ORDER_DEPOSIT_FORFEIT",
+        targetType: "ReservationOrder",
+        targetId: orderId,
+        payload: {
+          eventId: order.eventId,
+          userId: order.userId,
+          depositFee: order.depositFee,
+          operator,
+        },
+      });
       return NextResponse.json({
         message: "保证金没收成功，已扣减该放鸽子用户的保证金！",
         refundStatus: "FORFEITED",

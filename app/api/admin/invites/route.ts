@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureInviteCode } from "@/lib/coupon";
 import { requireAdmin } from "@/lib/api-helpers";
+import { logAdminAction } from "@/lib/admin-audit";
 
 // GET: list all invite codes with usage stats
 export async function GET(req: NextRequest) {
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;
-  const adminId = authResult.userId;
 
   try {
     const { searchParams } = new URL(req.url);
@@ -90,6 +90,13 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "用户不存在" }, { status: 404 });
         }
         const code = await ensureInviteCode(userId);
+        await logAdminAction({
+          adminId,
+          action: "INVITE_GENERATE",
+          targetType: "User",
+          targetId: userId,
+          payload: { code },
+        });
         return NextResponse.json({ code });
       }
 
@@ -100,6 +107,13 @@ export async function POST(req: NextRequest) {
         await db.inviteCode.update({
           where: { id: codeId },
           data: { isActive },
+        });
+        await logAdminAction({
+          adminId,
+          action: "INVITE_TOGGLE",
+          targetType: "InviteCode",
+          targetId: codeId,
+          payload: { isActive },
         });
         return NextResponse.json({ success: true });
       }
@@ -149,6 +163,16 @@ export async function POST(req: NextRequest) {
         const result = await db.inviteCode.createMany({
           data: inviteCodesToCreate,
           skipDuplicates: true,
+        });
+
+        await logAdminAction({
+          adminId,
+          action: "INVITE_GENERATE_ALL",
+          targetType: "InviteCode",
+          payload: {
+            generated: result.count,
+            total: usersWithoutCode.length,
+          },
         });
 
         return NextResponse.json({ generated: result.count, total: usersWithoutCode.length });

@@ -461,6 +461,21 @@ model RateLimit {
   @@index([resetAt])
 }
 
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String?
+  payload    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
 model ReservationOrder {
   id          String   @id @default(cuid())
   userId      String

@@ -29,6 +29,7 @@ function BridgeContent() {
     const token = searchParams.get("token");
     const email = searchParams.get("email");
     const next = searchParams.get("next") || "/dashboard";
+    const safeNext = (next.startsWith("/") && !next.startsWith("//")) ? next : "/dashboard";
 
     if (!token || !email) {
       router.replace("/login?error=missing_bridge_params");
@@ -54,7 +55,7 @@ function BridgeContent() {
         }
 
         if (result?.ok) {
-          router.push(next);
+          router.replace(safeNext);
           router.refresh();
         } else {
           router.replace("/login?error=session_failed");

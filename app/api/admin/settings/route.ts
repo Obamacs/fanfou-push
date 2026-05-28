@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/api-helpers";
 import { db } from "@/lib/db";
+import { logAdminAction } from "@/lib/admin-audit";
 
 const SETTINGS_KEY = "runtime_settings";
 
@@ -81,10 +82,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.wechatQRCodeUrl !== undefined) {
-      next.wechatQRCodeUrl = String(body.wechatQRCodeUrl || "");
+      const url = String(body.wechatQRCodeUrl || "").trim();
+      if (url && !/^https?:\/\//.test(url)) {
+        return NextResponse.json({ error: "微信二维码必须是有效的 HTTP 或 HTTPS 链接" }, { status: 400 });
+      }
+      next.wechatQRCodeUrl = url;
     }
     if (body.alipayQRCodeUrl !== undefined) {
-      next.alipayQRCodeUrl = String(body.alipayQRCodeUrl || "");
+      const url = String(body.alipayQRCodeUrl || "").trim();
+      if (url && !/^https?:\/\//.test(url)) {
+        return NextResponse.json({ error: "支付宝二维码必须是有效的 HTTP 或 HTTPS 链接" }, { status: 400 });
+      }
+      next.alipayQRCodeUrl = url;
     }
 
     Object.assign(settings, next);
@@ -95,9 +104,16 @@ export async function POST(req: NextRequest) {
       update: { value: JSON.stringify(settings) },
     });
 
+    await logAdminAction({
+      adminId: auth.userId,
+      action: "SETTINGS_UPDATE",
+      targetType: "AppSettings",
+      targetId: SETTINGS_KEY,
+      payload: next,
+    });
+
     return NextResponse.json({ settings });
   } catch {
     return NextResponse.json({ error: "设置保存失败" }, { status: 500 });
   }
 }
-

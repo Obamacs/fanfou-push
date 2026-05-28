@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,6 +9,23 @@ export async function POST(req: NextRequest) {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
+    }
+
+    // Rate Limiting Protection (Max 60 requests per minute)
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    const limitKey = `messages:send:${session.user.id}:${ip}`;
+    const rateLimit = await checkRateLimit(limitKey, {
+      maxRequests: 60,
+      windowMs: 60 * 1000,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "发送消息过于频繁，请稍后再试。" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } }
+      );
     }
 
     const { receiverId, content } = await req.json();

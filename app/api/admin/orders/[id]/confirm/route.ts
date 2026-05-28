@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/api-helpers";
 import { issueCoupon } from "@/lib/coupon";
+import { logAdminAction } from "@/lib/admin-audit";
 
 export async function POST(
   req: NextRequest,
@@ -129,6 +130,20 @@ export async function POST(
       revalidatePath(`/events/${order.eventId}`);
       revalidatePath("/events");
 
+      await logAdminAction({
+        adminId: auth.userId,
+        action: "ORDER_CONFIRM",
+        targetType: "ReservationOrder",
+        targetId: orderId,
+        payload: {
+          eventId: order.eventId,
+          userId: order.userId,
+          amount: order.amount,
+          orderCode: order.orderCode,
+          couponCode: order.couponCode,
+        },
+      });
+
       return NextResponse.json({
         message: "订单确认成功，用户名额已激活",
         status: "CONFIRMED",
@@ -175,6 +190,20 @@ export async function POST(
 
       revalidatePath(`/events/${order.eventId}`);
       revalidatePath("/events");
+
+      await logAdminAction({
+        adminId: auth.userId,
+        action: "ORDER_CANCEL",
+        targetType: "ReservationOrder",
+        targetId: orderId,
+        payload: {
+          eventId: order.eventId,
+          userId: order.userId,
+          amount: order.amount,
+          orderCode: order.orderCode,
+          couponCode: order.couponCode,
+        },
+      });
 
       return NextResponse.json({
         message: "订单取消成功，用户预订名额与优惠券已释放",

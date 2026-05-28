@@ -1,8 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findMatch } from "@/lib/match-actions";
+import { auth } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
+    }
+
+    // Rate Limiting (Max 5 matchmaking queries per minute)
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    const limitKey = `match:find:${session.user.id}:${ip}`;
+    const rateLimit = await checkRateLimit(limitKey, {
+      maxRequests: 5,
+      windowMs: 60 * 1000,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "发起匹配请求过于频繁，请稍后再试。" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } }
+      );
+    }
+
     const { activityType } = await req.json();
     const result = await findMatch(activityType);
     if (result.error) {

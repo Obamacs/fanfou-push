@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(
   req: NextRequest,
@@ -13,6 +14,23 @@ export async function POST(
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
+    }
+
+    // Rate Limiting (Max 5 enrollments/actions per minute)
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    const limitKey = `events:attend:${session.user.id}:${ip}`;
+    const rateLimit = await checkRateLimit(limitKey, {
+      maxRequests: 5,
+      windowMs: 60 * 1000,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "加入或退出活动过于频繁，请稍后再试。" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } }
+      );
     }
 
     const { action } = await req.json();

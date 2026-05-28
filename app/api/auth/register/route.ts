@@ -11,11 +11,6 @@ function generateCouponCode(): string {
   return `COUP-${nanoid()}-${nanoid()}`;
 }
 
-function getCallbackUrl(req: NextRequest): string {
-  const base = process.env.NEXTAUTH_URL || new URL(req.url).origin;
-  return `${base.replace(/\/$/, "")}/api/auth/callback`;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -180,8 +175,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Dev direct login bypass (works locally in China with no email server required)
-    if (process.env.NODE_ENV === "development") {
+    const requestHost = new URL(req.url).hostname;
+    const isLocalDevRequest =
+      requestHost === "localhost" ||
+      requestHost === "127.0.0.1" ||
+      requestHost === "[::1]";
+
+    // Dev direct login bypass (local-only, never expose tokens on hosted domains)
+    if (process.env.NODE_ENV === "development" && isLocalDevRequest) {
       const { createHash } = await import("crypto");
       const { nanoid } = await import("nanoid");
       const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");

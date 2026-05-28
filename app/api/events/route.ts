@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ events });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "查询活动失败" },
       { status: 500 }
@@ -175,12 +175,23 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // 4. Auto-invite match members if provided
-      if (autoInviteMembers && Array.isArray(autoInviteMembers) && autoInviteMembers.length > 0) {
-        const memberIds = autoInviteMembers.filter((id: string) => id !== userId);
-        if (memberIds.length > 0) {
+      // 4. Auto-invite match members if provided (ONLY if matchId is valid)
+      if (matchId && autoInviteMembers && Array.isArray(autoInviteMembers) && autoInviteMembers.length > 0) {
+        const matchMembers = await tx.matchMember.findMany({
+          where: {
+            matchId,
+            userId: { in: autoInviteMembers },
+          },
+          select: { userId: true },
+        });
+
+        const validMemberIds = matchMembers
+          .map((m) => m.userId)
+          .filter((id) => id !== userId); // exclude creator
+
+        if (validMemberIds.length > 0) {
           await tx.eventAttendance.createMany({
-            data: memberIds.map((memberId: string) => ({
+            data: validMemberIds.map((memberId: string) => ({
               eventId: newEvent.id,
               userId: memberId,
               status: "CONFIRMED",

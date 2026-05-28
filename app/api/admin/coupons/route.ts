@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { issueAdminCoupon } from "@/lib/coupon";
+import { logAdminAction } from "@/lib/admin-audit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -98,6 +99,18 @@ export async function POST(req: NextRequest) {
     }
 
     const coupon = await issueAdminCoupon(userId, welcomeText, limitDays);
+
+    await logAdminAction({
+      adminId: authResult.userId,
+      action: "COUPON_ISSUE",
+      targetType: "FreeCoupon",
+      targetId: coupon.id,
+      payload: {
+        userId,
+        code: coupon.code,
+        daysValid: limitDays,
+      },
+    });
 
     return NextResponse.json({
       success: true,
