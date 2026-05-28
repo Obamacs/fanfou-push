@@ -5,14 +5,37 @@
 
 const SUPABASE_URL = 'https://lwercdnrvxrsnjjvojfx.supabase.co';
 
+// CORS Origin dynamic validation whitelist
+function getCorsOrigin(request) {
+  const origin = request.headers.get('Origin') || '';
+  const allowedOrigins = [
+    'https://meal-meet.com',
+    'https://www.meal-meet.com',
+    'http://localhost:3000'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    return origin;
+  }
+  
+  // Allow Vercel preview branch deployments dynamically
+  if (/^https:\/\/timelefts-.*\.vercel\.app$/.test(origin)) {
+    return origin;
+  }
+  
+  return allowedOrigins[0]; // fallback to main production domain
+}
+
 export default {
   async fetch(request, env, ctx) {
+    const corsOrigin = getCorsOrigin(request);
+
     // 处理 CORS preflight 请求
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': corsOrigin,
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
           'Access-Control-Max-Age': '86400',
@@ -72,7 +95,7 @@ export default {
       });
 
       // 添加CORS头
-      newResponse.headers.set('Access-Control-Allow-Origin', '*');
+      newResponse.headers.set('Access-Control-Allow-Origin', corsOrigin);
       newResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
       newResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey');
       newResponse.headers.set('Access-Control-Expose-Headers', 'Content-Length, X-JSON-response-length');
@@ -83,7 +106,7 @@ export default {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': corsOrigin,
         },
       });
     }

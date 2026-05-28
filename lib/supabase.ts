@@ -8,7 +8,14 @@ function authUrl(): string {
   // In development, automatically route all backend requests through the deployed proxy
   // to bypass GFW block on *.supabase.co from the local machine in China.
   if (process.env.NODE_ENV === "development") {
-    return process.env.NEXT_PUBLIC_SUPABASE_URL || "https://meal-meet.com/api/supabase";
+    const devUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    if (!devUrl) {
+      throw new Error(
+        "❌ [Supabase Configuration Error]: NEXT_PUBLIC_SUPABASE_URL / SUPABASE_URL is missing in development .env. " +
+        "Please configure your environment variables to prevent silent, accidental database queries to the production database."
+      );
+    }
+    return devUrl;
   }
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) throw new Error("Missing SUPABASE_URL");

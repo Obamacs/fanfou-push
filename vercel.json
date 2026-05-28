@@ -1,7 +1,4 @@
 {
-  "env": {
-    "NEXTAUTH_URL": "https://meal-meet.com"
-  },
   "redirects": [
     {
       "source": "/:path*",

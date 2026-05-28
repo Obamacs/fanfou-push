@@ -39,10 +39,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value:
               "default-src 'self'; " +
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
+              "script-src 'self' 'unsafe-inline' https://js.stripe.com; " +
               "style-src 'self' 'unsafe-inline'; " +
-              "img-src 'self' data: blob: https://lwercdnrvxrsnjjvojfx.supabase.co https://webapi.amap.com; " +
-              "connect-src 'self' https://lwercdnrvxrsnjjvojfx.supabase.co https://api.anthropic.com https://checkout.stripe.com https://api.resend.com wss://ws.pusherapp.com; " +
+              "img-src 'self' data: blob: https://webapi.amap.com; " +
+              "connect-src 'self' https://checkout.stripe.com; " +
               "font-src 'self'; " +
               "frame-src https://checkout.stripe.com; " +
               "object-src 'none'; " +
@@ -53,19 +53,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  redirects: async () => [
-    {
-      source: "/:path*",
-      has: [
-        {
-          type: "host",
-          value: "www.meal-meet.com",
-        },
-      ],
-      destination: "https://meal-meet.com/:path*",
-      permanent: true,
-    },
-  ],
 };
 
 export default nextConfig;
