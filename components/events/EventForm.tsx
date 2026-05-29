@@ -42,9 +42,12 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
   const [type, setType] = useState(initialData?.type || "");
   const [city, setCity] = useState(initialData?.city || "");
   const [address, setAddress] = useState(initialData?.address || "");
-  const [date, setDate] = useState(
-    initialData?.date ? new Date(initialData.date).toISOString().slice(0, 16) : ""
-  );
+  const [date, setDate] = useState(() => {
+    if (!initialData?.date) return "";
+    const dt = new Date(initialData.date);
+    const offset = dt.getTimezoneOffset() * 60000;
+    return new Date(dt.getTime() - offset).toISOString().slice(0, 16);
+  });
   const [maxAttendees, setMaxAttendees] = useState(initialData?.maxAttendees?.toString() || "6");
   const [priceAmount, setPriceAmount] = useState(initialData?.priceAmount?.toString() || "0");
   const [description, setDescription] = useState(initialData?.description || "");
