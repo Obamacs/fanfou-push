@@ -43,6 +43,9 @@ interface OnboardingState {
   selectedInterests: string[];
   city: string;
   answers: Array<{ questionId: string; answer: string }>;
+  refundMethod: string;
+  refundAccount: string;
+  refundRealName: string;
 }
 
 interface OnboardingWizardProps {
@@ -71,9 +74,12 @@ export default function OnboardingWizard({
     selectedInterests: [],
     city: "",
     answers: [],
+    refundMethod: "",
+    refundAccount: "",
+    refundRealName: "",
   });
 
-  const progress = (step / 8) * 100;
+  const progress = (step / 9) * 100;
 
   const updateState = <K extends keyof OnboardingState>(
     key: K,
@@ -126,6 +132,9 @@ export default function OnboardingWizard({
           city: state.city,
           interestIds: state.selectedInterests,
           answers: state.answers,
+          refundMethod: state.refundMethod,
+          refundAccount: state.refundAccount,
+          refundRealName: state.refundRealName,
         }),
       });
 
@@ -313,6 +322,65 @@ export default function OnboardingWizard({
 
       case 8:
         return (
+          <StepSection
+            title="上传收款码（可选）"
+            subtitle="以便我们核对并在活动后退回您的出席押金"
+          >
+            <div className="space-y-6">
+              <div>
+                <Label className="block text-sm font-medium text-[#2D2420] mb-3">
+                  收款方式
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "WECHAT", label: "微信支付" },
+                    { value: "ALIPAY", label: "支付宝" },
+                  ].map((option) => (
+                    <OptionButton
+                      key={option.value}
+                      value={option.value}
+                      label={option.label}
+                      isSelected={state.refundMethod === option.value}
+                      onClick={(val) =>
+                        updateState("refundMethod", state.refundMethod === val ? "" : val)
+                      }
+                      className="text-sm"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {state.refundMethod && (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                  <div>
+                    <Label className="block text-sm font-medium text-[#2D2420] mb-3">
+                      真实姓名（核对退款用）
+                    </Label>
+                    <Input
+                      placeholder="请输入与收款码一致的真实姓名"
+                      value={state.refundRealName}
+                      onChange={(e) => updateState("refundRealName", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="block text-sm font-medium text-[#2D2420] mb-3">
+                      上传收款码截图
+                    </Label>
+                    <ImageUpload
+                      value={state.refundAccount}
+                      onChange={(url) => updateState("refundAccount", url)}
+                      label="选择图片"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </StepSection>
+        );
+
+      case 9:
+        return (
           <StepSection title="回答几个问题">
             <div className="space-y-6">
               {questions.map((question) => {
@@ -378,7 +446,7 @@ export default function OnboardingWizard({
                 欢迎, {userName}！
               </h1>
               <span className="text-sm text-[#B8A099]">
-                第 {step} / 8 步
+                第 {step} / 9 步
               </span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -408,7 +476,7 @@ export default function OnboardingWizard({
                   setStepError("请先完成当前步骤的选择");
                   return;
                 }
-                if (step === 8) {
+                if (step === 9) {
                   handleSubmit();
                 } else {
                   setStep(step + 1);
@@ -417,7 +485,7 @@ export default function OnboardingWizard({
               disabled={loading}
               className="flex-1 inline-flex items-center justify-center rounded-lg h-10 px-4 text-sm font-semibold text-white bg-gradient-to-r from-[#FF2442] to-[#FF6B35] hover:from-[#FF4D63] hover:to-[#FF8C69] shadow-md transition-all duration-200 active:scale-[0.98]"
             >
-              {step === 8 ? (loading ? "提交中..." : "完成引导") : "下一步"}
+              {step === 9 ? (loading ? "提交中..." : "完成引导") : "下一步"}
             </button>
           </div>
         </div>

@@ -1,5 +1,12 @@
 import type { NextConfig } from "next";
 
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  ...(process.env.NODE_ENV === "development" ? ["'unsafe-eval'"] : []),
+  "https://js.stripe.com",
+].join(" ");
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -39,7 +46,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value:
               "default-src 'self'; " +
-              "script-src 'self' 'unsafe-inline' https://js.stripe.com; " +
+              `script-src ${scriptSrc}; ` +
               "style-src 'self' 'unsafe-inline'; " +
               "img-src 'self' data: blob: https://webapi.amap.com; " +
               "connect-src 'self' https://checkout.stripe.com; " +

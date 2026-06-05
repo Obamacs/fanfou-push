@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
-    const { ageGroup, gender, relationshipGoal, smokingHabit, drinkingHabit, wantsChildren, avatar, city, interestIds, answers } = await req.json();
+    const { ageGroup, gender, relationshipGoal, smokingHabit, drinkingHabit, wantsChildren, avatar, city, interestIds, answers, refundMethod, refundAccount, refundRealName } = await req.json();
 
     // 验证必填字段
     if (!ageGroup || !gender || !relationshipGoal || !city || !interestIds || interestIds.length === 0) {
@@ -67,6 +67,9 @@ export async function POST(req: NextRequest) {
         avatarUrl: avatar,
         city,
         isOnboarded: true,
+        refundMethod: refundMethod || null,
+        refundAccount: refundAccount || null,
+        refundRealName: refundRealName || null,
       },
     });
 

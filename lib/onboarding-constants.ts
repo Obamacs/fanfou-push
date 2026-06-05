@@ -42,6 +42,9 @@ interface OnboardingValidationState {
   selectedInterests: string[];
   city: string;
   answers: Array<{ questionId: string; answer: string }>;
+  refundMethod: string;
+  refundAccount: string;
+  refundRealName: string;
 }
 
 // Validation rules for each step
@@ -56,6 +59,14 @@ export const STEP_VALIDATION = {
   5: () => true, // 头像可选
   6: (state: OnboardingValidationState) => state.selectedInterests.length >= 3, // 至少选3个兴趣
   7: (state: OnboardingValidationState) => state.city !== "",
-  8: (state: OnboardingValidationState, questionsCount: number) =>
+  8: (state: OnboardingValidationState) => {
+    // 退款信息可选，但如果选了方式，就建议上传图片和姓名（这里为了用户友好，不做强制硬阻挡，也可以做部分校验）
+    // 为了容易操作，这里设为完全可选，可以在后台校验，或者让用户随时跳过
+    if (state.refundMethod) {
+      return state.refundAccount !== "" && state.refundRealName !== "";
+    }
+    return true;
+  },
+  9: (state: OnboardingValidationState, questionsCount: number) =>
     state.answers.length === questionsCount,
 };
