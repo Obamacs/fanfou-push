@@ -1,5 +1,6 @@
 interface Candidate {
   id: string;
+  ageGroup?: string | null;
   gender?: string | null;
   relationshipGoal?: string | null;
   smokingHabit?: string | null;
@@ -67,17 +68,40 @@ function calculateLifestyleScore(
   candidate: Candidate
 ): number {
   const habitScore = (a?: string | null, b?: string | null): number => {
-    if (!a || !b) return 0;
+    if (!a || !b) return 3; // 默认给中间分
     if (a === b) return 5;
     const levels = ["NEVER", "OCCASIONALLY", "REGULARLY"];
     const diff = Math.abs(levels.indexOf(a) - levels.indexOf(b));
-    return diff === 1 ? 3 : 0;
+    return diff === 1 ? 2 : 0;
+  };
+  const childScore = (a?: string | null, b?: string | null): number => {
+    if (!a || !b) return 3;
+    if (a === b) return 5;
+    if (a === "OPEN" || b === "OPEN") return 3;
+    return 0; // YES vs NO 互斥
   };
   return (
     habitScore(user.smokingHabit, candidate.smokingHabit) +
     habitScore(user.drinkingHabit, candidate.drinkingHabit) +
-    habitScore(user.wantsChildren, candidate.wantsChildren)
-  );
+    childScore(user.wantsChildren, candidate.wantsChildren)
+  ); // 满分 15
+}
+
+function calculateAgeScore(user: Candidate, candidate: Candidate): number {
+  const ageOrder = ["18-25", "26-35", "36-45", "46+"];
+  const u = user.ageGroup;
+  const c = candidate.ageGroup;
+  if (!u || !c) return 10; // 缺失数据时给平均分
+  
+  const uIdx = ageOrder.indexOf(u);
+  const cIdx = ageOrder.indexOf(c);
+  if (uIdx === -1 || cIdx === -1) return 10;
+  
+  const diff = Math.abs(uIdx - cIdx);
+  if (diff === 0) return 20; // 完全同龄
+  if (diff === 1) return 10; // 相邻年龄段
+  if (diff === 2) return 2;  // 跨度较大
+  return 0; // 跨度极大
 }
 
 function calculateCuisineScore(
@@ -146,20 +170,24 @@ export function calculateActivityScore(
   candidate: Candidate,
   activityType: string
 ): number {
-  // 核心：根据活动类型匹配感兴趣的人
+  // 1. 活动兴趣 (20%)
   const activityInterestScore = calculateActivityInterestScore(
     candidate,
     activityType
   );
+  const weightedActivity = (activityInterestScore / 100) * 20;
 
-  // 基本兼容性：婚恋意向
-  const goalScore = calculateRelationshipGoalScore(user, candidate);
+  // 2. 年龄兼容度 (20%)
+  const weightedAge = calculateAgeScore(user, candidate); // 满分 20
 
-  // 性别平衡考虑（轻权重）
-  const genderBonus =
-    user.gender && candidate.gender && user.gender !== candidate.gender ? 10 : 0;
+  // 3. 婚恋意向 (15%)
+  const goalScore = calculateRelationshipGoalScore(user, candidate); // 满分 35
+  const weightedGoal = (goalScore / 35) * 15;
 
-  // 精准饮食与餐标匹配 (价格范围、湘菜/西餐/火锅/日料分类、吃辣口味、素食与风俗禁忌)
+  // 4. 生活习惯 (15%)
+  const weightedLifestyle = calculateLifestyleScore(user, candidate); // 满分 15
+
+  // 5. 精准饮食与餐标匹配 (30%)
   const userAnswerMap = new Map<string, string>();
   if (user.answers && Array.isArray(user.answers)) {
     user.answers.forEach((a) => {
@@ -171,14 +199,9 @@ export function calculateActivityScore(
   const dietScore = calculateDietScore(candidate, userAnswerMap);
   const budgetScore = calculateBudgetScore(candidate, userAnswerMap);
   const foodScore = cuisineScore + tasteScore + dietScore + budgetScore; // 最高 47 分
-
-  // 总分 = 活动兴趣匹配(权重 50%) + 精准饮食与价格兼容度(权重 30%) + 婚恋交友意向(权重 15%) + 性别平衡(权重 5%)
-  const weightedActivity = activityInterestScore * 0.5;
   const weightedFood = (foodScore / 47) * 30;
-  const weightedGoal = (goalScore / 35) * 15;
-  const weightedGender = genderBonus * 0.5; // 最高 5 分 (10 * 0.5)
 
-  const score = weightedActivity + weightedFood + weightedGoal + weightedGender;
+  const score = weightedActivity + weightedAge + weightedGoal + weightedLifestyle + weightedFood;
   return Math.min(100, Math.max(0, score));
 }
 
@@ -204,30 +227,26 @@ export function selectBalancedGroup(
   const useRelaxedMode = candidates.length < minCandidates * 2;
   const scoreThreshold = useRelaxedMode ? 20 : 40; // 宽松模式下分数阈值更低
 
-  // 选择候选人，同时保持性别平衡
+  // 阶段 1: 尝试在保证性别名额不超过一半的情况下，选取合格的同桌者
   for (const candidate of sorted) {
     if (selected.length >= targetSize - 1) break;
 
     // 在宽松模式下，忽略分数阈值，只要有候选人就选择
     if (!useRelaxedMode && candidate.score < scoreThreshold) {
-      break;
+      continue;
     }
 
     const gender = candidate.gender || "OTHER";
     const currentCount = genderCount[gender] || 0;
 
-    // 优先选择代表性不足的性别
-    // 如果：性别计数少于总数的一半，或者我们需要填充空位
-    if (
-      currentCount <= Math.ceil((targetSize - 1) / 2) ||
-      selected.length < targetSize - 2
-    ) {
+    // 优先选择代表性不足的性别（避免某一性别占比过高，比如一桌里不要全是男的）
+    if (currentCount <= Math.ceil((targetSize - 1) / 2)) {
       selected.push(candidate);
       genderCount[gender] = currentCount + 1;
     }
   }
 
-  // 如果人数不足，直接选择排名靠前的候选人
+  // 阶段 2: 如果因为性别配额卡点导致拼桌人数不足，立刻打破性别限制启动候补机制
   if (selected.length < targetSize - 1) {
     for (const candidate of sorted) {
       if (!selected.includes(candidate) && selected.length < targetSize - 1) {

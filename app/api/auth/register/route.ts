@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureInviteCode, validateInviteCode } from "@/lib/coupon";
 import { customAlphabet } from "nanoid";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, refundRateLimit } from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -251,6 +251,8 @@ export async function POST(req: NextRequest) {
         });
       } catch (err) {
         console.error("Custom register magic link error:", err);
+        // Refund rate limit since email sending failed
+        await refundRateLimit(`register:ip:${ip}`);
         return NextResponse.json(
           { error: "注册成功，但发送验证邮件失败，请稍后前往登录页重试。" },
           { status: 500 }

@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     // We map attendees to the Candidate interface required by selectBalancedGroup
     let pool = attendees.map(a => ({
       id: a.user.id,
+      ageGroup: a.user.ageGroup,
       gender: a.user.gender,
       relationshipGoal: a.user.relationshipGoal,
       smokingHabit: a.user.smokingHabit,

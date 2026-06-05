@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, refundRateLimit } from "@/lib/rate-limit";
 import { sendMagicLinkEmail } from "@/lib/email";
 import { createHash } from "crypto";
 import { nanoid } from "nanoid";
@@ -125,6 +125,9 @@ export async function POST(req: NextRequest) {
         });
       } catch (err) {
         console.error("Custom magic link error:", err);
+        // Refund rate limit since email sending failed, avoiding unfair lockouts
+        await refundRateLimit(`magiclink:email:${email.toLowerCase()}`);
+        await refundRateLimit(`magiclink:ip:${ip}`);
         return NextResponse.json(
           { error: "发送邮件失败，请稍后重试" },
           { status: 500 }

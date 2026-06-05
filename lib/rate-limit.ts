@@ -74,6 +74,31 @@ export async function checkRateLimit(
   }
 }
 
+/**
+ * Refunds a rate limit token. Useful when an operation fails (e.g., email sending fails)
+ * and we don't want to penalize the user.
+ */
+export async function refundRateLimit(key: string): Promise<void> {
+  try {
+    const entry = await db.rateLimit.findUnique({ where: { key } });
+    if (entry && entry.count > 0) {
+      await db.rateLimit.update({
+        where: { key },
+        data: { count: { decrement: 1 } },
+      });
+    }
+  } catch (error) {
+    try {
+      const entry = memoryFallback.get(key);
+      if (entry && entry.count > 0) {
+        entry.count -= 1;
+      }
+    } catch {
+      // ignore
+    }
+  }
+}
+
 // Lazy cleanup of expired entries — runs at most once per 10 minutes
 let lastCleanup = 0;
 async function cleanupExpired() {
