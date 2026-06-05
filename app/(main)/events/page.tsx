@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { EventCard } from "@/components/events/EventCard";
-import { Calendar, Sparkles } from "lucide-react";
+import { EventsViewSwitcher } from "@/components/events/EventsViewSwitcher";
+import { Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export default async function EventsPage() {
@@ -65,30 +65,11 @@ export default async function EventsPage() {
           </p>
         </div>
 
-        {eventsToShow.length > 0 ? (
-          <div className="grid grid-cols-1 justify-items-center gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {eventsToShow.map((event) => (
-              <div key={event.id} className="w-full max-w-md">
-                <EventCard
-                  event={{ ...event, date: event.date }}
-                  currentUserId={session?.user?.id}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="surface-card mx-auto max-w-2xl rounded-lg px-6 py-20 text-center">
-            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#fff0ef]">
-              <Calendar className="h-8 w-8 text-[#ff2442]" />
-            </div>
-            <h2 className="mb-2 text-[21px] font-semibold text-[#271f1d]">
-              本周活动正在筹备中
-            </h2>
-            <p className="mx-auto mb-8 max-w-sm text-[15px] leading-6 text-[#9d8580]">
-              你所在城市 ({userCity}) 的周四晚餐池尚未开启，请稍后再来看看。
-            </p>
-          </div>
-        )}
+        <EventsViewSwitcher 
+          events={eventsToShow} 
+          userCity={userCity} 
+          currentUserId={session?.user?.id} 
+        />
       </div>
     </div>
   );

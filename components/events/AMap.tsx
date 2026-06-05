@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import AMapLoader from "@amap/amap-jsapi-loader";
 
 interface AMapProps {
   latitude?: number | null;
@@ -18,94 +19,92 @@ export function AMap({
   title,
 }: AMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<AMapMap | null>(null);
+  const map = useRef<any>(null);
 
   useEffect(() => {
-    const addMarker = (lng: number, lat: number) => {
-      if (!window.AMap || !map.current) return;
+    let isMounted = true;
 
-      const marker = new window.AMap.Marker({
-        position: [lng, lat],
-        title: title || address || "活动地点",
-        map: map.current,
-      });
+    const initMap = async () => {
+      try {
+        const AMap = await AMapLoader.load({
+          key: process.env.NEXT_PUBLIC_AMAP_KEY || "257501275a6867c79f1bb06e03f456a6",
+          version: "2.0",
+          plugins: ["AMap.Geocoder"],
+        });
 
-      // HTML-escape user-provided values before injecting into innerHTML
-      const escapeHtml = (str: string) =>
-        str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+        if (!isMounted || !mapContainer.current) return;
 
-      // 添加信息窗口
-      const infoWindow = new window.AMap.InfoWindow({
-        content: `<div style="padding: 8px;">
-          <div style="font-weight: bold;">${escapeHtml(title || "活动地点")}</div>
-          ${address ? `<div style="font-size: 12px; color: #666;">${escapeHtml(address)}</div>` : ""}
-        </div>`,
-        offset: new window.AMap.Pixel(0, -30),
-      });
-
-      marker.on("click", () => {
-        if (map.current) {
-          infoWindow.open(map.current, marker.getPosition());
+        if (!map.current) {
+          map.current = new AMap.Map(mapContainer.current, {
+            zoom: 13,
+            center: [116.397428, 39.90923], // Default Beijing
+            mapStyle: "amap://styles/light",
+          });
+        } else {
+          map.current.clearMap();
         }
-      });
-    };
 
-    const geocodeCity = (cityName: string) => {
-      if (!window.AMap) return;
+        const addMarker = (lng: number, lat: number) => {
+          const marker = new AMap.Marker({
+            position: [lng, lat],
+            title: title || address || "活动地点",
+            map: map.current,
+          });
 
-      const geocoder = new window.AMap.Geocoder({
-        city: cityName,
-      });
+          const escapeHtml = (str: string) =>
+            str
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
 
-      geocoder.getLocation(cityName, (status, result) => {
-        if (status === "complete" && result.geocodes.length > 0) {
-          const { location } = result.geocodes[0];
-          map.current?.setCenter([location.lng, location.lat]);
-          addMarker(location.lng, location.lat);
+          const infoWindow = new AMap.InfoWindow({
+            content: `<div style="padding: 8px;">
+              <div style="font-weight: bold;">${escapeHtml(title || "活动地点")}</div>
+              ${address ? `<div style="font-size: 12px; color: #666;">${escapeHtml(address)}</div>` : ""}
+            </div>`,
+            offset: new AMap.Pixel(0, -30),
+          });
+
+          marker.on("click", () => {
+            if (map.current) {
+              infoWindow.open(map.current, marker.getPosition());
+            }
+          });
+        };
+
+        const geocodeCity = (cityName: string) => {
+          const geocoder = new AMap.Geocoder({ city: cityName });
+          geocoder.getLocation(cityName, (status: string, result: any) => {
+            if (status === "complete" && result.geocodes.length > 0) {
+              const { location } = result.geocodes[0];
+              map.current?.setCenter([location.lng, location.lat]);
+              addMarker(location.lng, location.lat);
+            }
+          });
+        };
+
+        if (latitude && longitude) {
+          map.current.setCenter([longitude, latitude]);
+          addMarker(longitude, latitude);
+        } else if (city) {
+          geocodeCity(city);
         }
-      });
-    };
 
-    const initMap = () => {
-      if (!window.AMap || !mapContainer.current) return;
-
-      // 创建地图实例
-      map.current = new window.AMap.Map(mapContainer.current, {
-        zoom: 13,
-        center: [116.397428, 39.90923], // 默认北京
-        mapStyle: "amap://styles/light",
-      });
-
-      // 如果有坐标，使用坐标定位
-      if (latitude && longitude) {
-        map.current.setCenter([longitude, latitude]);
-        addMarker(longitude, latitude);
-      } else if (city) {
-        // 否则使用城市名称定位
-        geocodeCity(city);
+      } catch (err) {
+        console.error("Failed to load AMap", err);
       }
     };
 
-    // 如果没有坐标，使用城市名称定位
-    if (!mapContainer.current) return;
-
-    // 动态加载高德地图API
-    const script = document.createElement("script");
-    const amapKey = process.env.NEXT_PUBLIC_AMAP_KEY || "257501275a6867c79f1bb06e03f456a6";
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapKey}&plugin=AMap.Geocoder`;
-    script.async = true;
-    script.onload = () => {
-      initMap();
-    };
-    document.head.appendChild(script);
+    initMap();
 
     return () => {
-      document.head.removeChild(script);
+      isMounted = false;
+      if (map.current) {
+        map.current.destroy();
+        map.current = null;
+      }
     };
   }, [address, city, latitude, longitude, title]);
 
