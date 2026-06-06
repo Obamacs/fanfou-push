@@ -29,9 +29,21 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">编辑活动</h1>
-      <EventForm mode="edit" initialData={event} />
+    <div className="min-h-screen bg-[#FFFAF8]">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+        <div className="mb-8">
+          <h1 className="text-[34px] font-bold text-[#2D2420] tracking-tight">
+            编辑活动
+          </h1>
+          <p className="mt-1 text-[17px] text-[#B8A099]">
+            修改活动信息，让更多人了解您的聚餐计划
+          </p>
+        </div>
+
+        <div className="border-0 shadow-sm rounded-3xl p-6 sm:p-8 bg-white">
+          <EventForm mode="edit" initialData={event} />
+        </div>
+      </div>
     </div>
   );
 }
