@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { selectBalancedGroup, calculateActivityScore } from "@/lib/matching";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/api-helpers";
+import { sendAlert } from "@/lib/alert";
 
 export async function POST(req: NextRequest) {
   try {
@@ -157,8 +158,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, tablesCreated });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Matchmaking run error:", error);
+    await sendAlert("分桌匹配算法运行失败", error.message || "Unknown Error");
     return NextResponse.json(
       { error: "算法运行失败" },
       { status: 500 }

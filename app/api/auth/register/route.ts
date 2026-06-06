@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { ensureInviteCode, validateInviteCode } from "@/lib/coupon";
 import { customAlphabet } from "nanoid";
 import { checkRateLimit, refundRateLimit } from "@/lib/rate-limit";
+import { sendAlert } from "@/lib/alert";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -249,8 +250,9 @@ export async function POST(req: NextRequest) {
           inviteCodeValid,
           email,
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Custom register magic link error:", err);
+        await sendAlert("发送注册验证邮件失败", err.message || "Unknown Error", { email });
         // Refund rate limit since email sending failed
         await refundRateLimit(`register:ip:${ip}`);
         return NextResponse.json(
@@ -266,8 +268,9 @@ export async function POST(req: NextRequest) {
       { error: "注册成功，但系统未配置邮件发送服务，请联系管理员" },
       { status: 500 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Register error:", error);
+    await sendAlert("用户注册失败 (严重异常)", error.message || "Unknown Error");
     return NextResponse.json(
       { error: "注册失败，请稍后重试" },
       { status: 500 }

@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import type Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { sendAlert } from "@/lib/alert";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +32,9 @@ export async function POST(req: NextRequest) {
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Webhook signature verification failed:", err);
+      await sendAlert("Stripe 支付回调签名验证失败", err.message || "Unknown Error");
       return NextResponse.json(
         { error: "Invalid signature" },
         { status: 400 }
@@ -48,6 +50,7 @@ export async function POST(req: NextRequest) {
 
       if (!eventId || !userId) {
         console.error("Missing eventId or userId in metadata");
+        await sendAlert("Stripe 支付回调元数据丢失", `无法关联订单 (Session ID: ${session.id})`);
         return NextResponse.json(
           { error: "Missing metadata" },
           { status: 400 }
@@ -91,8 +94,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Webhook error:", error);
+    await sendAlert("Stripe Webhook 处理崩溃", error.message || "Unknown Error");
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }
