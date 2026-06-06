@@ -77,10 +77,10 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
 
   const eventDate = new Date(event.date);
   const formattedDate = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric", month: "long", day: "numeric",
+    year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Shanghai"
   }).format(eventDate);
   const formattedTime = new Intl.DateTimeFormat("zh-CN", {
-    weekday: "short", hour: "2-digit", minute: "2-digit",
+    weekday: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Shanghai"
   }).format(eventDate);
 
   // Timeleft Reveal System Logic

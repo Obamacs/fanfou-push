@@ -169,6 +169,7 @@ export default function EventsPage() {
                       year: "numeric",
                       month: "2-digit",
                       day: "2-digit",
+                      timeZone: "Asia/Shanghai",
                     })}
                   </td>
                   <td className="px-6 py-4 text-[#B8A099] font-medium">

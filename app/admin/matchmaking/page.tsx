@@ -55,7 +55,7 @@ export default async function MatchmakingAdminPage() {
               </div>
               <h2 className="text-xl font-bold text-white mb-2">{pool.title}</h2>
               <p className="text-[#B8A099] text-sm mb-1">
-                📅 时间: {new Date(pool.date).toLocaleString("zh-CN")}
+                📅 时间: {new Date(pool.date).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}
               </p>
               <p className="text-[#B8A099] text-sm mb-6">
                 📍 城市: {pool.city}

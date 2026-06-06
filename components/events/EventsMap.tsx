@@ -91,7 +91,7 @@ export function EventsMap({ events, defaultCity = "Shanghai" }: EventsMapProps) 
 
             marker.on("click", () => {
               const dateStr = new Intl.DateTimeFormat("zh-CN", {
-                month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+                month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Shanghai"
               }).format(new Date(event.date));
               
               const infoHtml = `

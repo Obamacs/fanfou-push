@@ -409,7 +409,7 @@ export default function AdminOrdersPage() {
                         <div>
                           <p className="text-white font-semibold text-sm leading-tight line-clamp-1">{order.event.title}</p>
                           <div className="text-[11px] text-[#B8A099] mt-1 space-y-0.5">
-                            <p>预订时间: {new Date(order.createdAt).toLocaleDateString("zh-CN")}</p>
+                            <p>预订时间: {new Date(order.createdAt).toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" })}</p>
                             <p className="text-[#FF2442]/80 font-semibold font-mono">
                               明细: 组织费￥{order.platformFee} + 押金￥{order.depositFee}
                             </p>

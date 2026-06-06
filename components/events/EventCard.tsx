@@ -29,6 +29,7 @@ export function EventCard({ event }: EventCardProps) {
     weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Shanghai",
   }).format(date);
 
   const confirmed = event._count.attendances;
