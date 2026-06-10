@@ -57,19 +57,16 @@ export async function POST(req: NextRequest) {
     }
 
     const existingUser = await db.user.findUnique({ where: { email } });
-    if (existingUser) {
-      // 返回通用消息，避免邮箱枚举
-      return NextResponse.json(
-        { message: "如果该邮箱可用，验证链接将发送到你的邮箱" },
-        { status: 200 }
-      );
-    }
+    let isExistingUser = !!existingUser;
+    
+    // ... we still validate invite code below for new users ...
 
     const SYSTEM_PROMO_CODES = ["MEAL2026", "WELCOME", "TIMELEFT", "FANFOU"];
     let inviteCodeRecord = null;
     let inviteCodeValid = false;
     let isSystemPromoCode = false;
-    if (inviteCode) {
+    
+    if (!isExistingUser && inviteCode) {
       const trimmedCode = inviteCode.trim().toUpperCase();
       if (SYSTEM_PROMO_CODES.includes(trimmedCode)) {
         inviteCodeValid = true;
@@ -103,76 +100,78 @@ export async function POST(req: NextRequest) {
     let couponIssued = false;
     let newUserId: string | null = null;
 
-    await db.$transaction(async (tx) => {
-      const newUser = await tx.user.create({
-        data: { email, name, role: "USER" },
-      });
-      newUserId = newUser.id;
+    if (!isExistingUser) {
+      await db.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+          data: { email, name, role: "USER" },
+        });
+        newUserId = newUser.id;
 
-      if (inviteCodeValid) {
-        try {
-          const expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + 90);
+        if (inviteCodeValid) {
+          try {
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 90);
 
-          if (isSystemPromoCode) {
-            const trimmedCode = inviteCode.trim().toUpperCase();
-            await tx.freeCoupon.create({
-              data: {
-                code: generateCouponCode(),
-                userId: newUser.id,
-                welcomeText: `${name}，欢迎加入饭否！您已成功激活官方营销特权礼包【${trimmedCode}】，在此为您送上一张全额免费活动组织餐券，开启您的同城盲盒社交聚餐吧。`,
-                expiresAt,
-                reason: "REGISTER",
-              },
-            });
-            couponIssued = true;
-          } else if (inviteCodeRecord) {
-            await tx.inviteCodeUsage.create({
-              data: {
-                inviteCodeId: inviteCodeRecord.id,
-                newUserId: newUser.id,
-              },
-            });
-            await tx.inviteCode.update({
-              where: { id: inviteCodeRecord.id },
-              data: { usageCount: { increment: 1 } },
-            });
+            if (isSystemPromoCode) {
+              const trimmedCode = inviteCode.trim().toUpperCase();
+              await tx.freeCoupon.create({
+                data: {
+                  code: generateCouponCode(),
+                  userId: newUser.id,
+                  welcomeText: `${name}，欢迎加入饭否！您已成功激活官方营销特权礼包【${trimmedCode}】，在此为您送上一张全额免费活动组织餐券，开启您的同城盲盒社交聚餐吧。`,
+                  expiresAt,
+                  reason: "REGISTER",
+                },
+              });
+              couponIssued = true;
+            } else if (inviteCodeRecord) {
+              await tx.inviteCodeUsage.create({
+                data: {
+                  inviteCodeId: inviteCodeRecord.id,
+                  newUserId: newUser.id,
+                },
+              });
+              await tx.inviteCode.update({
+                where: { id: inviteCodeRecord.id },
+                data: { usageCount: { increment: 1 } },
+              });
 
-            await tx.freeCoupon.create({
-              data: {
-                code: generateCouponCode(),
-                userId: newUser.id,
-                welcomeText:
-                  newUserWelcomeText ||
-                  `${name}，欢迎加入！这张券是送给你的第一份礼物，用它免费参加一次心仪的活动吧。`,
-                expiresAt,
-                reason: "REGISTER",
-              },
-            });
-            await tx.freeCoupon.create({
-              data: {
-                code: generateCouponCode(),
-                userId: inviteCodeRecord.ownerId,
-                welcomeText:
-                  inviterWelcomeText ||
-                  `你邀请的朋友${name}已注册成功！这张券是我们的感谢，期待你们在聚会中相遇。`,
-                expiresAt,
-                reason: "INVITED_SOMEONE",
-              },
-            });
-            couponIssued = true;
+              await tx.freeCoupon.create({
+                data: {
+                  code: generateCouponCode(),
+                  userId: newUser.id,
+                  welcomeText:
+                    newUserWelcomeText ||
+                    `${name}，欢迎加入！这张券是送给你的第一份礼物，用它免费参加一次心仪的活动吧。`,
+                  expiresAt,
+                  reason: "REGISTER",
+                },
+              });
+              await tx.freeCoupon.create({
+                data: {
+                  code: generateCouponCode(),
+                  userId: inviteCodeRecord.ownerId,
+                  welcomeText:
+                    inviterWelcomeText ||
+                    `你邀请的朋友${name}已注册成功！这张券是我们的感谢，期待你们在聚会中相遇。`,
+                  expiresAt,
+                  reason: "INVITED_SOMEONE",
+                },
+              });
+              couponIssued = true;
+            }
+          } catch (err) {
+            console.error("Failed to process invite code:", err);
           }
-        } catch (err) {
-          console.error("Failed to process invite code:", err);
         }
-      }
-    });
+      });
 
-    if (newUserId) {
-      try {
-        await ensureInviteCode(newUserId);
-      } catch (err) {
-        console.error("Failed to generate invite code for new user:", err);
+      if (newUserId) {
+        try {
+          await ensureInviteCode(newUserId);
+        } catch (err) {
+          console.error("Failed to generate invite code for new user:", err);
+        }
       }
     }
 
@@ -210,7 +209,9 @@ export async function POST(req: NextRequest) {
       console.log("---------------------------------------------------\n");
 
       return NextResponse.json({
-        message: "【开发环境】注册成功！免密登录链接已生成，请在终端控制台或下方查看并复制",
+        message: isExistingUser 
+          ? "【开发环境】该邮箱已注册，已生成免密登录链接，请直接登录" 
+          : "【开发环境】注册成功！免密登录链接已生成，请在终端控制台或下方查看并复制",
         couponIssued,
         inviteCodeValid,
         email,
@@ -245,7 +246,9 @@ export async function POST(req: NextRequest) {
         await sendMagicLinkEmail(email, magicLink);
 
         return NextResponse.json({
-          message: "注册成功！验证链接已发送到你的邮箱，请检查邮件",
+          message: isExistingUser 
+            ? "该邮箱已注册，为您发送了登录验证链接，请查收邮件" 
+            : "注册成功！验证链接已发送到你的邮箱，请检查邮件",
           couponIssued,
           inviteCodeValid,
           email,

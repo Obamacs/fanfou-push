@@ -6,7 +6,7 @@ import { AMap } from "@/components/events/AMap";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EVENT_TYPE_COLORS } from "@/lib/constants";
-import { Calendar, MapPin, Users, Clock, Ticket, ChevronLeft, User, Lock } from "lucide-react";
+import { Calendar, MapPin, Users, Ticket, ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -99,6 +99,11 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   
   // 3. Past Event Check
   const isPastEvent = now > eventDate;
+  const displayStatus = isPastEvent ? "COMPLETED" : event.status;
+  const displayStatusLabel =
+    displayStatus === "UPCOMING" ? "即将开始" :
+    displayStatus === "ONGOING" ? "进行中" :
+    displayStatus === "COMPLETED" ? "已结束" : "已取消";
 
   return (
     <div className="min-h-screen bg-[#FFFAF8]">
@@ -146,14 +151,12 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
               {colors.icon} {event.type}
             </span>
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-              event.status === "UPCOMING" ? "bg-[#FFF0F3] text-[#FF2442]" :
-              event.status === "ONGOING" ? "bg-green-50 text-green-600" :
-              event.status === "COMPLETED" ? "bg-[#FFF5F3] text-[#B8A099]" :
+              displayStatus === "UPCOMING" ? "bg-[#FFF0F3] text-[#FF2442]" :
+              displayStatus === "ONGOING" ? "bg-green-50 text-green-600" :
+              displayStatus === "COMPLETED" ? "bg-[#FFF5F3] text-[#B8A099]" :
               "bg-red-50 text-red-600"
             }`}>
-              {event.status === "UPCOMING" ? "即将开始" :
-               event.status === "ONGOING" ? "进行中" :
-               event.status === "COMPLETED" ? "已结束" : "已取消"}
+              {displayStatusLabel}
             </span>
           </div>
           <h1 className="text-[34px] font-bold text-[#2D2420] tracking-tight leading-tight">
@@ -445,4 +448,3 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
     </div>
   );
 }
-

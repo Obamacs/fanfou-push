@@ -75,9 +75,9 @@ function RegisterContent() {
       }
 
       setSuccess(
-        data.couponIssued
+        data.message || (data.couponIssued
           ? "注册成功！你已获得一张免费券，请检查邮箱验证"
-          : "注册成功！验证链接已发送到你的邮箱"
+          : "注册成功！验证链接已发送到你的邮箱")
       );
       if (data.devLoginUrl) {
         setDevLoginUrl(data.devLoginUrl);

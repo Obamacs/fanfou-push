@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EVENT_TYPES, CITIES, EVENT_TYPE_COLORS } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { CalendarClock, MapPin, Sparkles, Ticket, Users, Wallet } from "lucide-react";
 
 interface EventFormProps {
   mode: "create" | "edit";
@@ -134,6 +134,8 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
 
   const inputClass = "rounded-xl border-[#F0E4E0] bg-white focus:border-[#FF2442] focus:ring-[#FF2442] text-[15px] h-12 transition-colors";
   const labelClass = "text-[13px] font-semibold text-[#2D2420] mb-1.5";
+  const panelClass = "rounded-2xl border border-[#F0E4E0] bg-[#FFFDFC] p-4 shadow-[0_8px_24px_rgba(45,36,32,0.04)]";
+  const metricInputClass = "mt-3 h-14 rounded-xl border-[#F0E4E0] bg-white text-[24px] font-black text-[#2D2420] focus:border-[#FF2442] focus:ring-[#FF2442]";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-7">
@@ -195,7 +197,10 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
 
       {/* Address */}
       <div className="space-y-1.5">
-        <Label htmlFor="address" className={labelClass}>详细地址</Label>
+        <Label htmlFor="address" className={`${labelClass} flex items-center gap-1.5`}>
+          <MapPin className="h-3.5 w-3.5 text-[#1677FF]" />
+          详细地址
+        </Label>
         <Input
           id="address"
           placeholder="具体位置（选填）"
@@ -208,7 +213,10 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
 
       {/* Date + Time */}
       <div className="space-y-1.5">
-        <Label htmlFor="date" className={labelClass}>活动时间 *</Label>
+        <Label htmlFor="date" className={`${labelClass} flex items-center gap-1.5`}>
+          <CalendarClock className="h-3.5 w-3.5 text-[#FF2442]" />
+          活动时间 *
+        </Label>
         <Input
           id="date"
           type="datetime-local"
@@ -220,9 +228,17 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
       </div>
 
       {/* Max + Price */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="maxAttendees" className={labelClass}>最多人数</Label>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className={panelClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Label htmlFor="maxAttendees" className="text-[13px] font-bold text-[#2D2420]">最多人数</Label>
+              <p className="mt-1 text-[12px] text-[#8D746D]">控制桌面规模，建议 4-8 人更舒服</p>
+            </div>
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#ECFFF5]">
+              <Users className="h-4 w-4 text-[#07A35A]" />
+            </span>
+          </div>
           <Input
             id="maxAttendees"
             type="number"
@@ -231,11 +247,20 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
             value={maxAttendees}
             onChange={(e) => setMaxAttendees(e.target.value)}
             disabled={loading}
-            className={inputClass}
+            className={metricInputClass}
           />
+          <div className="mt-2 text-[12px] font-medium text-[#B8A099]">范围：2-20 人</div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="priceAmount" className={labelClass}>活动保证金 (元)</Label>
+        <div className={panelClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Label htmlFor="priceAmount" className="text-[13px] font-bold text-[#2D2420]">活动保证金</Label>
+              <p className="mt-1 text-[12px] text-[#8D746D]">报名支付页会清晰展示，可用邀请码抵扣</p>
+            </div>
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#FFF7E8]">
+              <Ticket className="h-4 w-4 text-[#D97706]" />
+            </span>
+          </div>
           <Input
             id="priceAmount"
             type="number"
@@ -243,15 +268,20 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
             value={priceAmount}
             onChange={(e) => setPriceAmount(e.target.value)}
             disabled={loading}
-            className={inputClass}
+            className={metricInputClass}
           />
+          <div className="mt-2 flex items-center gap-1.5 text-[12px] font-medium text-[#B8A099]">
+            <Wallet className="h-3.5 w-3.5" />
+            单位：元，填 0 表示免费
+          </div>
         </div>
       </div>
 
       {/* Localized Dining Options (Changsha & Timeleft style) */}
       <div className="bg-[#FFF5F3]/40 border border-[#F0E4E0]/60 rounded-2xl p-5 space-y-4">
         <h3 className="text-sm font-bold text-[#FF2442] flex items-center gap-1.5">
-          🍴 长沙同城聚餐匹配要素 (价格/菜系/辣度/饮酒)
+          <Sparkles className="h-4 w-4" />
+          长沙同城聚餐匹配要素 (价格/菜系/辣度/饮酒)
         </h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -356,7 +386,12 @@ export function EventForm({ mode, initialData, matchId, matchMembers = [] }: Eve
             <Sparkles className="w-4 h-4" />
             创建活动
           </span>
-        ) : "保存修改"}
+        ) : (
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            保存修改
+          </span>
+        )}
       </Button>
     </form>
   );
