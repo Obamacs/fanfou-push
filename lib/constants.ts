@@ -20,6 +20,7 @@ export const CITIES = [
   "杭州",
   "武汉",
   "南京",
+  "宜春",
 ] as const;
 
 // Xiaohongshu-inspired warm color palette

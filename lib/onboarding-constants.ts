@@ -30,7 +30,7 @@ export const CHILDREN_OPTIONS = [
   { value: "OPEN", label: "可以有也可以没有" },
 ];
 
-export const CITY_OPTIONS = ["长沙", "北京", "上海", "广州", "深圳", "成都", "杭州", "武汉", "南京"];
+export const CITY_OPTIONS = ["长沙", "北京", "上海", "广州", "深圳", "成都", "杭州", "武汉", "南京", "宜春"];
 
 interface OnboardingValidationState {
   ageGroup: string;
