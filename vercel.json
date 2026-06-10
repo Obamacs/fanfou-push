@@ -11,5 +11,11 @@
       "destination": "https://meal-meet.com/:path*",
       "permanent": true
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/notify-events",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }

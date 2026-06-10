@@ -90,8 +90,8 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   // Timeleft Reveal System Logic
   const now = new Date();
   
-  // 1. Address Reveal: 12 hours before event
-  const revealTime = new Date(eventDate.getTime() - 12 * 60 * 60 * 1000);
+  // 1. Address Reveal: 24 hours before event
+  const revealTime = new Date(eventDate.getTime() - 24 * 60 * 60 * 1000);
   const isAddressRevealed = now >= revealTime || isCreator;
   
   // 2. Attendee Reveal: At event start time
@@ -192,7 +192,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
                     {isAddressRevealed ? event.address : (
                       <>
                         <Lock className="w-3 h-3" />
-                        地点将在活动前12小时揭晓
+                        地点将在活动前24小时揭晓
                       </>
                     )}
                   </div>
@@ -316,7 +316,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
                   <Lock className="w-8 h-8 text-[#B8A099] mb-3 opacity-50" />
                   <p className="text-[15px] font-medium text-[#2D2420]">保持神秘，遇见惊喜</p>
                   <p className="text-[13px] text-[#B8A099] mt-1 max-w-[250px]">
-                    为了给你最纯粹的盲盒交友体验，具体地点将在活动开始前 12 小时准时揭晓
+                    为了给你最纯粹的盲盒交友体验，具体地点将在活动开始前 24 小时准时揭晓
                   </p>
                 </div>
               )}

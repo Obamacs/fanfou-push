@@ -263,6 +263,8 @@ model Event {
   status       EventStatus @default(UPCOMING)
   creatorId    String
   matchId      String?     @unique
+  notified24h  Boolean     @default(false)
+  notified3h   Boolean     @default(false)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
