@@ -83,11 +83,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        const emailClean = (credentials.email as string).toLowerCase().trim();
         const verToken = await db.verificationToken.findUnique({
           where: { token: hashToken(credentials.token as string) },
         });
 
-        if (!verToken || verToken.identifier !== credentials.email) {
+        if (!verToken || verToken.identifier !== emailClean) {
           return null;
         }
 

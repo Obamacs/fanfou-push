@@ -27,7 +27,7 @@ function BridgeContent() {
     }
 
     const token = searchParams.get("token");
-    const email = searchParams.get("email");
+    const email = searchParams.get("email")?.trim().toLowerCase();
     const next = searchParams.get("next") || "/dashboard";
     const safeNext = (next.startsWith("/") && !next.startsWith("//")) ? next : "/dashboard";
 

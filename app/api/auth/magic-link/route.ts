@@ -13,7 +13,9 @@ function hashToken(token: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
     if (!email) {
       return NextResponse.json({ error: "邮箱为必填项" }, { status: 400 });
@@ -26,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limit: 3 requests per email per 5 minutes
-    const emailLimit = await checkRateLimit(`magiclink:email:${email.toLowerCase()}`, {
+    const emailLimit = await checkRateLimit(`magiclink:email:${email}`, {
       maxRequests: 3,
       windowMs: 5 * 60 * 1000,
     });
@@ -126,7 +128,7 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         console.error("Custom magic link error:", err);
         // Refund rate limit since email sending failed, avoiding unfair lockouts
-        await refundRateLimit(`magiclink:email:${email.toLowerCase()}`);
+        await refundRateLimit(`magiclink:email:${email}`);
         await refundRateLimit(`magiclink:ip:${ip}`);
         return NextResponse.json(
           { error: "发送邮件失败，请稍后重试" },

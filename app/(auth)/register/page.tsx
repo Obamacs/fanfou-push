@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,10 +126,15 @@ function RegisterContent() {
 
   return (
     <div className="min-h-screen bg-[#fff9f7] lg:grid lg:grid-cols-[1.02fr_0.98fr]">
-      <div
-        className="relative hidden overflow-hidden bg-cover bg-center p-10 text-white lg:flex lg:flex-col lg:justify-end xl:p-14"
-        style={{ backgroundImage: "url(/login-hero.jpg)" }}
-      >
+      <div className="relative hidden overflow-hidden bg-[#271f1d] p-10 text-white lg:flex lg:flex-col lg:justify-end xl:p-14">
+        <Image
+          src="/login-hero.jpg"
+          alt=""
+          fill
+          sizes="51vw"
+          quality={72}
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(18,10,9,0.78),rgba(18,10,9,0.36)_48%,rgba(255,36,66,0.14))]" />
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
 
@@ -172,7 +178,7 @@ function RegisterContent() {
                 <p className="mt-3 text-sm leading-6 text-[#9d8580]">验证链接已发送到</p>
                 <p className="mt-1 break-all font-semibold text-[#271f1d]">{formData.email}</p>
                 <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-left text-sm leading-6 text-amber-800">
-                  链接 15 分钟内有效。邮件可能需要 1-3 分钟送达，若未收到，请检查收件箱和垃圾邮件后再重新发送。
+                  链接 15 分钟内有效。邮件可能需要 1-3 分钟送达，若未收到，请检查收件箱和垃圾邮件后再重新发送。国内网络下建议使用 QQ、163、Outlook 等可正常打开的邮箱。
                 </div>
                 {success && (
                   <div className="mt-5 rounded-lg border border-green-200 bg-green-50 p-4 text-left text-sm text-green-700">
