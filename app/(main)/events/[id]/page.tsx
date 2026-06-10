@@ -10,6 +10,8 @@ import { Calendar, MapPin, Users, Clock, Ticket, ChevronLeft, User, Lock } from 
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { EventReviewList } from "@/components/events/EventReviewList";
+import { EventReviewForm } from "@/components/events/EventReviewForm";
 
 interface EventDetailPageProps {
   params: Promise<{ id: string }>;
@@ -30,6 +32,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         include: { user: { select: { id: true, name: true, avatarUrl: true, gender: true, ageGroup: true } } },
         orderBy: { joinedAt: "asc" },
       },
+      reviews: { where: { userId: session?.user?.id || "anonymous" }, select: { id: true } },
       _count: { select: { attendances: { where: { status: "CONFIRMED" } } } },
     },
   });
@@ -74,6 +77,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   const colors = EVENT_TYPE_COLORS[event.type] || EVENT_TYPE_COLORS["其他"];
   const confirmedAttendees = event.attendances.filter((a) => a.status === "CONFIRMED");
   const waitlistedCount = event.attendances.filter((a) => a.status === "WAITLISTED").length;
+  const hasReviewed = event.reviews.length > 0;
 
   const eventDate = new Date(event.date);
   const formattedDate = new Intl.DateTimeFormat("zh-CN", {
@@ -92,6 +96,9 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   
   // 2. Attendee Reveal: At event start time
   const isAttendeeRevealed = now >= eventDate || isCreator;
+  
+  // 3. Past Event Check
+  const isPastEvent = now > eventDate;
 
   return (
     <div className="min-h-screen bg-[#FFFAF8]">
@@ -369,6 +376,20 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
           </Card>
         </div>
 
+        {/* Reviews Section */}
+        {isPastEvent && (
+          <div className="mt-8 border-t border-[#F0E4E0] pt-8">
+            <h2 className="text-[24px] font-bold text-[#2D2420] mb-6">体验与反馈</h2>
+            
+            {/* Show review form if user attended and hasn't reviewed yet */}
+            {attendance?.status === "CONFIRMED" && !hasReviewed && (
+              <EventReviewForm eventId={event.id} />
+            )}
+            
+            <EventReviewList eventId={event.id} />
+          </div>
+        )}
+
         {/* Creator */}
         <Card className="border-0 shadow-sm rounded-2xl p-5 bg-white mb-8">
           <div className="flex items-center gap-3">
@@ -395,22 +416,28 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
             </>
           ) : (
             session?.user && (
-              <AttendButton
-                eventId={event.id}
-                initialIsAttending={isAttending}
-                initialStatus={
-                  (attendance?.status as "CONFIRMED" | "PENDING" | "WAITLISTED" | null) || null
-                }
-                isFull={isFull}
-                priceAmount={event.priceAmount}
-                estimatedSpend={event.estimatedSpend}
-                serviceFeeRate={serviceFeeRate}
-                initialOrderCode={pendingOrder?.orderCode}
-                initialOrderAmount={pendingOrder?.amount}
-                initialPlatformFee={pendingOrder?.platformFee}
-                initialDepositFee={pendingOrder?.depositFee}
-                initialCouponCode={pendingOrder?.couponCode}
-              />
+              isPastEvent ? (
+                <Button disabled className="w-full rounded-full bg-[#E8DCD8] text-white font-medium py-6 text-lg cursor-not-allowed">
+                  活动已结束
+                </Button>
+              ) : (
+                <AttendButton
+                  eventId={event.id}
+                  initialIsAttending={isAttending}
+                  initialStatus={
+                    (attendance?.status as "CONFIRMED" | "PENDING" | "WAITLISTED" | null) || null
+                  }
+                  isFull={isFull}
+                  priceAmount={event.priceAmount}
+                  estimatedSpend={event.estimatedSpend}
+                  serviceFeeRate={serviceFeeRate}
+                  initialOrderCode={pendingOrder?.orderCode}
+                  initialOrderAmount={pendingOrder?.amount}
+                  initialPlatformFee={pendingOrder?.platformFee}
+                  initialDepositFee={pendingOrder?.depositFee}
+                  initialCouponCode={pendingOrder?.couponCode}
+                />
+              )
             )
           )}
         </div>

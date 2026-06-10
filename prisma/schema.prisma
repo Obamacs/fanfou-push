@@ -111,6 +111,7 @@ model User {
   reportsAbout      Report[]             @relation("ReportedUser")
   blocksGiven       Block[]              @relation("Blocker")
   blocksReceived    Block[]              @relation("Blocked")
+  eventReviews      EventReview[]
   messages          Message[]
   sentMessages      DirectMessage[]      @relation("SentMessages")
   receivedMessages  DirectMessage[]      @relation("ReceivedMessages")
@@ -271,6 +272,7 @@ model Event {
   messages     Message[]
   ratings      Rating[]
   reports      Report[]
+  reviews      EventReview[]
   couponsUsed  FreeCoupon[]      @relation("EventCouponsUsed")
   reservationOrders ReservationOrder[]
 
@@ -352,6 +354,24 @@ model Rating {
   @@index([eventId])
   @@index([ratedUserId])
   @@index([createdAt])
+}
+
+// ============ Event Reviews ============
+
+model EventReview {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  score     Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
 }
 
 // ============ Safety Features ============
