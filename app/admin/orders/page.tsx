@@ -220,7 +220,7 @@ export default function AdminOrdersPage() {
         if (eventDate < now) {
           return (
             <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 text-xs font-semibold rounded-full border border-amber-500/15 animate-pulse">
-              待审核 (活动结束)
+              待核销出席
             </span>
           );
         }

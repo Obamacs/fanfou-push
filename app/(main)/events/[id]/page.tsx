@@ -12,6 +12,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { EventReviewList } from "@/components/events/EventReviewList";
 import { EventReviewForm } from "@/components/events/EventReviewForm";
+import { ManageAttendance } from "@/components/events/ManageAttendance";
 
 interface EventDetailPageProps {
   params: Promise<{ id: string }>;
@@ -69,6 +70,7 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   }) : null;
 
   const isCreator = session?.user?.id === event.creatorId;
+  const isAdmin = session?.user?.role === "ADMIN";
   const isAttending = event.attendances.some(
     (a) => a.userId === session?.user?.id && a.status !== "CANCELLED"
   );
@@ -78,6 +80,12 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   const confirmedAttendees = event.attendances.filter((a) => a.status === "CONFIRMED");
   const waitlistedCount = event.attendances.filter((a) => a.status === "WAITLISTED").length;
   const hasReviewed = event.reviews.length > 0;
+
+  // Load orders for attendance management if admin or creator
+  const orders = (isCreator || isAdmin) ? await db.reservationOrder.findMany({
+    where: { eventId: id, status: "CONFIRMED" },
+    select: { userId: true, refundStatus: true },
+  }) : [];
 
   const eventDate = new Date(event.date);
   const formattedDate = new Intl.DateTimeFormat("zh-CN", {
@@ -378,6 +386,11 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
             )}
           </Card>
         </div>
+
+        {/* Attendance Verification Management */}
+        {(isCreator || isAdmin) && isPastEvent && (
+          <ManageAttendance eventId={event.id} attendees={confirmedAttendees} orders={orders} />
+        )}
 
         {/* Reviews Section */}
         {isPastEvent && (

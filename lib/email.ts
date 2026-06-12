@@ -56,7 +56,7 @@ export async function sendMagicLinkEmail(email: string, link: string) {
 export async function sendEventRevealEmail(email: string, userName: string, eventTitle: string, restaurantName: string, eventUrl: string) {
   const resend = getResend();
   try {
-    await resend.emails.send({
+    const response = await resend.emails.send({
       from: EMAIL_FROM,
       to: email,
       subject: "🍽️ 你的周四晚盲盒晚餐已揭晓！",
@@ -83,6 +83,9 @@ export async function sendEventRevealEmail(email: string, userName: string, even
         </div>
       `,
     });
+    if (response.error) {
+      console.error("Resend API returned error for reveal email:", response.error);
+    }
   } catch (err) {
     console.error("Failed to send reveal email:", err);
   }
@@ -91,7 +94,7 @@ export async function sendEventRevealEmail(email: string, userName: string, even
 export async function sendEventReminderEmail(email: string, userName: string, eventTitle: string, eventUrl: string) {
   const resend = getResend();
   try {
-    await resend.emails.send({
+    const response = await resend.emails.send({
       from: EMAIL_FROM,
       to: email,
       subject: "⏳ 距离晚餐还有 3 小时，准备好迎接惊喜了吗？",
@@ -115,6 +118,9 @@ export async function sendEventReminderEmail(email: string, userName: string, ev
         </div>
       `,
     });
+    if (response.error) {
+      console.error("Resend API returned error for reminder email:", response.error);
+    }
   } catch (err) {
     console.error("Failed to send reminder email:", err);
   }
