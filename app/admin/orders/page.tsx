@@ -19,6 +19,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import {
   Dialog,
@@ -389,11 +390,19 @@ export default function AdminOrdersPage() {
                           <p className="text-white font-bold text-sm leading-tight">{order.user.name}</p>
                           <p className="text-[#B8A099] text-xs mt-1 leading-tight">{order.user.email}</p>
                           {isRefundTab && order.user.refundMethod ? (
-                            <div className="mt-1.5 flex items-center gap-1">
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${order.user.refundMethod === "WECHAT" ? "bg-[#07C160]/10 text-[#07C160]" : "bg-[#1677FF]/10 text-[#1677FF]"}`}>
-                                {order.user.refundMethod === "WECHAT" ? "微" : "支"}
-                              </span>
-                              <span className="text-[10px] text-[#B8A099] font-mono">{order.user.refundAccount}</span>
+                            <div className="mt-1.5 flex flex-col items-start gap-1">
+                              <div className="flex items-center gap-1">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${order.user.refundMethod === "WECHAT" ? "bg-[#07C160]/10 text-[#07C160]" : "bg-[#1677FF]/10 text-[#1677FF]"}`}>
+                                  {order.user.refundMethod === "WECHAT" ? "微" : "支"}
+                                </span>
+                                {order.user.refundAccount?.startsWith("http") ? (
+                                  <a href={order.user.refundAccount} target="_blank" rel="noreferrer" className="text-[10px] text-[#FF2442] flex items-center gap-0.5 hover:underline">
+                                    查看收款码 <ExternalLink className="w-2.5 h-2.5" />
+                                  </a>
+                                ) : (
+                                  <span className="text-[10px] text-[#B8A099] font-mono">{order.user.refundAccount}</span>
+                                )}
+                              </div>
                             </div>
                           ) : isRefundTab ? (
                             <span className="text-[10px] text-red-400 mt-1 block">⚠️ 尚未绑定退款账户</span>
@@ -523,23 +532,51 @@ export default function AdminOrdersPage() {
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-[#B8A099]">账号:</span>
-                      <span className="font-mono font-bold text-white selection:bg-[#FF2442]">{selectedRefundOrder.user.refundAccount}</span>
+                      <span className="text-[#B8A099]">账号/收款码:</span>
+                      {selectedRefundOrder.user.refundAccount.startsWith("http") ? (
+                        <span className="text-xs text-[#07C160] font-semibold flex items-center gap-1">已上传截图 ✓</span>
+                      ) : (
+                        <span className="font-mono font-bold text-white selection:bg-[#FF2442]">{selectedRefundOrder.user.refundAccount}</span>
+                      )}
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-[#B8A099]">收款实名:</span>
                       <span className="font-bold text-white">{selectedRefundOrder.user.refundRealName || "未填写"}</span>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyRefundInfo(selectedRefundOrder)}
-                      className="w-full text-xs border-[#2D1E1A] bg-[#1A1311] hover:bg-[#1A1311]/50 text-white rounded-lg mt-2 flex items-center justify-center gap-1.5"
-                    >
-                      <ClipboardCopy className="w-3.5 h-3.5" />
-                      {copiedText ? "已复制到剪贴板！" : "一键复制收款信息"}
-                    </Button>
+                    {selectedRefundOrder.user.refundAccount.startsWith("http") && (
+                      <div className="mt-4 flex flex-col items-center bg-[#1A1311] p-3 rounded-xl border border-[#3D2C28]">
+                        <span className="text-[#B8A099] text-xs mb-2">请用手机微信/支付宝扫描下方二维码打款</span>
+                        <div className="relative w-48 h-48 bg-white rounded-xl overflow-hidden shadow-md">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={selectedRefundOrder.user.refundAccount} 
+                            alt="收款码" 
+                            className="w-full h-full object-contain p-2" 
+                          />
+                        </div>
+                        <a 
+                          href={selectedRefundOrder.user.refundAccount} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="text-xs text-[#FF2442] hover:text-[#FF4D94] mt-3 flex items-center gap-1 transition-colors"
+                        >
+                          点击新标签页打开大图 <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+
+                    {!selectedRefundOrder.user.refundAccount.startsWith("http") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyRefundInfo(selectedRefundOrder)}
+                        className="w-full text-xs border-[#2D1E1A] bg-[#1A1311] hover:bg-[#1A1311]/50 text-white rounded-lg mt-2 flex items-center justify-center gap-1.5"
+                      >
+                        <ClipboardCopy className="w-3.5 h-3.5" />
+                        {copiedText ? "已复制到剪贴板！" : "一键复制收款信息"}
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-4 bg-red-950/20 border border-red-900/30 rounded-xl">
