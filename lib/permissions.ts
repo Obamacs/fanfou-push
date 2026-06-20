@@ -12,6 +12,8 @@ export type Permission =
   | "MANAGE_COUPONS"
   | "VIEW_ANALYTICS";
 
+export type ResourceType = "event" | "message" | "coupon" | "report" | "user";
+
 export interface AuthContext {
   userId: string;
   email: string;
@@ -84,12 +86,18 @@ export async function requireAdmin(): Promise<
 }
 
 /**
- * Require specific permission
+ * Require specific permission with optional resource ownership verification
  * @param permission Permission to check
+ * @param resourceType Type of resource to verify ownership (optional)
+ * @param resourceId ID of the resource to verify (optional)
  * @returns Auth context if authorized, or error response
+ *
+ * CRITICAL FIX: This now properly validates resource ownership for EDIT_EVENT and DELETE_EVENT
  */
 export async function requirePermission(
-  permission: Permission
+  permission: Permission,
+  resourceType?: ResourceType,
+  resourceId?: string
 ): Promise<
   { success: true; auth: AuthContext } | { success: false; error: NextResponse }
 > {
@@ -104,7 +112,7 @@ export async function requirePermission(
     return authResult;
   }
 
-  // Check specific permissions for regular users
+  // Check if user has the permission
   const hasPermission = await checkUserPermission(
     authResult.auth.userId,
     permission
@@ -120,11 +128,35 @@ export async function requirePermission(
     };
   }
 
+  // CRITICAL FIX: For EDIT_EVENT and DELETE_EVENT, verify resource ownership
+  if (
+    (permission === "EDIT_EVENT" || permission === "DELETE_EVENT") &&
+    resourceType &&
+    resourceId
+  ) {
+    const ownsResource = await verifyOwnership(
+      authResult.auth.userId,
+      resourceType,
+      resourceId
+    );
+
+    if (!ownsResource) {
+      return {
+        success: false,
+        error: NextResponse.json(
+          { error: "您没有权限修改此资源" },
+          { status: 403 }
+        ),
+      };
+    }
+  }
+
   return authResult;
 }
 
 /**
- * Check if user has specific permission
+ * Check if user has specific base permission (without resource ownership)
+ * Use requirePermission() for full permission check including ownership
  */
 async function checkUserPermission(
   userId: string,
@@ -135,28 +167,37 @@ async function checkUserPermission(
     select: {
       role: true,
       canCreateEvents: true,
+      isBanned: true,
     },
   });
 
   if (!user) return false;
 
+  // Banned users have no permissions
+  if (user.isBanned) return false;
+
   // Admin has all permissions
   if (user.role === "ADMIN") return true;
 
-  // Check specific permissions
+  // Regular users: check specific permissions
   switch (permission) {
     case "CREATE_EVENT":
-      return user.canCreateEvents || false;
+      return user.canCreateEvents === true;
     case "EDIT_EVENT":
-      return user.canCreateEvents || false;
+      // CRITICAL FIX: Only check if user can create events
+      // Resource ownership must be verified in requirePermission()
+      return user.canCreateEvents === true;
     case "DELETE_EVENT":
-      return user.canCreateEvents || false;
+      // CRITICAL FIX: Only check if user can create events
+      // Resource ownership must be verified in requirePermission()
+      return user.canCreateEvents === true;
     case "VIEW_ADMIN_PANEL":
     case "MANAGE_USERS":
     case "MANAGE_REPORTS":
     case "MANAGE_COUPONS":
     case "VIEW_ANALYTICS":
-      return false; // Regular users can't do these
+      // Regular users cannot access admin-only features
+      return false;
     default:
       return false;
   }
@@ -164,27 +205,61 @@ async function checkUserPermission(
 
 /**
  * Verify user owns the resource (for edit/delete operations)
+ * CRITICAL FIX: Now supports multiple resource types
  */
 export async function verifyOwnership(
   userId: string,
-  resourceType: "event",
+  resourceType: ResourceType,
   resourceId: string
 ): Promise<boolean> {
-  switch (resourceType) {
-    case "event": {
-      const event = await db.event.findUnique({
-        where: { id: resourceId },
-        select: { creatorId: true },
-      });
-      return event?.creatorId === userId;
+  try {
+    switch (resourceType) {
+      case "event": {
+        const event = await db.event.findUnique({
+          where: { id: resourceId },
+          select: { creatorId: true },
+        });
+        return event?.creatorId === userId;
+      }
+
+      case "message": {
+        const message = await db.message.findUnique({
+          where: { id: resourceId },
+          select: { userId: true },
+        });
+        return message?.userId === userId;
+      }
+
+      case "coupon": {
+        const coupon = await db.freeCoupon.findUnique({
+          where: { id: resourceId },
+          select: { userId: true },
+        });
+        return coupon?.userId === userId;
+      }
+
+      case "report": {
+        // Only admins can modify reports, regular users cannot
+        return false;
+      }
+
+      case "user": {
+        // Users can only modify their own profile
+        return resourceId === userId;
+      }
+
+      default:
+        return false;
     }
-    default:
-      return false;
+  } catch (error) {
+    console.error(`[Permissions] Error verifying ${resourceType} ownership:`, error);
+    return false;
   }
 }
 
 /**
- * Log audit event for admin actions
+ * Log audit event for admin or system actions
+ * CRITICAL FIX: Now properly handles system audit logs
  */
 export async function logAuditEvent(
   adminId: string,
@@ -194,9 +269,33 @@ export async function logAuditEvent(
   payload?: Record<string, unknown>
 ): Promise<void> {
   try {
+    // Validate adminId
+    if (!adminId || adminId.length === 0) {
+      console.warn("[Permissions] Invalid adminId for audit log");
+      return;
+    }
+
+    // For "system" actions, create a special system admin entry
+    const actualAdminId = adminId === "system" ? "SYSTEM" : adminId;
+
+    // Verify admin exists (if not system)
+    if (actualAdminId !== "SYSTEM") {
+      const admin = await db.user.findUnique({
+        where: { id: actualAdminId },
+        select: { id: true, role: true },
+      });
+
+      if (!admin || admin.role !== "ADMIN") {
+        console.warn(
+          `[Permissions] Non-admin user ${actualAdminId} attempted audit log`
+        );
+        return;
+      }
+    }
+
     await db.adminAuditLog.create({
       data: {
-        adminId,
+        adminId: actualAdminId,
         action,
         targetType,
         targetId: targetId || null,
@@ -204,6 +303,6 @@ export async function logAuditEvent(
       },
     });
   } catch (error) {
-    console.error("Failed to log audit event:", error);
+    console.error("[Permissions] Failed to log audit event:", error);
   }
 }
