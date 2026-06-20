@@ -1,6 +1,7 @@
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { EVENT_TYPES } from "@/lib/constants";
+import { createEventSchema, formatValidationErrors } from "@/lib/validation";
+import { requirePermission, logAuditEvent } from "@/lib/permissions";
 import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
@@ -42,7 +43,8 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ events });
-  } catch {
+  } catch (error) {
+    console.error("Failed to fetch events:", error);
     return NextResponse.json(
       { error: "查询活动失败" },
       { status: 500 }
@@ -52,23 +54,34 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "未授权" }, { status: 401 });
+    // Step 1: Check authentication and permission
+    const authResult = await requirePermission("CREATE_EVENT");
+    if (!authResult.success) {
+      return authResult.error;
     }
 
-    // 获取用户信息，检查是否有权限创建活动
-    const user = await db.user.findUnique({
-      where: { id: session.user.id as string },
-      select: { canCreateEvents: true, role: true },
-    });
+    const userId = authResult.auth.userId;
 
-    // 只有管理员或授权用户才能创建活动
-    if (!user?.canCreateEvents && user?.role !== "ADMIN") {
+    // Step 2: Parse and validate request body
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { error: "您没有权限创建活动。请联系管理员申请权限。" },
-        { status: 403 }
+        { error: "请求体格式无效" },
+        { status: 400 }
+      );
+    }
+
+    // Step 3: Validate input using Zod schema
+    const validation = createEventSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: "数据验证失败",
+          details: formatValidationErrors(validation.error),
+        },
+        { status: 400 }
       );
     }
 
@@ -88,49 +101,16 @@ export async function POST(req: NextRequest) {
       estimatedSpicy,
       estimatedCuisine,
       alcoholPolicy,
-    } = await req.json();
+    } = validation.data;
 
-    // Validation
-    if (!title || !type || !city || !date) {
-      return NextResponse.json(
-        { error: "请填写所有必填项" },
-        { status: 400 }
-      );
-    }
-
-    if (!(EVENT_TYPES as readonly string[]).includes(type)) {
-      return NextResponse.json(
-        { error: "活动类型无效" },
-        { status: 400 }
-      );
-    }
-
-    if (typeof title !== "string" || title.length > 100) {
-      return NextResponse.json({ error: "活动标题过长" }, { status: 400 });
-    }
-    if (address && typeof address === "string" && address.length > 200) {
-      return NextResponse.json({ error: "活动地址过长" }, { status: 400 });
-    }
-    if (description && typeof description === "string" && description.length > 2000) {
-      return NextResponse.json({ error: "活动描述过长" }, { status: 400 });
-    }
-
+    // Convert date string to Date object
     const eventDate = new Date(date);
-    if (isNaN(eventDate.getTime()) || eventDate <= new Date()) {
-      return NextResponse.json(
-        { error: "活动时间必须是未来的时间" },
-        { status: 400 }
-      );
-    }
+    const max = Math.max(2, Math.min(200, maxAttendees || 6));
+    const price = Math.max(0, Math.min(10000, priceAmount || 0));
 
-    const max = Math.max(2, Math.min(20, maxAttendees || 6));
-    const price = Math.max(0, priceAmount || 0);
-
-    const userId = session.user.id as string;
-
-    // Create event and its attendances inside a single atomic database transaction
+    // Step 4: Create event and attendances in atomic transaction
     const event = await db.$transaction(async (tx) => {
-      // 1. Create the event
+      // 4.1: Create the event
       const newEvent = await tx.event.create({
         data: {
           title,
@@ -157,14 +137,14 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 2. Fetch creator's role to prevent auto-enrolling admins
+      // 4.2: Get creator's role
       const creatorUser = await tx.user.findUnique({
         where: { id: userId },
         select: { role: true },
       });
       const isAdmin = creatorUser?.role === "ADMIN";
 
-      // 3. Auto-add creator as confirmed attendee (only if they are NOT an admin)
+      // 4.3: Auto-add creator as confirmed attendee (skip for admins)
       if (!isAdmin) {
         await tx.eventAttendance.create({
           data: {
@@ -175,8 +155,8 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // 4. Auto-invite match members if provided (ONLY if matchId is valid)
-      if (matchId && autoInviteMembers && Array.isArray(autoInviteMembers) && autoInviteMembers.length > 0) {
+      // 4.4: Auto-invite match members if provided
+      if (matchId && autoInviteMembers && Array.isArray(autoInviteMembers)) {
         const matchMembers = await tx.matchMember.findMany({
           where: {
             matchId,
@@ -187,7 +167,7 @@ export async function POST(req: NextRequest) {
 
         const validMemberIds = matchMembers
           .map((m) => m.userId)
-          .filter((id) => id !== userId); // exclude creator
+          .filter((id) => id !== userId);
 
         if (validMemberIds.length > 0) {
           await tx.eventAttendance.createMany({
@@ -203,6 +183,15 @@ export async function POST(req: NextRequest) {
 
       return newEvent;
     });
+
+    // Step 5: Log audit event
+    if (authResult.auth.role === "ADMIN") {
+      await logAuditEvent(userId, "CREATE_EVENT", "Event", event.id, {
+        title: event.title,
+        type: event.type,
+        city: event.city,
+      });
+    }
 
     revalidatePath("/events");
 

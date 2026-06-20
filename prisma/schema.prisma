@@ -498,6 +498,26 @@ model AdminAuditLog {
   @@index([createdAt])
 }
 
+// Webhook idempotency: prevent duplicate processing of Stripe webhooks
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  provider   String   // "stripe", "wechat", etc.
+  eventId    String   // External provider's event ID
+  eventType  String   // "checkout.session.completed", etc.
+  status     String   @default("PROCESSING") // "PROCESSING", "COMPLETED", "FAILED"
+  payload    Json     // Raw webhook payload
+  error      String?  // Error message if failed
+  processedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([provider, eventId])
+  @@index([provider])
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model ReservationOrder {
   id          String   @id @default(cuid())
   userId      String

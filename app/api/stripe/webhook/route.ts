@@ -8,6 +8,8 @@ import { sendAlert } from "@/lib/alert";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  let webhookEventId: string | null = null;
+
   try {
     const sig = req.headers.get("stripe-signature");
 
@@ -41,6 +43,51 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Step 1: Check for duplicate webhook (idempotency)
+    // Use a unique constraint on (provider, eventId) to prevent duplicates
+    const existingWebhook = await db.webhookEvent.findUnique({
+      where: {
+        provider_eventId: {
+          provider: "stripe",
+          eventId: event.id,
+        },
+      },
+    });
+
+    if (existingWebhook) {
+      if (existingWebhook.status === "COMPLETED") {
+        console.log(`Webhook ${event.id} already processed successfully`);
+        return NextResponse.json({ received: true });
+      }
+      if (existingWebhook.status === "PROCESSING") {
+        console.log(`Webhook ${event.id} is still processing, returning 202`);
+        return NextResponse.json({ message: "Processing" }, { status: 202 });
+      }
+    }
+
+    // Step 2: Create or update webhook event record with PROCESSING status
+    const webhookRecord = await db.webhookEvent.upsert({
+      where: {
+        provider_eventId: {
+          provider: "stripe",
+          eventId: event.id,
+        },
+      },
+      create: {
+        provider: "stripe",
+        eventId: event.id,
+        eventType: event.type,
+        status: "PROCESSING",
+        payload: event.data as any,
+      },
+      update: {
+        status: "PROCESSING",
+        updatedAt: new Date(),
+      },
+    });
+
+    webhookEventId = webhookRecord.id;
+
     // Handle checkout.session.completed
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -50,6 +97,13 @@ export async function POST(req: NextRequest) {
 
       if (!eventId || !userId) {
         console.error("Missing eventId or userId in metadata");
+        await db.webhookEvent.update({
+          where: { id: webhookEventId! },
+          data: {
+            status: "FAILED",
+            error: "Missing eventId or userId in metadata",
+          },
+        });
         await sendAlert("Stripe 支付回调元数据丢失", `无法关联订单 (Session ID: ${session.id})`);
         return NextResponse.json(
           { error: "Missing metadata" },
@@ -57,45 +111,64 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Check if already processed (Idempotency protection)
-      const existingAttendance = await db.eventAttendance.findUnique({
-        where: {
-          eventId_userId: {
-            eventId,
-            userId,
+      // Step 3: Use database transaction for atomic update
+      // This ensures that either both attendance and webhook status are updated, or neither
+      await db.$transaction(async (tx) => {
+        // Update attendance to CONFIRMED
+        await tx.eventAttendance.update({
+          where: {
+            eventId_userId: {
+              eventId,
+              userId,
+            },
           },
-        },
-      });
-
-      if (existingAttendance && existingAttendance.status === "CONFIRMED" && existingAttendance.paymentId === (session.payment_intent as string)) {
-        console.log(`Webhook already processed for event ${eventId}, user ${userId}`);
-        return NextResponse.json({ received: true });
-      }
-
-      // Update attendance to CONFIRMED
-      await db.eventAttendance.update({
-        where: {
-          eventId_userId: {
-            eventId,
-            userId,
+          data: {
+            status: "CONFIRMED",
+            paidAt: new Date(session.created * 1000),
+            paymentId: session.payment_intent as string,
           },
-        },
-        data: {
-          status: "CONFIRMED",
-          paidAt: new Date(session.created * 1000),
-          paymentId: session.payment_intent as string,
-        },
+        });
+
+        // Mark webhook as completed
+        await tx.webhookEvent.update({
+          where: { id: webhookEventId! },
+          data: {
+            status: "COMPLETED",
+            processedAt: new Date(),
+          },
+        });
       });
 
       // Revalidate the event page
       revalidatePath(`/events/${eventId}`);
 
       console.log(`Payment confirmed for event ${eventId}, user ${userId}`);
+    } else {
+      // For unhandled event types, still mark as completed
+      await db.webhookEvent.update({
+        where: { id: webhookEventId! },
+        data: {
+          status: "COMPLETED",
+          processedAt: new Date(),
+        },
+      });
     }
 
     return NextResponse.json({ received: true });
   } catch (error: any) {
     console.error("Webhook error:", error);
+
+    // Mark webhook as failed
+    if (webhookEventId) {
+      await db.webhookEvent.update({
+        where: { id: webhookEventId! },
+        data: {
+          status: "FAILED",
+          error: error.message || "Unknown error",
+        },
+      }).catch((e) => console.error("Failed to update webhook status:", e));
+    }
+
     await sendAlert("Stripe Webhook 处理崩溃", error.message || "Unknown Error");
     return NextResponse.json(
       { error: "Webhook processing failed" },
