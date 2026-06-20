@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { ensureEventStatusUpdated } from "@/lib/event-utils";
 import { AttendButton } from "@/components/events/AttendButton";
 import { DeleteEventButton } from "@/components/events/DeleteEventButton";
 import { AMap } from "@/components/events/AMap";
@@ -24,7 +25,28 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   const { id } = await params;
   const { payment } = await searchParams;
 
-  const event = await db.event.findUnique({
+  let event = await db.event.findUnique({
+    where: { id },
+    include: {
+      creator: { select: { id: true, name: true, avatarUrl: true } },
+      attendances: {
+        where: { status: { in: ["CONFIRMED", "PENDING", "WAITLISTED"] } },
+        include: { user: { select: { id: true, name: true, avatarUrl: true, gender: true, ageGroup: true } } },
+        orderBy: { joinedAt: "asc" },
+      },
+      reviews: { where: { userId: session?.user?.id || "anonymous" }, select: { id: true } },
+      _count: { select: { attendances: { where: { status: "CONFIRMED" } } } },
+    },
+  });
+
+  if (!event) notFound();
+
+  // ✅ FIX: Ensure event status is up-to-date before rendering
+  // This updates the database status based on current time
+  await ensureEventStatusUpdated(id);
+
+  // Reload event to get the updated status
+  event = await db.event.findUnique({
     where: { id },
     include: {
       creator: { select: { id: true, name: true, avatarUrl: true } },
@@ -105,13 +127,16 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   // 2. Attendee Reveal: At event start time
   const isAttendeeRevealed = now >= eventDate || isCreator;
   
-  // 3. Past Event Check
-  const isPastEvent = now > eventDate;
-  const displayStatus = isPastEvent ? "COMPLETED" : event.status;
+  // ✅ FIX: Use the database status directly (which is now up-to-date)
+  // No longer using isPastEvent for status display - database is source of truth
+  const displayStatus = event.status;
   const displayStatusLabel =
     displayStatus === "UPCOMING" ? "即将开始" :
     displayStatus === "ONGOING" ? "进行中" :
     displayStatus === "COMPLETED" ? "已结束" : "已取消";
+
+  // For backward compatibility with UI logic that checks if event is past
+  const isPastEvent = displayStatus === "COMPLETED";
 
   return (
     <div className="min-h-screen bg-[#FFFAF8]">
