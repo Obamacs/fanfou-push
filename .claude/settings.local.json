@@ -15,7 +15,18 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(npx tsc *)",
-      "Bash(vercel --prod --yes)"
+      "Bash(vercel --prod --yes)",
+      "Bash(ls -la \"/Users/liemjames/vs Code/\")",
+      "Read(//Users/liemjames/**)",
+      "Bash(npx next *)",
+      "Bash(sed -i '' 's/where: { id: webhookEventId }/where: { id: webhookEventId! }/g' \"/Users/liemjames/vs Code /timelefts/app/api/stripe/webhook/route.ts\")",
+      "Bash(sed -i '' 's/payload: payload || null,/payload: payload as any || null,/g' \"/Users/liemjames/vs Code /timelefts/lib/permissions.ts\")",
+      "Bash(git push *)",
+      "Bash(rm \"/Users/liemjames/vs Code /timelefts/lib/email-queue.ts\")"
+    ],
+    "additionalDirectories": [
+      "/Users/liemjames/vs Code /timelefts/app/api/stripe/webhook",
+      "/Users/liemjames/vs Code /timelefts/lib"
     ]
   }
 }

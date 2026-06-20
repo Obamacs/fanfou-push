@@ -4,6 +4,7 @@ import { ensureInviteCode, validateInviteCode } from "@/lib/coupon";
 import { customAlphabet } from "nanoid";
 import { checkRateLimit, refundRateLimit } from "@/lib/rate-limit";
 import { sendAlert } from "@/lib/alert";
+import { queueMagicLinkEmail } from "@/app/actions/email";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -222,7 +223,6 @@ export async function POST(req: NextRequest) {
     // Try custom email flow (works in China). Do not fall back to Supabase.
     if (process.env.RESEND_API_KEY) {
       try {
-        const { sendMagicLinkEmail } = await import("@/lib/email");
         const { createHash } = await import("crypto");
         const { nanoid } = await import("nanoid");
         const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
@@ -243,11 +243,23 @@ export async function POST(req: NextRequest) {
         const base = process.env.NEXTAUTH_URL || new URL(req.url).origin;
         const magicLink = `${base.replace(/\/$/, "")}/auth/bridge?token=${token}&email=${encodeURIComponent(email)}&next=${nextPath}`;
 
-        await sendMagicLinkEmail(email, magicLink);
+        // Queue email for async sending with retry logic
+        try {
+          await queueMagicLinkEmail(email, magicLink);
+        } catch (queueError) {
+          console.error("Failed to queue magic link email:", queueError);
+          await sendAlert("发送注册验证邮件失败", queueError instanceof Error ? queueError.message : String(queueError), { email });
+          // Refund rate limit since email queueing failed
+          await refundRateLimit(`register:ip:${ip}`);
+          return NextResponse.json(
+            { error: "注册成功，但发送验证邮件失败，请稍后前往登录页重试。" },
+            { status: 500 }
+          );
+        }
 
         return NextResponse.json({
-          message: isExistingUser 
-            ? "该邮箱已注册，为您发送了登录验证链接，请查收邮件" 
+          message: isExistingUser
+            ? "该邮箱已注册，为您发送了登录验证链接，请查收邮件"
             : "注册成功！验证链接已发送到你的邮箱，请检查邮件",
           couponIssued,
           inviteCodeValid,
@@ -256,7 +268,7 @@ export async function POST(req: NextRequest) {
       } catch (err: any) {
         console.error("Custom register magic link error:", err);
         await sendAlert("发送注册验证邮件失败", err.message || "Unknown Error", { email });
-        // Refund rate limit since email sending failed
+        // Refund rate limit since email flow failed
         await refundRateLimit(`register:ip:${ip}`);
         return NextResponse.json(
           { error: "注册成功，但发送验证邮件失败，请稍后前往登录页重试。" },

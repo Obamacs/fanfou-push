@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { checkRateLimit, refundRateLimit } from "@/lib/rate-limit";
-import { sendMagicLinkEmail } from "@/lib/email";
+import { queueMagicLinkEmail } from "@/app/actions/email";
 import { createHash } from "crypto";
 import { nanoid } from "nanoid";
 
@@ -119,7 +119,19 @@ export async function POST(req: NextRequest) {
         const base = process.env.NEXTAUTH_URL || new URL(req.url).origin;
         const magicLink = `${base.replace(/\/$/, "")}/auth/bridge?token=${token}&email=${encodeURIComponent(email)}&next=${nextPath}`;
 
-        await sendMagicLinkEmail(email, magicLink);
+        // Queue email for async sending with retry logic
+        try {
+          await queueMagicLinkEmail(email, magicLink);
+        } catch (queueError) {
+          console.error("Failed to queue magic link email:", queueError);
+          // Refund rate limit since email queueing failed
+          await refundRateLimit(`magiclink:email:${email}`);
+          await refundRateLimit(`magiclink:ip:${ip}`);
+          return NextResponse.json(
+            { error: "发送邮件失败，请稍后重试" },
+            { status: 500 }
+          );
+        }
 
         return NextResponse.json({
           message: "验证链接已发送到你的邮箱，请检查邮件",
