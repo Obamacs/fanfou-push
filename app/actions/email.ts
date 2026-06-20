@@ -1,44 +1,113 @@
 'use server';
 
-import { sendMagicLinkEmail } from '@/lib/email';
-
 /**
- * 邮件队列包装器（当前使用直接发送）
- * TODO: 集成 Bull 队列用于生产环境重试
+ * 邮件服务器端操作
+ * 通过内部 API 与 Bull 队列交互
  *
- * 目前的实现：
- * - 直接发送邮件（快速）
- * - 不支持重试（简单）
- * - 足够用于开发和早期阶段
- *
- * 未来改进：
- * - 添加 Bull + Redis 队列
- * - 实现自动重试机制
- * - 添加失败通知
- * - 邮件统计和监控
+ * 架构：
+ * Server Action → /api/queue/send (Bull queue)
+ *   ↓
+ * 后台异步处理
+ *   ↓
+ * 自动重试 3 次（指数退避）
+ *   ↓
+ * 失败时记录审计日志
  */
 
+interface QueueResponse {
+  success: boolean;
+  message?: string;
+  jobId?: string;
+  error?: string;
+}
+
+interface StatsResponse {
+  success: boolean;
+  stats?: {
+    pending: number;
+    active: number;
+    completed: number;
+    failed: number;
+    failedJobs: any[];
+  };
+}
+
+/**
+ * 将魔法链接邮件添加到队列
+ *
+ * 流程：
+ * 1. 立即入队（< 100ms）
+ * 2. 用户立即得到反馈
+ * 3. 邮件在后台异步发送
+ * 4. 失败自动重试 3 次
+ * 5. 最终失败时通知管理员
+ */
 export async function queueMagicLinkEmail(to: string, link: string): Promise<string> {
   try {
-    // TODO: 当 Bull 队列集成时，改为异步队列操作
-    // 现在直接发送邮件 - 用户需要等待邮件发送完成
-    const result = await sendMagicLinkEmail(to, link);
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/queue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'magic-link',
+        to,
+        subject: '登录饭否 - 你的专属饭搭子',
+        data: { link },
+      }),
+    });
 
-    console.log(`[Email] Magic link sent to ${to}`);
-    return result?.id || `direct-${Date.now()}`;
+    const data = (await response.json()) as QueueResponse;
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Failed to queue email');
+    }
+
+    console.log(`[Email] ✅ Magic link email queued for ${to} (job: ${data.jobId})`);
+    return data.jobId || `queued-${Date.now()}`;
   } catch (error) {
-    console.error('[Email] Failed to send magic link email:', error);
+    console.error('[Email] ❌ Failed to queue magic link email:', error);
     throw error;
   }
 }
 
+/**
+ * 获取邮件队列统计信息
+ */
 export async function getEmailQueueStats() {
-  // TODO: 当集成 Bull 时实现
-  return {
-    pending: 0,
-    active: 0,
-    completed: 0,
-    failed: 0,
-    failedJobs: [],
-  };
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/queue`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = (await response.json()) as StatsResponse;
+
+    if (!response.ok || !data.success) {
+      return {
+        pending: 0,
+        active: 0,
+        completed: 0,
+        failed: 0,
+        failedJobs: [],
+      };
+    }
+
+    return data.stats || {
+      pending: 0,
+      active: 0,
+      completed: 0,
+      failed: 0,
+      failedJobs: [],
+    };
+  } catch (error) {
+    console.error('[Email] Failed to get queue stats:', error);
+    return {
+      pending: 0,
+      active: 0,
+      completed: 0,
+      failed: 0,
+      failedJobs: [],
+    };
+  }
 }
