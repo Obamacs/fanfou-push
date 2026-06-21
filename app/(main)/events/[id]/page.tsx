@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import { EventReviewList } from "@/components/events/EventReviewList";
 import { EventReviewForm } from "@/components/events/EventReviewForm";
 import { ManageAttendance } from "@/components/events/ManageAttendance";
+import { MutualConnect } from "@/components/events/MutualConnect";
 
 interface EventDetailPageProps {
   params: Promise<{ id: string }>;
@@ -102,6 +103,20 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
   const confirmedAttendees = event.attendances.filter((a) => a.status === "CONFIRMED");
   const waitlistedCount = event.attendances.filter((a) => a.status === "WAITLISTED").length;
   const hasReviewed = event.reviews.length > 0;
+
+  // Load existing ratings if the user attended
+  let initialRatings: Record<string, "YES" | "NO"> = {};
+  if (attendance?.status === "CONFIRMED" && session?.user?.id) {
+    const ratings = await db.rating.findMany({
+      where: {
+        eventId: id,
+        raterId: session.user.id,
+      },
+    });
+    ratings.forEach((r) => {
+      initialRatings[r.ratedUserId] = r.score === 1 ? "YES" : "NO";
+    });
+  }
 
   // Load orders for attendance management if admin or creator
   const orders = (isCreator || isAdmin) ? await db.reservationOrder.findMany({
@@ -415,6 +430,16 @@ export default async function EventDetailPage({ params, searchParams }: EventDet
         {/* Attendance Verification Management */}
         {(isCreator || isAdmin) && isPastEvent && (
           <ManageAttendance eventId={event.id} attendees={confirmedAttendees} orders={orders} />
+        )}
+
+        {/* Mutual Connect Section */}
+        {isPastEvent && attendance?.status === "CONFIRMED" && session?.user && (
+          <MutualConnect 
+            eventId={event.id} 
+            attendees={confirmedAttendees} 
+            currentUserId={session.user.id} 
+            initialRatings={initialRatings} 
+          />
         )}
 
         {/* Reviews Section */}
